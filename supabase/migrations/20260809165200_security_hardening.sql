@@ -6,7 +6,7 @@ WITH CHECK (
   EXISTS (
     SELECT 1 FROM public.vcards
     WHERE id = vcard_id
-    AND (status = 'published' OR owner_id = auth.uid())
+    AND (is_public = true OR created_by = auth.uid())
   )
 );
 

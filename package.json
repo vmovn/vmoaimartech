@@ -6,18 +6,31 @@
   "description": "Swiffer – A complete, production-grade guide to installing, configuring, deploying, and operating Swiffer — the multi-tenant WhatsApp CRM & Omnichannel platform.",
   "author": "WRAPCODERS",
   "type": "commonjs",
+  "packageManager": "npm@11.6.2",
+  "engines": {
+    "node": ">=20.19.0"
+  },
   "main": "eslint.config.js",
   "sideEffects": false,
   "directories": {
     "doc": "docs"
   },
   "scripts": {
-    "dev": "vite dev",
+    "dev": "vite dev --host 127.0.0.1 --port 8080",
+    "dev:setup": "npm ci && npm run dev:infra:start && npm run dev:env && npm run dev:verify",
+    "dev:infra:start": "supabase start",
+    "dev:infra:stop": "supabase stop",
+    "dev:db:reset": "supabase db reset",
+    "dev:reset": "npm run dev:db:reset && npm run dev:env && npm run dev:verify",
+    "dev:env": "node scripts/dev/generate-local-env.mjs",
+    "dev:verify": "node --env-file=.env.local scripts/dev/verify-local-supabase.mjs",
+    "dev:check": "npm run typecheck && npm run build && npm run security:scan:local && npm run security:policies",
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "lint": "eslint .",
     "security:scan": "node scripts/security-scan-ci.mjs && node scripts/security-check-extensions.mjs",
+    "security:scan:local": "node --env-file=.env.local scripts/security-scan-ci.mjs && node --env-file=.env.local scripts/security-check-extensions.mjs",
     "security:baseline": "node scripts/security-scan-ci.mjs --update-baseline && node scripts/security-check-extensions.mjs",
     "security:policies": "node scripts/security-policy-assertions.mjs",
     "test:security:policies": "vitest run tests/unit/rls-policy-argument-order.test.ts tests/unit/rls-billing-invite-policies.test.ts tests/unit/messaging-account-security.test.ts tests/unit/gateway-secret-access.test.ts tests/integration/chatbot-webhook-secret-access.test.ts tests/integration/avatar-storage-access.test.ts tests/integration/workflow-rls-access.test.ts tests/integration/cross-tenant-access-prevention.test.ts tests/integration/tenant-access-audit-trail.test.ts tests/integration/tenant-audit-event-recording.test.ts tests/api/security-realtime-rls.test.ts",

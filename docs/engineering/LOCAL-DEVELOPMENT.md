@@ -1,0 +1,238 @@
+# Local Development
+
+## Architecture
+
+Local development uses the application on the host and the official Supabase
+CLI stack in Docker. It never requires or contacts production Supabase.
+
+```text
+Browser
+  -> TanStack Start / Vite at http://127.0.0.1:8080
+  -> local Supabase API at http://127.0.0.1:56321
+       -> PostgreSQL 17 at 127.0.0.1:56322
+       -> Auth
+       -> Storage
+       -> Realtime
+       -> Studio at http://127.0.0.1:56323
+       -> Mailpit at http://127.0.0.1:56324
+```
+
+The local Supabase project ID is `vmoaimartech-local`. Ports use the `5632x`
+range because the standard `5432x` range was already assigned to another local
+Supabase project on the baseline machine.
+
+## Prerequisites
+
+Verified baseline versions on 2026-08-29:
+
+- Node.js 24.12.0; repository minimum is 20.19.0.
+- npm 11.6.2, pinned by `packageManager` in `package.json`.
+- Git 2.52.0.windows.1.
+- Docker Engine 29.7.2 through Docker Desktop 4.88.1.
+- Docker Compose 5.4.0.
+- Supabase CLI 2.116.0, installed as an exact local dev dependency.
+
+Bun and a global Supabase CLI are not required.
+
+## First-Time Setup
+
+From the repository root:
+
+```powershell
+npm run dev:setup
+```
+
+That command performs a lockfile install, starts the isolated local Supabase
+stack, generates the ignored `.env.local`, and verifies Auth, the signup
+profile/workspace trigger, cross-tenant RLS, Storage, and Realtime.
+
+Equivalent expanded commands:
+
+```powershell
+npm ci
+npm run dev:infra:start
+npm run dev:env
+npm run dev:verify
+```
+
+`npm ci` downloads SheetJS 0.20.3 from its official CDN URL recorded in the
+lockfile; public npm does not publish that version.
+
+## Environment Variables
+
+`.env.local` is generated from the running local Supabase stack and is ignored
+by Git. Never copy production values into it and never commit it.
+
+| Variable | Purpose | Phase | Exposure | Requirement |
+| --- | --- | --- | --- | --- |
+| `VITE_SUPABASE_URL` | Local Supabase API URL | build/runtime | browser-safe | required |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | Local publishable API key | build/runtime | browser-safe | required |
+| `VITE_APP_ENV` | Deployment label (`development`) | build | browser-safe | required locally |
+| `VITE_APP_MODE` | Real-data versus demo behavior | build | browser-safe | required; use `production` for real local Supabase |
+| `VITE_DEMO_MODE` | Legacy demo-mode alias | build | browser-safe | optional; `false` locally |
+| `SUPABASE_URL` | Local Supabase API URL for server functions | runtime | server-only | required |
+| `SUPABASE_PUBLISHABLE_KEY` | Publishable key for authenticated server clients | runtime | server-only | required |
+| `SUPABASE_SERVICE_ROLE_KEY` | Local privileged key for trusted server operations | runtime | server-only | required for admin/provisioning functions |
+| `APP_MODE` | Real-data versus demo behavior | runtime | server-only | required; use `production` |
+| `DEMO_MODE` | Legacy demo-mode alias | runtime | server-only | optional; `false` locally |
+| `HOST` / `PORT` | Local application bind address and port | runtime | server-only | required locally |
+| `APP_ORIGIN` | OAuth/CORS application origin | runtime | server-only | required locally |
+| `LOG_LEVEL` | Server logging verbosity | runtime | server-only | optional |
+| `LOCAL_DEV_EMAIL` / `LOCAL_DEV_PASSWORD` | Disposable local smoke account | verification only | server/local tooling | optional |
+
+Provider credentials such as `LOVABLE_API_KEY`, WhatsApp, Meta, Stripe, SMTP,
+and AI-provider keys are optional for core local development. Missing provider
+credentials disable only those integrations.
+
+The service-role key has no `VITE_` prefix. The baseline build scanned 1,047
+public bundle files and confirmed that its value was absent.
+
+## Start Local Infrastructure
+
+```powershell
+npm run dev:infra:start
+```
+
+Inspect sanitized service status when needed:
+
+```powershell
+npm exec -- supabase status
+```
+
+Do not link this directory to a hosted Supabase project for local development.
+
+## Apply Database Migrations
+
+`npm run dev:infra:start` applies pending migrations on the first start. To
+prove the complete chain against an empty local database:
+
+```powershell
+npm run dev:reset
+```
+
+This resets only the database configured in `supabase/config.toml`, reapplies
+all 290 migrations, applies `supabase/seed.sql`, regenerates `.env.local`, and
+runs the service verification.
+
+During Product v1.0.0 normalization, documented vendor corrections are listed
+in `docs/engineering/BASELINE-FIXES.md`. After baseline freeze, existing
+migrations are immutable.
+
+## Seed Development Data
+
+`supabase/seed.sql` creates the eight private Storage buckets required by the
+application. It intentionally contains no product/demo/customer records.
+
+`npm run dev:verify` creates two disposable local Auth users to validate signup,
+workspace provisioning, and cross-tenant RLS. It also uploads, downloads, and
+removes a temporary Storage object.
+
+## Start Application
+
+```powershell
+npm run dev
+```
+
+The application binds deterministically to `http://127.0.0.1:8080`.
+
+## URLs
+
+- Application: `http://127.0.0.1:8080`
+- Authentication: `http://127.0.0.1:8080/auth`
+- Health: `http://127.0.0.1:8080/api/public/health`
+- Readiness: `http://127.0.0.1:8080/api/public/health/ready`
+- Supabase API: `http://127.0.0.1:56321`
+- REST API: `http://127.0.0.1:56321/rest/v1`
+- Auth API: `http://127.0.0.1:56321/auth/v1`
+- Storage API: `http://127.0.0.1:56321/storage/v1`
+- Realtime: `ws://127.0.0.1:56321/realtime/v1`
+- PostgreSQL: `127.0.0.1:56322`
+- Supabase Studio: `http://127.0.0.1:56323`
+- Mailpit: `http://127.0.0.1:56324`
+
+Use `npm exec -- supabase status` to obtain current local keys and database
+connection details. Do not copy those values into committed documentation.
+
+## Stop Environment
+
+Stop the application with `Ctrl+C` in its terminal, then stop Supabase while
+preserving local database state:
+
+```powershell
+npm run dev:infra:stop
+```
+
+## Reset Local Database
+
+The following command is destructive to local development data only:
+
+```powershell
+npm run dev:reset
+```
+
+Confirm that `supabase/config.toml` still points to `vmoaimartech-local` and the
+local `5632x` ports before resetting. Never use this workflow against a linked
+or hosted project.
+
+## Common Problems
+
+### Standard Supabase ports are occupied
+
+This repository intentionally uses `56321` through `56324`. Do not stop other
+projects merely to reclaim the default `54321` through `54324` ports.
+
+### npm cannot resolve `xlsx@0.20.3`
+
+SheetJS 0.20.3 is distributed from `cdn.sheetjs.com`, not the public npm
+registry. The repository manifest and lockfile already contain the intended
+official tarball URL. Do not replace the library or upgrade it as a workaround.
+
+### Supabase CLI user-state or telemetry write is blocked
+
+The CLI is project-local. Run it from a normal developer terminal. Coding
+agents should make one scoped attempt, then follow the external-environment
+failure policy in `AGENTS.md`; do not enter machine-repair loops.
+
+### Vite route warnings
+
+Some inherited `src/routes/**/server/*.server.ts` helpers are discovered as
+non-route files. They are excluded from the route tree and do not prevent
+startup or build. Normalize their route-ignore naming in a separate scoped task.
+
+### Lint reports a very large formatting backlog
+
+The inherited repository currently reports 59,113 lint findings, mostly
+Prettier formatting. Do not run a repository-wide automatic fix as part of an
+unrelated feature. Establish a dedicated lint-normalization change before
+Product v1.0.0 freeze.
+
+## Verification
+
+For local services:
+
+```powershell
+npm run dev:verify
+```
+
+For the passing build/security baseline:
+
+```powershell
+npm run dev:check
+```
+
+A healthy environment has:
+
+- `npm run dev:verify` reporting all six checks as `true`;
+- health returning HTTP 200 with `status: ok`;
+- readiness returning HTTP 200 with `status: ready` and database `ok: true`;
+- `npm run typecheck` passing;
+- `npm run build` passing;
+- local security scan and policy assertions passing;
+- no service-role value in `.output/public`.
+
+## Rollback
+
+Local infrastructure can be stopped with `npm run dev:infra:stop`. The ignored
+`.env.local` can be deleted and regenerated with `npm run dev:env`. Repository
+setup changes can be reviewed or reverted through Git without affecting any
+production database or credentials.

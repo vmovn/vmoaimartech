@@ -9,6 +9,8 @@ Primary product direction: Vietnam-first business operating platform for SOHO, s
 
 ## Mandatory preflight
 
+Before local development, read `docs/engineering/LOCAL-DEVELOPMENT.md`.
+
 Before any substantial code change:
 
 1. Read `PRODUCT.md`.
@@ -72,6 +74,46 @@ Do not edit first and understand later.
 - Tier 1: isolated UI/local logic. Inspect → plan → implement → targeted checks.
 - Tier 2: database, RLS, auth, billing, identity, messaging core, workflow runtime, external integrations. Produce impact map before implementation; run security/regression checks.
 - Tier 3: destructive migrations, production data mutation, auth/tenant model redesign, secret rotation, irreversible deployment changes. STOP and request explicit approval.
+
+## Database lifecycle states
+
+### PRE-BASELINE / PRODUCT NORMALIZATION
+
+Before Product v1.0.0 is frozen or its migration history reaches production,
+vendor migrations may receive minimal in-place corrections only when a defect
+is proven, unambiguous, required for deterministic clean bootstrap, and has no
+production data impact. The correction must preserve the vendor state in Git
+history and be documented in `docs/engineering/BASELINE-FIXES.md`.
+
+### POST-BASELINE / PRODUCT DEVELOPMENT
+
+Once Product v1.0.0 is frozen or a migration has reached production:
+
+- existing migrations are immutable;
+- never modify an applied migration;
+- all database changes use new additive migrations;
+- destructive operations require explicit review.
+
+## Engineering autonomy
+
+Proceed autonomously when a change is local, reversible, deterministic,
+unambiguous and testable.
+
+Stop only for semantic ambiguity, security ambiguity, destructive or data-loss
+risk, production impact, external credentials/accounts, or business/product
+decisions requiring human judgment. Do not ask for approval for routine,
+reversible engineering work.
+
+### External environment failure policy
+
+When Docker, WSL, OS permissions, external registries, CLI telemetry/cache,
+networking, or another environment outside application source fails:
+
+- diagnose once;
+- attempt at most one safe recovery;
+- if it still fails, stop and report the exact blocker;
+- never enter repeated infrastructure-repair loops;
+- never use factory reset or destructive repair without explicit human approval.
 
 ## Required task workflow
 
