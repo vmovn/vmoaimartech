@@ -1,0 +1,6 @@
+---
+description: Vietnamese localization
+globs: ["src/**/*", "docs/**/*"]
+alwaysApply: false
+---
+For localization tasks read `GLOSSARY.md`, Vietnam context and localization skill. Translate display semantics only; keep internal contracts unchanged.

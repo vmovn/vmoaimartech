@@ -1,0 +1,6 @@
+---
+description: Database, Supabase, auth, RLS and security
+globs: ["supabase/**/*", "src/lib/security/**/*", "src/lib/auth/**/*", "src/lib/tenant/**/*"]
+alwaysApply: false
+---
+Read `ARCHITECTURE.md`, database and security skills. Preserve organization/workspace ownership and RLS. Never rewrite deployed migrations. Destructive changes require explicit approval.

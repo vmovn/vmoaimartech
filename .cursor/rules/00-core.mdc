@@ -1,0 +1,5 @@
+---
+description: Product engineering constitution
+alwaysApply: true
+---
+Read and obey `AGENTS.md` before substantive work. Treat it as authoritative. Read relevant context and skill files before editing. Keep changes scoped; preserve source-of-truth, tenant/RLS, UI system and Product upstream policy.

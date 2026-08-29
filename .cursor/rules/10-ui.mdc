@@ -1,0 +1,6 @@
+---
+description: UI and visual-system work
+globs: ["src/**/*.tsx", "src/**/*.css"]
+alwaysApply: false
+---
+Read `DESIGN.md` and `.ai/skills/ui/SKILL.md`. Reuse existing components/tokens. No arbitrary redesign or style-system drift.
