@@ -114,9 +114,9 @@ This resets only the database configured in `supabase/config.toml`, reapplies
 all 290 migrations, applies `supabase/seed.sql`, regenerates `.env.local`, and
 runs the service verification.
 
-During Product v1.0.0 normalization, documented vendor corrections are listed
-in `docs/engineering/BASELINE-FIXES.md`. After baseline freeze, existing
-migrations are immutable.
+Product v1.0.0 baseline corrections are preserved as history in
+`docs/engineering/BASELINE-FIXES.md`. The baseline is frozen: all existing 290
+migrations are immutable and every future database change uses a new migration.
 
 ## Seed Development Data
 
@@ -201,10 +201,11 @@ startup or build. Normalize their route-ignore naming in a separate scoped task.
 
 ### Lint reports a very large formatting backlog
 
-The inherited repository currently reports 59,113 lint findings, mostly
-Prettier formatting. Do not run a repository-wide automatic fix as part of an
-unrelated feature. Establish a dedicated lint-normalization change before
-Product v1.0.0 freeze.
+The inherited repository reports approximately 59,113 lint findings, mostly
+formatting. This vendor debt is baselined by
+`docs/adr/0004-inherited-vendor-lint-debt-baseline.md` and is not a freeze
+blocker. Do not run a repository-wide automatic fix. Keep new work clean with
+checks scoped to changed files/modules and reduce inherited debt incrementally.
 
 ## Verification
 

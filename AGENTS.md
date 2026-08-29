@@ -77,9 +77,13 @@ Do not edit first and understand later.
 
 ## Database lifecycle states
 
+**Active state: POST-BASELINE / PRODUCT DEVELOPMENT.** Product v1.0.0 is frozen.
+The 290 baseline migrations are immutable from this point forward.
+
 ### PRE-BASELINE / PRODUCT NORMALIZATION
 
-Before Product v1.0.0 is frozen or its migration history reaches production,
+This state is historical and no longer active. Before Product v1.0.0 was
+frozen or its migration history reached production,
 vendor migrations may receive minimal in-place corrections only when a defect
 is proven, unambiguous, required for deterministic clean bootstrap, and has no
 production data impact. The correction must preserve the vendor state in Git
@@ -87,11 +91,13 @@ history and be documented in `docs/engineering/BASELINE-FIXES.md`.
 
 ### POST-BASELINE / PRODUCT DEVELOPMENT
 
-Once Product v1.0.0 is frozen or a migration has reached production:
+This is the active state. From the Product v1.0.0 freeze forward:
 
-- existing migrations are immutable;
-- never modify an applied migration;
+- all 290 baseline migrations are immutable;
+- never modify a baseline or applied migration;
 - all database changes use new additive migrations;
+- baseline vendor fixes in `docs/engineering/BASELINE-FIXES.md` are historical
+  records only and do not authorize further in-place edits;
 - destructive operations require explicit review.
 
 ## Engineering autonomy
@@ -163,6 +169,11 @@ At minimum inspect `package.json` and run the narrowest relevant existing checks
 - `npm run security:scan`
 - `npm run security:policies`
 - design audits such as branding/buttons/fonts/menu/accent where relevant.
+
+Repository-wide lint debt inherited from Swiffer 4.4.6 is baselined by
+`docs/adr/0004-inherited-vendor-lint-debt-baseline.md`. New work must not add
+lint debt; prefer lint/checks scoped to changed files or modules. Never run a
+mass format or mass auto-fix as unrelated cleanup.
 
 Do not claim tests passed if test files are absent or commands were not run.
 

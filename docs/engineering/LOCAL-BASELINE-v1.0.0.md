@@ -4,8 +4,8 @@
 
 - Date: 2026-08-29
 - Upstream technical source: Swiffer 4.4.6
-- Product baseline target: v1.0.0
-- Baseline phase: pre-freeze normalization
+- Product baseline: v1.0.0
+- Baseline phase: FROZEN / READY
 - Application: TanStack Start, React 19, Vite 8
 - Application URL: `http://127.0.0.1:8080`
 
@@ -93,7 +93,9 @@ is confined to ignored `.env.local` and server output.
 - security policy assertions: PASS, 6/6
 - Realtime RLS audit: PASS
 - public-bundle secret scan: PASS across 1,047 files
-- `npm run lint`: FAIL, 59,113 inherited findings (58,939 errors and 174 warnings)
+- `npm run lint`: inherited inventory of approximately 59,113 findings
+  (58,939 errors and 174 warnings), accepted as non-blocking vendor debt by
+  ADR-0004
 
 ## Smoke-Test Data
 
@@ -101,19 +103,39 @@ The ignored `.env.local` contains a disposable local account used by
 `npm run dev:verify`. No customer, production or provider data is included.
 The application provisioned organization and workspace context on first login.
 
+## Organization Role Review
+
+The first organization creator is expected to be an owner, not a member:
+
+- `public.ensure_personal_organization` inserts the new organization with
+  `owner_id = _user_id`.
+- The same function explicitly inserts `organization_members.role = 'owner'`.
+- It also creates or repairs the personal workspace with an active `owner`
+  workspace membership.
+- Organization update, membership management, billing and ownership-transfer
+  paths consistently reserve privileged operations for `owner`/`admin` roles.
+
+The `member` label observed during browser smoke testing came from presentation
+fallback, not stored authorization state: `toSwitcherOrg()` does not copy role
+data, and `OrganizationSwitcher` renders `active.role ?? "member"`.
+Authorization hooks query `organization_members` separately. This is a
+non-blocking inherited display inconsistency, not a provisioning, tenant
+isolation or privilege-escalation blocker. Product behavior was not changed as
+part of freeze preparation.
+
 ## Known Warnings
 
-- Repository-wide lint/formatting is not normalized and remains a Product
-  v1.0.0 freeze gate.
+- Repository-wide lint/formatting remains inherited technical debt accepted by
+  ADR-0004; it is not an active freeze gate.
 - Vite reports inherited non-route helper files under `src/routes/**/server`.
 - Several server functions use the deprecated `inputValidator()` API.
 - The build reports chunks larger than 500 kB.
 - Rapid automated navigation aborted some in-flight browser Auth lookups and
   produced transient `Failed to fetch` messages; stable pages, direct service
   checks and readiness remained healthy with no continuous failures.
-- The disposable user's new organization membership rendered as `member`, so
-  General Settings was read-only. Tenant context itself loaded correctly; role
-  semantics should be reviewed separately before freeze.
+- The organization switcher can display fallback role `member` because its
+  organization mapper omits role data. The database provisions the creator as
+  `owner`; the display inconsistency is non-blocking inherited debt.
 
 ## Files Modified or Created
 
@@ -130,13 +152,18 @@ The application provisioned organization and workspace context on first login.
 - `docs/engineering/BASELINE-FIXES.md`
 - `docs/engineering/LOCAL-DEVELOPMENT.md`
 - `docs/engineering/LOCAL-BASELINE-v1.0.0.md`
+- `docs/adr/0004-inherited-vendor-lint-debt-baseline.md`
 
 `.env.local` and local runtime/build logs are ignored machine state and are not
 part of the committed baseline.
 
 ## Current Status
 
+**Product v1.0.0 baseline status: FROZEN / READY.**
+
 The localhost development environment is operational, isolated from production,
-and ready for daily AI-assisted development. Product v1.0.0 should not be frozen
-until the inherited lint gate is normalized or deliberately baselined through a
-separate reviewed decision. No release tag was created.
+and ready for daily AI-assisted development. The inherited lint inventory is
+accepted under ADR-0004 and is not a freeze blocker. The organization creator is
+provisioned as owner; the observed member label is a non-blocking presentation
+fallback. The active database lifecycle state is POST-BASELINE / PRODUCT
+DEVELOPMENT. No release tag was created.

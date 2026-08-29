@@ -2,8 +2,9 @@
 
 This ledger records minimal corrections made while normalizing the unshipped
 Swiffer vendor migration history into the deterministic Product v1.0.0
-baseline. After the Product v1.0.0 baseline is frozen, existing migrations are
-immutable and future database changes must use new additive migrations.
+baseline. Product v1.0.0 is now frozen. These corrections are historical;
+all 290 baseline migrations are immutable and future database changes must use
+new additive migrations.
 
 ## Swiffer 4.4.6 — vCard view-policy column mismatch
 
