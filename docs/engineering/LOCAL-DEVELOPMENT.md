@@ -58,6 +58,26 @@ npm run dev:verify
 `npm ci` downloads SheetJS 0.20.3 from its official CDN URL recorded in the
 lockfile; public npm does not publish that version.
 
+## Windows One-Click Start
+
+1. Double-click `START-LOCAL.cmd`.
+2. Wait for Docker and the local services; the browser opens when the app is ready.
+3. Develop while the **VMO AIMarTech App** terminal remains open.
+4. Double-click `STOP-LOCAL.cmd` when finished.
+
+The launcher uses repository-relative paths and `npm.cmd`, so it does not invoke
+PowerShell's blocked `npm.ps1` shim or change Windows ExecutionPolicy. If Docker
+Desktop is not running, the launcher may start it normally and wait up to about
+120 seconds; it does not repair, reset, reconfigure, or stop Docker Desktop.
+
+Manual PowerShell fallback:
+
+```powershell
+npm.cmd run dev:infra:start
+npm.cmd run dev:env
+npm.cmd run dev
+```
+
 ## Environment Variables
 
 `.env.local` is generated from the running local Supabase stack and is ignored

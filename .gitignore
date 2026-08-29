@@ -21,6 +21,7 @@ dist-ssr
 .dev.vars
 supabase/.branches/
 supabase/.temp/
+.local-app-shell.pid
 
 # Editor directories and files
 .vscode/*
