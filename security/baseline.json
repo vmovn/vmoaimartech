@@ -1,0 +1,10 @@
+{
+  "generatedAt": "2026-08-10T05:54:09.460Z",
+  "accepted": {
+    "589d3a9b1aae8843": {
+      "title": "Policy \"vcard views insert\" lets anon write to vcard_views with an always-true check",
+      "severity": "critical",
+      "file": "supabase/migrations/20260728154545_c9bbcba2-9f34-41b8-aa85-9ea7c5413b13.sql"
+    }
+  }
+}

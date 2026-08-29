@@ -1,0 +1,49 @@
+{
+  "$comment": "Regression assertions derived from resolved security-scan findings. Each entry pins the exact policy/grant shape that closed a finding so it cannot silently regress. Run via `bun run security:policies`.",
+  "assertions": [
+    {
+      "id": "chatbot-webhooks-secret-not-granted",
+      "finding": "chatbot_webhooks signing secret exposed to client roles",
+      "severity": "critical",
+      "scope": "migrations",
+      "mustNotMatch": "GRANT\\s+SELECT\\s*\\([^)]*\\bsecret\\b[^)]*\\)\\s+ON\\s+public\\.chatbot_webhooks",
+      "mustMatch": "REVOKE ALL ON public\\.chatbot_webhooks FROM anon"
+    },
+    {
+      "id": "chatbot-webhooks-admin-only-select",
+      "finding": "Any workspace member could read chatbot webhook rows",
+      "severity": "high",
+      "scope": "migrations",
+      "mustMatch": "CREATE POLICY \"chatbot_webhooks_select\" ON public\\.chatbot_webhooks[\\s\\S]{0,600}?'admin'::workspace_role"
+    },
+    {
+      "id": "avatars-owner-or-comember-read",
+      "finding": "Avatar objects readable by every authenticated user",
+      "severity": "high",
+      "scope": "migrations",
+      "mustMatch": "CREATE POLICY \"Avatars are readable by owner or co-members\" ON storage\\.objects[\\s\\S]{0,900}?workspace_members"
+    },
+    {
+      "id": "avatars-permissive-policy-dropped",
+      "finding": "Permissive avatar read policy still present",
+      "severity": "high",
+      "scope": "migrations",
+      "mustMatch": "DROP POLICY IF EXISTS \"Avatars are readable by authenticated\" ON storage\\.objects"
+    },
+    {
+      "id": "social-channels-token-not-granted",
+      "finding": "social_channels OAuth access_token exposed to client roles",
+      "severity": "critical",
+      "scope": "migrations",
+      "mustNotMatch": "GRANT\\s+SELECT\\s*\\([^)]*\\baccess_token\\b[^)]*\\)\\s+ON\\s+public\\.social_channels",
+      "mustMatch": "REVOKE ALL ON public\\.social_channels FROM anon"
+    },
+    {
+      "id": "no-service-role-key-in-client-code",
+      "finding": "Service-role credentials reachable from the browser bundle",
+      "severity": "critical",
+      "scope": "src",
+      "mustNotMatch": "SUPABASE_SERVICE_ROLE_KEY"
+    }
+  ]
+}

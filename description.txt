@@ -1,0 +1,345 @@
+
+Swiffer v4.4.6 — The Ultimate WhatsApp CRM SaaS Platform (Node.js Script)
+
+=========================================================================
+
+ai chatbot, automation tool, crm software, flow builder, instagram automation, meta cloud api, nodejs script, saas platform, telegram chatbot, whatsapp api, whatsapp chatbot, whatsapp crm, whatsapp marketing, whatsapp saas, omnichannel inbox, sales pipeline, marketing automation, chatbot builder, live chat widget, appointment booking, client portal, business intelligence, saas billing
+
+
+=========================================================================
+
+<h3>IMPORTANT: Third-Party Services &amp; Usage Costs</h3>
+<p>This script integrates with several third-party services. Accounts and any associated fees are <strong>the buyer's responsibility</strong> and are <strong>NOT included</strong> in the purchase price:</p>
+<ul>
+  <li><strong>Supabase</strong> — backend, database, auth, storage (free tier available, paid plans for production usage)</li>
+  <li><strong>Stripe</strong> — card payments (per-transaction fees set by Stripe)</li>
+  <li><strong>PayPal</strong> — alternative payment provider (per-transaction fees set by PayPal)</li>
+  <li><strong>Google OAuth</strong> — social sign-in (free)</li>
+  <li><strong>Google Gemini API</strong> — AI Smart Matching &amp; content suggestions (usage-based pricing)</li>
+  <li><strong>Meta WhatsApp Cloud API</strong> — messaging fees based on destination country and conversation window</li>
+</ul>
+<p>You will need to provide your own API keys and manage all associated costs separately. Typical costs vary based on usage volume.</p>
+
+<hr/>
+
+<h1>Swiffer v4.4.6 — All-in-One Enterprise Omnichannel CRM, WhatsApp Business &amp; AI Automation SaaS Platform</h1>
+
+<p align="center">
+  <img src="https://swiffer.wrapcoders.com/marketing/hero-dashboard.jpg" alt="Swiffer Dashboard" style="max-width:100%; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.15);"/>
+</p>
+
+<p><strong>Swiffer</strong> is a production-grade, multi-tenant SaaS platform that unifies the entire customer lifecycle — WhatsApp Business Cloud API, Omnichannel Inbox across 16+ channels, AI Assistants, Sales CRM, Marketing Automation, Helpdesk with SLA, Appointment Booking, Client Portal, WhatsApp Commerce, Business Intelligence, Chatbot Builder, Live Chat Widget, Plugin Marketplace and a full public REST API — inside one blazing-fast, installable, offline-capable Progressive Web App.</p>
+
+<p>Built with <strong>React 19, TanStack Start, TanStack Router, TanStack Query, Tailwind v4, shadcn/ui and Supabase</strong>, Swiffer ships with a bulletproof Setup Wizard, environment-controlled Demo Mode, enterprise RBAC, GDPR readiness, SAML SSO, audit logs, plan-to-gateway billing, and a fully documented Node.js / Docker / cPanel deployment path. Everything you need to launch a premium SaaS business — in one clean codebase.</p>
+
+<hr/>
+
+<h3>Live Demo</h3>
+<p><strong>Demo URL:</strong> <a href="https://swiffer.wrapcoders.com" target="_blank">https://swiffer.wrapcoders.com</a></p>
+<div><strong>User:</strong> user@demo.com / User123!</div><br/>
+<div><strong>Agent:</strong> agent@demo.com / Agent123!</div><br/>
+<div><strong>Admin:</strong> admin@demo.com / Admin123!</div>
+
+<hr/>
+
+<a href="https://wa.me/+8801850348685" target="_blank">
+<img src="https://wrapcoders.com/demo_item_assets/hire-us-banner-02.png" alt="Hire Us"/> 
+</a>
+
+<hr>
+
+<h2>What’s New in v4.4.6</h2>
+<ul>
+  <li><strong>Plan Gateway Mapping</strong> — link subscription plans directly to Stripe / Paddle price IDs with environment-aware validation.</li>
+  <li><strong>Billing Webhooks</strong> — automatic subscription renewal, upgrade, downgrade and cancellation via gateway webhooks.</li>
+  <li><strong>Audit Logs</strong> — platform-wide audit trail for gateway changes, plan linkage, security events and staff actions.</li>
+  <li><strong>Gateway Health Panel</strong> — real-time webhook delivery status and one-click replay for failed deliveries.</li>
+  <li><strong>WhatsApp Template Variables</strong> — strict numbered placeholders, automatic named-to-numbered conversion, URL param mapping preview.</li>
+  <li><strong>Accessible Theme Engine</strong> — automatic contrast-safe accent colors with live WCAG preview.</li>
+  <li><strong>Live Chat to Inbox Bridge</strong> — widget sessions are mirrored into the unified Inbox with real-time updates.</li>
+  <li><strong>Security Dashboard</strong> — aggregated security issues, RLS regression scans and issue severity tracking.</li>
+</ul>
+
+<hr>
+
+<h2>Overview</h2>
+<ul>
+  <li>Enterprise multi-tenant SaaS with per-workspace isolation and RLS.</li>
+  <li>Official <strong>WhatsApp Cloud API (Meta)</strong> integration — WABA, templates, media, webhooks, reliable outbox.</li>
+  <li>Omnichannel unified inbox across <strong>16+ providers</strong> (WhatsApp, Instagram, Messenger, Telegram, Email, SMS, Web Chat and more).</li>
+  <li>AI Layer with multi-provider LLM support, RAG Knowledge Base (pgvector), AI Reply Assistant, Sales Assistant and Conversation Intelligence.</li>
+  <li>Full Sales CRM, Kanban pipelines, Quotes, Invoices and Commerce.</li>
+  <li>Visual Workflow Builder, Marketing Campaigns and Chatbot Builder.</li>
+  <li>Helpdesk with SLA, ticket routing and AI panels.</li>
+  <li>Installable PWA, native Expo mobile app, plugin marketplace and public REST API.</li>
+</ul>
+
+<h2>Key Features</h2>
+
+<h3>1. WhatsApp Business Cloud API</h3>
+<ul>
+  <li>Official Meta WhatsApp Cloud API integration (no unofficial libraries).</li>
+  <li>Step-by-step WhatsApp Business connection wizard and admin status diagnostics.</li>
+  <li>WABA management, phone number pool and business verification workflow.</li>
+  <li>Template management with sync, categories, drafts, multi-language support and strict numbered placeholders.</li>
+  <li>URL button validation with placeholder variables inside query strings and fragments.</li>
+  <li>Enterprise media management (images, video, audio, docs, stickers, contacts, location) using Meta Resumable Upload.</li>
+  <li>Reliable webhook processing with HMAC verification, IP allowlists, replay protection and idempotency.</li>
+  <li>Delivery outbox with retries, delivery/read receipts and status tracking.</li>
+  <li>Monitoring dashboard, error reporting and provider health checks.</li>
+</ul>
+<p align="center">
+  <img src="https://swiffer.wrapcoders.com/marketing/integrations-channels.jpg" alt="Omnichannel Integrations" style="max-width:100%; border-radius: 12px;"/>
+</p>
+
+<h3>2. Omnichannel Unified Inbox</h3>
+<ul>
+  <li>One inbox for 16+ channels through a clean provider abstraction layer.</li>
+  <li>Unified customer timeline across every touchpoint.</li>
+  <li>Realtime typing indicators, read receipts, presence and unread badges.</li>
+  <li>Assignments, teams, tags, priorities, snooze, notes and internal replies.</li>
+  <li>Global search across conversations, contacts, deals and tickets.</li>
+  <li>Keyboard shortcuts, bulk actions and mobile-optimized conversation list.</li>
+  <li>Media lightbox, background sync settings and inbound deduplication.</li>
+</ul>
+<p align="center">
+  <img src="https://swiffer.wrapcoders.com/marketing/tour-inbox.jpg" alt="Unified Inbox" style="max-width:100%; border-radius: 12px;"/>
+</p>
+
+<h3>3. AI Assistants &amp; RAG Knowledge Base</h3>
+<ul>
+  <li>Multi-provider AI Engine (OpenAI, Gemini, Anthropic and Lovable AI Gateway).</li>
+  <li>AI Reply Assistant, Smart Compose, Summaries and Sentiment.</li>
+  <li>Conversation Intelligence, lead scoring and next-best-action.</li>
+  <li>pgvector-powered RAG Knowledge Base with document ingestion and re-embedding.</li>
+  <li>AI Sales Assistant with deal-stage predictions.</li>
+  <li>AI Helpdesk panel with automated ticket triage.</li>
+</ul>
+<p align="center">
+  <img src="https://swiffer.wrapcoders.com/marketing/integrations-ai.jpg" alt="AI Integrations" style="max-width:100%; border-radius: 12px;"/>
+</p>
+
+<h3>4. Sales CRM &amp; Commerce</h3>
+<ul>
+  <li>Contacts, Companies, Deals, Quotes, Invoices and Products.</li>
+  <li>Drag-and-drop Kanban pipelines and custom fields.</li>
+  <li>Customer 360 with activity timeline, engagement metrics, notes and tasks.</li>
+  <li>Task &amp; birthday reminder engine with notifications.</li>
+  <li>WhatsApp Commerce — catalog sync, cart, orders, payment links, promotions, inventory, brands and shipping.</li>
+</ul>
+<p align="center">
+  <img src="https://swiffer.wrapcoders.com/marketing/feature-commerce.jpg" alt="WhatsApp Commerce" style="max-width:100%; border-radius: 12px;"/>
+</p>
+
+<h3>5. Marketing &amp; Workflow Automation</h3>
+<ul>
+  <li>Multi-step campaign wizard with segmentation, scheduling and A/B stats.</li>
+  <li>Scheduled / running / paused campaigns with mid-flight enqueue.</li>
+  <li>Visual No-Code Workflow Builder powered by React Flow with workspace-level security.</li>
+  <li>Triggers, delays, conditions, branches and omnichannel nodes.</li>
+  <li>Workflow history, versioning and performance dashboards.</li>
+</ul>
+<p align="center">
+  <img src="https://swiffer.wrapcoders.com/marketing/tour-automation.jpg" alt="Marketing Automation" style="max-width:100%; border-radius: 12px;"/>
+  <img src="https://swiffer.wrapcoders.com/marketing/stepper-flow.jpg" alt="Workflow Builder" style="max-width:100%; border-radius: 12px; margin-top: 12px;"/>
+</p>
+
+<h3>6. Helpdesk, Chatbots &amp; Live Chat Widget</h3>
+<ul>
+  <li>Tickets with SLA, routing, priorities and relationships.</li>
+  <li>Visual Chatbot Builder with multi-language triggers, operator handoff and skills-based routing.</li>
+  <li>Template marketplace, install/uninstall and permission diffs.</li>
+  <li>Embeddable Live Chat Widget (420×600) with unread badges, delivery states, attachments and appearance preview.</li>
+  <li>Widget analytics and install snippet generator.</li>
+</ul>
+<p align="center">
+  <img src="https://swiffer.wrapcoders.com/marketing/feature-helpdesk.jpg" alt="Helpdesk" style="max-width:100%; border-radius: 12px;"/>
+</p>
+
+<h3>7. Business Intelligence &amp; Reporting</h3>
+<ul>
+  <li>Realtime BI dashboards at <code>/bi</code>.</li>
+  <li>Sales, conversation, campaign, chatbot and omnichannel analytics.</li>
+  <li>Custom widgets and dashboard builder.</li>
+</ul>
+<p align="center">
+  <img src="https://swiffer.wrapcoders.com/marketing/feature-analytics.jpg" alt="Business Intelligence" style="max-width:100%; border-radius: 12px;"/>
+</p>
+
+<h3>8. Appointment Booking &amp; Client Portal</h3>
+<ul>
+  <li>AI scheduling assistant with availability rules.</li>
+  <li>Bookings, calendars, reminders and confirmations.</li>
+  <li>Branded Client Portal at <code>/client</code> with attachments and messaging.</li>
+</ul>
+<p align="center">
+  <img src="https://swiffer.wrapcoders.com/marketing/feature-appointments.jpg" alt="Appointment Booking" style="max-width:100%; border-radius: 12px;"/>
+</p>
+
+<h3>9. Super Admin, API Platform &amp; Plugin Marketplace</h3>
+<ul>
+  <li>Dedicated Super Admin zone (<code>/admin</code>) with collapsed app-sidebar UX.</li>
+  <li>AI Provider management, Payment Gateway management and gateway audit logs.</li>
+  <li>Developer Center with public REST API, API key scopes and documentation portal.</li>
+  <li>Extension SDK and Plugin Marketplace for third-party integrations.</li>
+</ul>
+<p align="center">
+  <img src="https://swiffer.wrapcoders.com/marketing/role-superadmin.jpg" alt="Super Admin" style="max-width:100%; border-radius: 12px;"/>
+</p>
+
+<h2>Multi-Role System</h2>
+<p align="center">
+  <img src="https://swiffer.wrapcoders.com/marketing/role-agent.jpg" alt="Agent Role" style="max-width:32%; border-radius: 8px; margin: 4px;"/>
+  <img src="https://swiffer.wrapcoders.com/marketing/role-manager.jpg" alt="Manager Role" style="max-width:32%; border-radius: 8px; margin: 4px;"/>
+  <img src="https://swiffer.wrapcoders.com/marketing/role-admin.jpg" alt="Admin Role" style="max-width:32%; border-radius: 8px; margin: 4px;"/>
+</p>
+<ul>
+  <li><strong>Super Admin</strong> — platform-wide operations, tenants, billing, branding, PWA icons, AI providers and payment gateways.</li>
+  <li><strong>Owner / Admin</strong> — full workspace control, members, roles, billing.</li>
+  <li><strong>Agent</strong> — inbox, CRM, sales, helpdesk, campaigns.</li>
+  <li><strong>Provider</strong> — restricted delivery / logistics / partner surfaces.</li>
+  <li><strong>User / Viewer</strong> — read-only or personal scope.</li>
+</ul>
+<p>All roles are stored in a dedicated <code>user_roles</code> table and enforced through a <code>has_role()</code> SECURITY DEFINER function plus strict Row Level Security — no client-side role checks, no privilege escalation.</p>
+
+<h2>Authentication System</h2>
+<ul>
+  <li>Supabase Auth with email/password and social OAuth (Google, Apple, Microsoft-ready).</li>
+  <li>Secure PasswordInput component with strength meter.</li>
+  <li>Invitation flow with role presets and email delivery.</li>
+  <li>Multi-tenant workspace switching with cache purge and realtime resubscribe.</li>
+  <li>Idle-logout, session rotation, device management and biometrics (mobile).</li>
+</ul>
+
+<h2>Role-Based Redirect System</h2>
+<ul>
+  <li>Post-login routing decided by role and workspace context.</li>
+  <li>Super Admin → <code>/admin</code>, Agent → <code>/inbox</code>, User → <code>/dashboard</code>, Provider → dedicated console.</li>
+  <li>Deep-link protection: unauthorized hash and route deep links never render protected panels — verified with end-to-end tests.</li>
+  <li>Account menu items are hidden or disabled per role in sidebar and mobile navigation.</li>
+</ul>
+
+<h2>Setup Wizard (Installation Flow)</h2>
+<ul>
+  <li>Guided first-run wizard with system validation, database checks and storage checks.</li>
+  <li>Super Admin account creation, workspace, branding and SMTP test.</li>
+  <li>Signed, single-use step tokens — secure by construction.</li>
+  <li>Setup Lock via <code>SETUP_LOCKED=true</code> — the wizard cannot re-run without manual unlock.</li>
+</ul>
+
+<h2>PWA System — Installable, Offline, Admin-Controlled Branding</h2>
+<ul>
+  <li>Installable Progressive Web App with Add to Home Screen on iOS and Android.</li>
+  <li>Optional offline app-shell with network-first HTML and cache-first hashed assets.</li>
+  <li>Admin-controlled PWA icons, splash, theme color and name — no code edits required.</li>
+  <li>Drag-and-drop logo, favicon and PWA icon uploads with live preview.</li>
+  <li>Manifest, Apple touch icons, maskable icons and favicon set out of the box.</li>
+  <li>Safe registration guards for editor previews and iframes; kill-switch cleanup worker for stale installs.</li>
+</ul>
+
+<h2>Supabase Integration</h2>
+<ul>
+  <li><strong>Auth</strong> — email/password, OAuth, SAML SSO-ready, session cookies via <code>@supabase/ssr</code>.</li>
+  <li><strong>Database</strong> — Postgres with typed client, migrations and typed schema generation.</li>
+  <li><strong>Row Level Security (RLS)</strong> — enabled on every user-data table with policies scoped to <code>auth.uid()</code> and workspace isolation.</li>
+  <li><strong>Storage</strong> — avatars, attachments, media, catalog, branding and PWA icons via Supabase Storage.</li>
+  <li><strong>Realtime</strong> — inbox, notifications, badges, presence, workflows and BI with burst deduplication and auto-reconnection.</li>
+  <li><strong>Server Functions</strong> — TanStack <code>createServerFn</code> for app-internal RPC, public server routes for webhooks.</li>
+  <li><strong>pgvector</strong> — powering the RAG Knowledge Base.</li>
+</ul>
+
+<h2>Demo / Test Mode (.env Controlled Quick Login)</h2>
+<ul>
+  <li><code>DEMO_MODE=true</code> — quick login buttons, visible demo credentials and instant sign-in.</li>
+  <li><code>DEMO_MODE=false</code> — all demo UI is removed at build time; production-safe auth only.</li>
+  <li>Perfect for sales demos, staging environments and CodeCanyon buyer previews without leaking credentials in production.</li>
+</ul>
+
+<h2>Responsive Navigation System</h2>
+<ul>
+  <li>Desktop — full app sidebar with grouped nav (Inbox, CRM, Sales, Marketing, Helpdesk, Commerce, Admin, Account).</li>
+  <li>Tablet — collapsible mini sidebar, floating triggers, no auto-open side panels.</li>
+  <li>Mobile — bottom nav, hamburger drawer, safe-area aware, conversation-first layout.</li>
+  <li>Nested dropdowns for second-level menus with accurate active-state matching.</li>
+  <li>Admin zone auto-collapses the main sidebar and restores it on exit.</li>
+</ul>
+
+<h2>Documentation System</h2>
+<ul>
+  <li>Built-in documentation portal at <code>/docs</code> with sidebar, search, copy-to-clipboard and syntax highlighting.</li>
+  <li>Full sections: Introduction, Installation, Build &amp; Deployment (Node.js, PM2, systemd, Nginx, cPanel, Docker), Project Structure, Configuration, Features, Demo Mode, Setup Wizard, Changelog, Troubleshooting and FAQ.</li>
+  <li>Changelog with semantic versioning — <strong>current release: v4.4.6</strong>.</li>
+  <li>PDF release notes download button for v4.4.6.</li>
+  <li>Environment variable reference table and deployment troubleshooting guide.</li>
+</ul>
+
+<h2>Security Features</h2>
+<p align="center">
+  <img src="https://swiffer.wrapcoders.com/marketing/security-rls.jpg" alt="RLS Security" style="max-width:30%; border-radius: 8px; margin: 4px;"/>
+  <img src="https://swiffer.wrapcoders.com/marketing/security-2fa.jpg" alt="2FA Security" style="max-width:30%; border-radius: 8px; margin: 4px;"/>
+  <img src="https://swiffer.wrapcoders.com/marketing/security-gdpr.jpg" alt="GDPR" style="max-width:30%; border-radius: 8px; margin: 4px;"/>
+</p>
+<ul>
+  <li>Row Level Security on every table with owner-scoped and workspace-scoped policies.</li>
+  <li>Server-side role enforcement via <code>has_role()</code> SECURITY DEFINER.</li>
+  <li>HMAC-verified webhooks (WhatsApp, chatbot lifecycle, payment providers).</li>
+  <li>IP allowlists, signed setup tokens, API key scopes and rate limiting.</li>
+  <li>GDPR readiness — data export, deletion and retention.</li>
+  <li>Audit logs, cross-tenant access prevention, security dashboard and org-switch stress-tested.</li>
+  <li>Idle-logout, secure cookies, CSRF-safe server functions and column-level grants for sensitive tokens.</li>
+</ul>
+
+<h2>Performance Optimization</h2>
+<ul>
+  <li>SSR + selective prerender via TanStack Start.</li>
+  <li>TanStack Query with loader ensureQueryData + useSuspenseQuery pattern.</li>
+  <li>Route-level code splitting, lazy images and virtualized lists.</li>
+  <li>Realtime patched via RPC (<code>get_conversation_counts</code>) to bypass PostgREST schema cache thrash.</li>
+  <li>Bundled, edge-friendly server runtime with zero cold-start module resolution.</li>
+</ul>
+
+<h2>Billing &amp; Subscriptions</h2>
+<ul>
+  <li>Subscription plan management with trial, active, past-due and cancelled states.</li>
+  <li>Plan-to-gateway price mapping for Stripe and Paddle.</li>
+  <li>Upgrade / downgrade wizard with checkout and entitlement refresh.</li>
+  <li>Automatic status updates via verified gateway webhooks.</li>
+  <li>Workspace billing settings with invoice and subscription history.</li>
+</ul>
+<p align="center">
+  <img src="https://swiffer.wrapcoders.com/marketing/why-after.jpg" alt="Swiffer After" style="max-width:100%; border-radius: 12px;"/>
+</p>
+
+<h2>Deployment Guide (Summary)</h2>
+<ul>
+  <li><strong>Node.js</strong> — <code>DEPLOY_TARGET=node bun run build</code> then <code>node app.cjs</code>. PM2 &amp; systemd units included.</li>
+  <li><strong>Nginx</strong> reverse proxy with WebSocket upgrade and TLS.</li>
+  <li><strong>cPanel</strong> — Setup Node.js App, startup file <code>app.cjs</code>, Node 20+.</li>
+  <li><strong>Docker</strong> — <code>docker compose up -d</code> with dev / staging / production compose files.</li>
+  <li><strong>Cloudflare Workers</strong> — default TanStack Start target.</li>
+</ul>
+
+<h2>Who It’s For</h2>
+<ul>
+  <li>SaaS founders launching a WhatsApp / Omnichannel CRM product.</li>
+  <li>Agencies reselling a white-label customer-engagement platform.</li>
+  <li>Enterprises consolidating sales, support and marketing into one stack.</li>
+  <li>Developers who want a modern React 19 + Supabase codebase they can extend via plugins.</li>
+  <li>Anyone replacing fragmented tools with one clean, documented, production-ready system.</li>
+</ul>
+
+<h2>What You Get</h2>
+<ul>
+  <li>Full source code (frontend + server functions + migrations).</li>
+  <li>Native Expo mobile app scaffold.</li>
+  <li>Docker, Nginx and systemd deployment assets.</li>
+  <li>Comprehensive <code>/docs</code> portal (v4.4.6) with changelog and PDF export.</li>
+  <li>Extension SDK and plugin templates.</li>
+  <li>Regular updates and buyer support.</li>
+</ul>
+
+<p align="center">
+  <img src="https://swiffer.wrapcoders.com/marketing/tour-growth.jpg" alt="Growth Tools" style="max-width:100%; border-radius: 12px;"/>
+</p>
+
+<p><strong>Swiffer v4.4.6</strong> — Ship a premium, multi-tenant SaaS in days, not months.</p>

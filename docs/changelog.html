@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Swiffer — Changelog v4.4.6</title>
+<meta name="description" content="Release history for Swiffer — omnichannel inbox, WhatsApp templates, CRM, automation and security updates across every version." />
+<link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+<a class="skip" href="#content">Skip to content</a>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="logo">S</span>
+    <div>
+      <div class="brand-name">Swiffer Docs</div>
+      <div class="brand-ver">v4.4.6 · Changelog</div>
+    </div>
+  </div>
+  <div class="topbar-actions">
+    <button id="themeBtn" class="ghost" aria-label="Toggle theme">🌓</button>
+  </div>
+</header>
+
+<div class="layout">
+  <aside class="sidebar" aria-label="Documentation pages">
+    <div class="nav-group">
+      <h4>Documentation</h4>
+      <ul>
+        <li><a href="./index.html">Documentation</a></li>
+        <li><a href="./changelog.html">Changelog</a></li>
+        <li><a href="./status.html">System Status</a></li>
+        <li><a href="./support.html">Support</a></li>
+      </ul>
+    </div>
+  </aside>
+
+  <main class="content" id="content">
+    <section id="changelog">
+      <h1>Changelog <span class="badge">v4.4.6</span></h1>
+      <p class="lead">Every notable change to Swiffer, newest first.</p>
+      <p><a class="btn" href="/api/public/changelog.pdf" download>&#8681; Download v4.4.6 release notes (PDF)</a></p>
+
+
+      <h3>Version 4.4.6 <span class="badge success">Current</span></h3>
+      <ul>
+        <li><strong>Security &amp; RLS hardening:</strong> fixed a PostgREST filter-injection path, restricted <code>billing_documents</code> deletes, locked down <code>public.settings</code>, and tightened policies on <code>payment_methods</code>, <code>billing_document_templates</code>, and <code>workspace_invitations</code> so invite tokens are readable only by an admin or the invitee.</li>
+        <li><code>SECURITY DEFINER</code> functions audited and pinned to a fixed <code>search_path</code>, licensing logic isolated, and administrative functions refactored to verify the caller before doing privileged work.</li>
+        <li>Rate-limiting restored for <code>vcard_views</code>, social channel tokens moved behind column-level grants, and an XSS sink in the public footer removed.</li>
+        <li>New RLS regression suites: a DB-free static migration policy guard plus a live per-role harness that mints ephemeral users for every organization and workspace role, covering insert/update/delete on billing templates, invite-token privacy, and cross-tenant denial for every role.</li>
+        <li>Automated security scans wired into CI so new findings block merges.</li>
+        <li><strong>Developer Center RBAC:</strong> navigation entries and sensitive actions are hidden for users without the required organization role — not just blocked by route guards — with <code>requireOrgRole</code> loader guards and integration tests asserting 403 behaviour.</li>
+        <li>The 403 page now names the missing organization role and links to team &amp; roles so users can request access.</li>
+        <li>In-app organization switcher for the Developer Center and org-scoped API key management with selectable scopes.</li>
+        <li><strong>WhatsApp Forms (Meta Flows)</strong> end to end: publishing, a composer picker, and <code>nfm_reply</code> ingestion, plus centralized WhatsApp Catalog logic.</li>
+        <li>Friendly error messages when publishing a form or sending from the composer fails, translating raw Meta and backend errors into actionable guidance.</li>
+        <li>Organization settings load reactively, Super Admin brand leaks fixed, Billing portal empty states corrected, and Developer Center / Booking overview crashes resolved.</li>
+        <li>Faster builds: incremental TypeScript compilation and query typing fixes cut warm typechecks to seconds.</li>
+      </ul>
+
+      <h3>Version 4.2.2</h3>
+      <ul>
+        <li>The product is now Swiffer end to end — app UI, documentation portal, changelog, deployment manifests, SDK/CLI package names, and stored marketplace copy — with browser storage keys migrated automatically so active organization, workspace, and preferences survive the rename.</li>
+        <li>Fixed outbound messages stalling in “queued”: composite WhatsApp thread keys now resolve to the correct recipient, with automatic retry for messages stuck longer than 20 seconds.</li>
+        <li>Unsupported WhatsApp media types (WebP images, WebM audio) are delivered as documents instead of failing with a media upload error; voice notes record as OGG/Opus.</li>
+        <li>Attachments and downloads work across the app — outbound media creates attachment records visible in the conversation, media lightbox, and CRM profile, with blob-based downloads plus an explicit error state and retry.</li>
+        <li>Inbox sync status consolidated into a single info popover showing last sync time, duration, item counts, and recent runs.</li>
+        <li>Sidebar menus behave as an accordion: one section open at a time, state persisted across navigation, with smooth collapse and expand animations.</li>
+        <li>Automated security scanning in CI, plus audited agent, user, and RLS coverage across the platform.</li>
+      </ul>
+
+      <h3>Version 4.0.0</h3>
+      <ul>
+        <li>Subscription plans are now fully linked to payment gateways: per-plan price/product mapping, workspace-level overrides, environment-aware resolution, and an admin "verify mappings" action that syncs live from the gateway API.</li>
+        <li>Billing webhooks normalize Stripe and Paddle events into a single router that keeps subscription status, renewals, and cancellations in sync automatically, with signature verification and a replay tool for failed deliveries.</li>
+        <li>Full upgrade/downgrade flow — plan change wizard, checkout hand-off, entitlement refresh on return, and a billing settings page with invoices and subscription history.</li>
+        <li>Redesigned marketing site: new landing page, live pricing driven by real plans, monthly/yearly toggle, plan comparison table, current-plan badges, and smooth in-page scrolling.</li>
+        <li>WhatsApp templates enforce strictly numbered placeholders ({{1}}, {{2}}); named variables are auto-converted on import with a field-by-field preview, plus URL button query/fragment parameter mapping.</li>
+        <li>Version 4.0.0 consolidates the 3.9.x billing and platform work into the first fully self-serve release: sign up, pick a plan, pay, and get entitlements without admin involvement.</li>
+      </ul>
+
+
+      <h3>Version 3.9.0</h3>
+      <ul>
+        <li>Super Admin consoles for AI providers and payment gateways, including credential storage with column-level protection, connection tests, and a gateway health widget.</li>
+        <li>Platform audit logging for every gateway and plan-linkage change, plus a webhook delivery health panel with per-event status.</li>
+        <li>Plan &rarr; gateway price mapping (<code>plan_gateway_prices</code>) with workspace-level overrides, environment-aware resolution, and server-side conflict detection for duplicate mappings.</li>
+        <li>Localization rebuilt for 100+ languages with full RTL support and generated locale data.</li>
+        <li>Platform Settings: General, Branding, Maintenance mode, and feature flags now apply globally at runtime.</li>
+        <li>Drag-and-drop uploads for logo, favicon, and PWA icons backed by a private branding bucket with a streaming public endpoint.</li>
+        <li>Accessible accent-colour engine — contrast is measured and adjusted instead of blocking the save.</li>
+      </ul>
+
+      <h3>Version 3.8.9</h3>
+      <ul>
+        <li>WhatsApp templates can be picked, previewed, and sent directly from the Inbox, with markdown-accurate bubble previews and manual Meta sync.</li>
+        <li>Template parameter editor with auto-suggested values from the contact/CRM record, reusable saved presets, and strict inline validation that blocks invalid sends.</li>
+        <li>Friendly Meta delivery error mapping (including #131030 recipient-not-allowed) with retry suppression for unrecoverable failures.</li>
+        <li>Meta App settings screen for App ID/Secret with live connection verification, plus a Facebook Pages manager showing Messenger capability status and safe disconnect/reconnect.</li>
+        <li>Multi-bot Telegram support — several bots per workspace, each as an independent Inbox account with its own webhook and outbound token.</li>
+        <li>Unified Inbox fixes: correct contact/conversation mapping for Telegram ingest, webhook idempotency, and a double-increment unread-count bug removed (DB trigger now owns unread state).</li>
+        <li>Realtime outbound updates and monotonic delivery-status guard so “read” can never regress to “sent” on out-of-order receipts.</li>
+        <li>Live Chat widget: unified realtime status line, Supabase broadcast updates, required pre-chat fields, and fixed agent handoff/assignment.</li>
+        <li>Security: tightened RLS across API keys, OAuth clients, webhooks, meeting credentials, and WhatsApp catalog; template RBAC with full audit logging; extensions moved out of <code>public</code>; CI blocks merges on new scan findings.</li>
+        <li>UI consistency: standardized <code>h-8 w-8</code> icon buttons app-wide and default accent locked to <code>#D81C20</code>.</li>
+      </ul>
+
+      <h3>Version 3.8.8</h3>
+      <ul>
+        <li>App-wide realtime with burst deduplication, coalesced query invalidation, and exponential-backoff reconnection.</li>
+        <li>Inbox sync settings with background refetch, and a media lightbox for images, video, and documents.</li>
+        <li>CRM contact identity and cache keys unified so profile edits propagate everywhere instantly.</li>
+        <li>E.164 phone validation for WhatsApp template sends and template version history.</li>
+      </ul>
+
+      <h3>Version 3.8.7</h3>
+      <ul>
+        <li>Conversation transcript export and cross-platform typing indicators.</li>
+        <li>Agent notifications for assignment, handoff, and SLA breaches.</li>
+        <li>Flow Builder workspace security — loader-level access guards with live revocation and no data reads on denied opens.</li>
+        <li>TypeScript build performance work; typecheck time reduced from timeout to roughly 35 s.</li>
+      </ul>
+
+      <h3>Version 3.8.6</h3>
+      <ul>
+        <li>Email and SMS channel accounts added to the omnichannel model.</li>
+        <li>Thread deduplication and hardened conversation merging to stop duplicate chats.</li>
+        <li>Live Chat widget requires contact details before starting, with fixed media rendering.</li>
+        <li>RLS corrections for contact re-match jobs, inbox agent assignment, and mobile AI endpoints.</li>
+        <li>Security CI gate blocking merges on new scan findings; database extensions moved to an <code>extensions</code> schema.</li>
+      </ul>
+
+      <h3>Version 3.4.6</h3>
+      <ul>
+        <li>Production-ready Setup Wizard (6 steps) with server-side lock and route guards.</li>
+        <li>Centralized Environment Mode System (Demo vs Production) with <code>demoWriteGuard</code>.</li>
+        <li>Enterprise PWA with dynamic manifest, custom service worker, and admin-controlled icons.</li>
+        <li>Responsive navigation — full sidebar &gt; 1200 px, mini rail 768–1200 px, drawer &lt; 768 px.</li>
+        <li>Security hardening — XSS remediation, CSP headers, HIBP password check, RLS enforcement.</li>
+        <li>Auth listener filtered — no more hourly router thrashing on <code>TOKEN_REFRESHED</code>.</li>
+        <li>Overhauled documentation portal with sidebar nav, search, and syntax highlighting.</li>
+      </ul>
+
+      <h3>Version 3.4.0</h3>
+      <ul>
+        <li>WhatsApp Cloud API provider abstraction, webhook processing, and template sync.</li>
+        <li>AI Chatbot Builder, Live Chat Widget, and Helpdesk module.</li>
+        <li>Stripe billing, SaaS plan management, and revenue snapshots.</li>
+      </ul>
+
+      <h3>Version 3.3.3</h3>
+      <ul>
+        <li>Project Documentation System v1.</li>
+        <li>Node.js 22 deployment support for cPanel/LiteSpeed.</li>
+        <li>Swapped <code>xlsx</code> for SheetJS CDN (CVE mitigation).</li>
+      </ul>
+    </section>
+
+    <footer class="footer">
+      <div>© 2026 Swiffer · v4.4.6 · Built by <a href="https://wrapcoders.com/" target="_blank" rel="noopener">WRAPCODERS</a></div>
+      <div>
+        <a href="./index.html">Docs</a> ·
+        <a href="./changelog.html">Changelog</a> ·
+        <a href="./status.html">Status</a> ·
+        <a href="./support.html">Support</a>
+      </div>
+    </footer>
+  </main>
+</div>
+
+<script src="./script.js"></script>
+</body>
+</html>
