@@ -23,7 +23,7 @@ async function setupRpc(name: string, args: Record<string, unknown>): Promise<Se
     functionName: string,
     functionArgs: Record<string, unknown>,
   ) => PromiseLike<SetupRpcResult>;
-  return rpc(name, args);
+  return rpc.call(admin, name, args);
 }
 
 async function readSetupStatus() {
