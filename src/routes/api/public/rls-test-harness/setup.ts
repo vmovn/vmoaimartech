@@ -7,7 +7,7 @@ import { createFileRoute } from "@tanstack/react-router";
  *
  * SECURITY:
  * - Gated by RLS_TEST_HARNESS_SECRET (header `x-harness-secret`).
- * - Refuses to run when APP_MODE=production unless RLS_TEST_HARNESS_ALLOW_PROD=1.
+ * - Refuses to run when NODE_ENV=production unless RLS_TEST_HARNESS_ALLOW_PROD=1.
  */
 export const Route = createFileRoute("/api/public/rls-test-harness/setup")({
   server: {

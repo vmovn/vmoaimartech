@@ -553,7 +553,7 @@ WHERE scope = 'platform' AND key = 'setup_complete';</code></pre>
       <h3>Version 3.4.6</h3>
       <ul>
         <li>Production-ready Setup Wizard (6 steps) with server-side lock and route guards.</li>
-        <li>Centralized Environment Mode System (Demo vs Production) with <code>demoWriteGuard</code>.</li>
+        <li>Legacy demo-mode behavior (removed from the current Product baseline).</li>
         <li>Enterprise PWA with dynamic manifest, custom service worker, and admin-controlled icons.</li>
         <li>Responsive navigation — full sidebar &gt; 1200 px, mini rail 768–1200 px, drawer &lt; 768 px.</li>
         <li>Security hardening — XSS remediation, CSP headers, HIBP password check, RLS enforcement.</li>
@@ -632,9 +632,6 @@ WHERE scope = 'platform' AND key = 'setup_complete';</code></pre>
       <p><strong>Where do I upload the app icon?</strong> <em>Super Admin → PWA</em>. Variants are generated automatically.</p>
       <p><strong>Does the PWA work offline?</strong> Yes for cached routes and assets; live data requires connectivity and falls back to <code>/offline</code>.</p>
 
-      <h3>Demo Mode</h3>
-      <p><strong>How do I disable demo mode for production?</strong> Set <code>APP_MODE=production</code> and <code>VITE_APP_MODE=production</code> in <code>.env</code>, rebuild, restart.</p>
-      <p><strong>Can demo users delete records?</strong> No — <code>demoWriteGuard</code> blocks destructive server fns with HTTP 423.</p>
     </section>
 
     <!-- ===== FOOTER ===== -->
@@ -9881,7 +9878,7 @@ WHERE scope = 'platform' AND key = 'setup_complete';</code></pre>
       <code>RLS_HARNESS_BASE_URL</code> / <code>E2E_BASE_URL</code>).</li>
       <li><code>RLS_TEST_HARNESS_SECRET</code> must be exported in the test shell. The secret is
       already provisioned in the project; retrieve it from Cloud → Secrets.</li>
-      <li>The harness refuses to run when <code>APP_MODE=production</code> unless
+      <li>The harness refuses to run when <code>NODE_ENV=production</code> unless
       <code>RLS_TEST_HARNESS_ALLOW_PROD=1</code> is also set (used only for staging drills).</li>
       </ul>
       <h3>Run it</h3>

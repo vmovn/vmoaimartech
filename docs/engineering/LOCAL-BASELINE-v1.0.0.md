@@ -99,9 +99,10 @@ is confined to ignored `.env.local` and server output.
 
 ## Smoke-Test Data
 
-The ignored `.env.local` contains a disposable local account used by
-`npm run dev:verify`. No customer, production or provider data is included.
-The application provisioned organization and workspace context on first login.
+The frozen baseline originally used reusable local smoke credentials. The
+current verifier instead generates random fixtures per run and deletes their
+tenant data and Auth users before exit. `.env.local`, START and RESET contain no
+demo/test/smoke user credentials and create no account.
 
 ## Organization Role Review
 

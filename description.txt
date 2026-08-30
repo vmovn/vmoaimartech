@@ -248,13 +248,6 @@ ai chatbot, automation tool, crm software, flow builder, instagram automation, m
   <li><strong>pgvector</strong> — powering the RAG Knowledge Base.</li>
 </ul>
 
-<h2>Demo / Test Mode (.env Controlled Quick Login)</h2>
-<ul>
-  <li><code>DEMO_MODE=true</code> — quick login buttons, visible demo credentials and instant sign-in.</li>
-  <li><code>DEMO_MODE=false</code> — all demo UI is removed at build time; production-safe auth only.</li>
-  <li>Perfect for sales demos, staging environments and CodeCanyon buyer previews without leaking credentials in production.</li>
-</ul>
-
 <h2>Responsive Navigation System</h2>
 <ul>
   <li>Desktop — full app sidebar with grouped nav (Inbox, CRM, Sales, Marketing, Helpdesk, Commerce, Admin, Account).</li>
@@ -267,7 +260,7 @@ ai chatbot, automation tool, crm software, flow builder, instagram automation, m
 <h2>Documentation System</h2>
 <ul>
   <li>Built-in documentation portal at <code>/docs</code> with sidebar, search, copy-to-clipboard and syntax highlighting.</li>
-  <li>Full sections: Introduction, Installation, Build &amp; Deployment (Node.js, PM2, systemd, Nginx, cPanel, Docker), Project Structure, Configuration, Features, Demo Mode, Setup Wizard, Changelog, Troubleshooting and FAQ.</li>
+  <li>Full sections: Introduction, Installation, Build &amp; Deployment (Node.js, PM2, systemd, Nginx, cPanel, Docker), Project Structure, Configuration, Features, Setup Wizard, Changelog, Troubleshooting and FAQ.</li>
   <li>Changelog with semantic versioning — <strong>current release: v4.4.6</strong>.</li>
   <li>PDF release notes download button for v4.4.6.</li>
   <li>Environment variable reference table and deployment troubleshooting guide.</li>

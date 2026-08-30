@@ -10,7 +10,6 @@ export const LOCAL_SECRET_NAMES = [
   "WA_QR_WEBHOOK_SECRET",
   "WA_QR_WORKER_TOKEN",
   "WA_QR_WORKER_SIGNING_SECRET",
-  "LOCAL_DEV_PASSWORD",
 ];
 
 export function parseLocalEnv(contents) {
@@ -43,7 +42,6 @@ export function isReusableLocalSecret(value) {
 
 export function generateLocalSecret(name) {
   const entropy = randomBytes(32).toString("base64url");
-  if (name === "LOCAL_DEV_PASSWORD") return `Local-${entropy}!9aA`;
   return entropy;
 }
 

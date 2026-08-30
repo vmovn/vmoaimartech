@@ -77,6 +77,7 @@
     "audit:menu-tokens": "node scripts/check-menu-item-tokens.mjs",
     "audit:branding": "node scripts/check-outbound-branding.mjs",
     "audit:deprecated-utilities": "node scripts/check-deprecated-utilities.mjs",
+    "env:audit": "node scripts/ai/env-audit.mjs",
     "prebuild": "node scripts/check-forbidden-font-features.mjs && node scripts/check-menu-item-tokens.mjs && node scripts/check-outbound-branding.mjs && node scripts/check-deprecated-utilities.mjs",
     "test:security:api": "vitest run tests/api/security-cron-token.test.ts tests/api/security-bulk-mass-assignment.test.ts tests/api/security-realtime-rls.test.ts",
     "audit:realtime-rls": "node scripts/audit-realtime-rls.mjs",

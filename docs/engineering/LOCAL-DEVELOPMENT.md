@@ -100,8 +100,6 @@ by Git. Never copy production values into it and never commit it.
 | `HOST` / `PORT` | Local application bind address and port | runtime | server-only | required locally |
 | `APP_ORIGIN` | OAuth/CORS application origin | runtime | server-only | required locally |
 | `LOG_LEVEL` | Server logging verbosity | runtime | server-only | optional |
-| `LOCAL_DEV_EMAIL` / `LOCAL_DEV_PASSWORD` | Disposable local smoke account | verification only | server/local tooling | optional |
-
 Provider credentials such as `LOVABLE_API_KEY`, WhatsApp, Meta, Stripe, SMTP,
 and AI-provider keys are optional for core local development. Missing provider
 credentials disable only those integrations.
@@ -138,16 +136,18 @@ runs the service verification.
 
 Product v1.0.0 baseline corrections are preserved as history in
 `docs/engineering/BASELINE-FIXES.md`. The baseline is frozen: all existing 290
-migrations are immutable and every future database change uses a new migration. The current chain contains 291 migrations: 290 frozen baseline migrations plus the additive Product bootstrap-security migration.
+migrations are immutable and every future database change uses a new migration. The current chain contains 293 migrations: 290 frozen baseline migrations plus three additive Product migrations for bootstrap security and deletion-safe fixture/account cleanup.
 
 ## Seed Development Data
 
 `supabase/seed.sql` creates the eight private Storage buckets required by the
 application. It intentionally contains no product/demo/customer records.
 
-`npm run dev:verify` creates two disposable local Auth users to validate signup,
-workspace provisioning, and cross-tenant RLS. It also uploads, downloads, and
-removes a temporary Storage object.
+`npm run dev:verify` generates two random Auth fixtures only for the duration of
+the verification run. It validates signup, workspace provisioning, cross-tenant
+RLS, Storage and Realtime, then removes the Storage object, users and their
+tenant data in a `finally` cleanup path. It does not read reusable credentials
+from `.env.local` and normal START/RESET creates no account.
 
 ## Start Application
 
@@ -219,9 +219,10 @@ npm.cmd run dev
 ```
 
 `npm.cmd run dev:reset` is a lighter reset that replays the database and runs
-verification fixtures; use `RESET-LOCAL.cmd` when testing the true first-run
-Product setup with no users. Never use either workflow against a linked or
-hosted project.
+generated verification fixtures that are deleted before the command exits; use
+`RESET-LOCAL.cmd` when testing the true first-run Product setup. Both workflows
+finish with no test/demo/smoke account. Never use either workflow against a
+linked or hosted project.
 
 ## Common Problems
 
