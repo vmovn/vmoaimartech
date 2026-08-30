@@ -1,19 +1,18 @@
 @echo off
 setlocal EnableExtensions EnableDelayedExpansion
-title VMO AIMarTech Local Factory Reset
-cd /d "%~dp0"
 
+title VMO AIMarTech Local RESET
+cd /d "%~dp0"
 set "REPO=%~dp0"
 set "PROJECT_ID=vmoaimartech-local"
+set "LEGACY_PROJECT_ID=YOUR_SUPABASE_PROJECT_ID"
 set "SUPABASE_PROJECT_ID=%PROJECT_ID%"
 set "VITE_SUPABASE_PROJECT_ID=%PROJECT_ID%"
-set "APP_URL=http://127.0.0.1:8080/"
-set "SETUP_URL=http://127.0.0.1:8080/setup"
-set "STUDIO_URL=http://127.0.0.1:56323/"
 set "SUPABASE_TELEMETRY_DISABLED=1"
+set "SUPABASE_PORTS=56320 56321 56322 56323 56324"
 
 echo ========================================
-echo VMO AIMarTech Local Factory Reset
+echo VMO AIMarTech Local Factory Reset - RESET
 echo ========================================
 echo.
 
@@ -25,24 +24,25 @@ if not exist "%REPO%supabase\config.toml" (
   echo ERROR: supabase\config.toml was not found.
   goto fail
 )
+if not exist "%REPO%START-LOCAL.cmd" (
+  echo ERROR: START-LOCAL.cmd was not found beside RESET-LOCAL.cmd.
+  goto fail
+)
+if not exist "%REPO%STOP-LOCAL.cmd" (
+  echo ERROR: STOP-LOCAL.cmd was not found beside RESET-LOCAL.cmd.
+  goto fail
+)
 
-powershell.exe -NoProfile -Command "$raw=Get-Content -LiteralPath '%REPO%supabase\config.toml' -Raw; if ($raw -match '(?m)^\s*project_id\s*=\s*\"vmoaimartech-local\"\s*$') { exit 0 } else { exit 1 }" >nul 2>&1
+powershell.exe -NoProfile -Command "$raw=Get-Content -LiteralPath '%REPO%supabase\config.toml' -Raw; if($raw -match '(?m)^\s*project_id\s*=\s*\"vmoaimartech-local\"\s*$'){exit 0}else{exit 1}" >nul 2>&1
 if errorlevel 1 (
-  echo ERROR: Safety check failed.
-  echo Expected local Supabase project_id: %PROJECT_ID%
+  echo ERROR: Safety check failed. Expected project_id %PROJECT_ID%.
   echo No data was deleted.
   goto fail
 )
 
-echo WARNING: This permanently deletes ALL data owned by this repository's
-echo local Supabase project, including:
-echo   - PostgreSQL rows and migration history
-echo   - Auth users and sessions
-echo   - Storage buckets, uploaded objects, and metadata
-echo   - Realtime state and other local Supabase volumes
-echo.
-echo Source code, node_modules, Docker Desktop, and unrelated containers
-echo are NOT deleted.
+echo WARNING: This permanently deletes ALL local data for this repository,
+echo including PostgreSQL rows, Auth users, Storage objects and migration state.
+echo Source code, node_modules, Docker Desktop and unrelated projects are NOT deleted.
 echo.
 set /p "CONFIRM=Type RESET-LOCAL to continue: "
 if /I not "!CONFIRM!"=="RESET-LOCAL" (
@@ -51,154 +51,122 @@ if /I not "!CONFIRM!"=="RESET-LOCAL" (
   exit /b 0
 )
 
+call :ensure_docker
+if errorlevel 1 goto fail
+
+echo.
+echo Stopping web app and local Supabase stacks first...
+call "%REPO%STOP-LOCAL.cmd" --no-pause
+
+rem Remove current frozen-product local Supabase state.
+echo.
+echo Removing current local Supabase project %PROJECT_ID%...
+call npm.cmd exec -- supabase stop --project-id "%PROJECT_ID%" --no-backup >nul 2>&1
+call :remove_project_state "%PROJECT_ID%"
+
+rem Remove ONLY the known stale predecessor created when the repository still
+rem used the literal placeholder YOUR_SUPABASE_PROJECT_ID. This is what was
+rem occupying ports 56321-56324 in the failure log.
+echo Removing stale legacy local Supabase project %LEGACY_PROJECT_ID% if present...
+call npm.cmd exec -- supabase stop --project-id "%LEGACY_PROJECT_ID%" --no-backup >nul 2>&1
+call :remove_project_state "%LEGACY_PROJECT_ID%"
+
+call :wait_ports_free 90
+if errorlevel 1 goto fail
+
+del /q "%REPO%.env.local" >nul 2>&1
+del /q "%REPO%.env.local.tmp" >nul 2>&1
+del /q "%REPO%.local-app-shell.pid" >nul 2>&1
+
+echo.
+echo Local state removed. Rebuilding through the SAME START-LOCAL path...
+call "%REPO%START-LOCAL.cmd" --setup --no-pause
+if errorlevel 1 (
+  echo ERROR: Reset removed local state, but START-LOCAL failed.
+  goto fail
+)
+
+echo.
+echo ========================================
+echo VMO AIMarTech Local Factory Reset - DONE
+echo ========================================
+echo Database/Auth/Storage: REBUILT FROM MIGRATIONS + SEED
+echo App:   http://127.0.0.1:8080/
+echo Setup: http://127.0.0.1:8080/setup
+echo Studio:http://127.0.0.1:56323/
+echo ========================================
+echo.
+echo RESET and START now share exactly the same startup path.
+pause
+exit /b 0
+
+:ensure_docker
 where docker.exe >nul 2>&1
 if errorlevel 1 (
   echo ERROR: Docker CLI was not found.
-  goto fail
+  exit /b 1
 )
-
 docker info >nul 2>&1
-if not errorlevel 1 goto docker_ready
-
+if not errorlevel 1 (
+  echo Docker Engine ready.
+  exit /b 0
+)
 set "DOCKER_DESKTOP=%ProgramFiles%\Docker\Docker\Docker Desktop.exe"
 if not exist "!DOCKER_DESKTOP!" set "DOCKER_DESKTOP=%LocalAppData%\Docker\Docker Desktop.exe"
 if not exist "!DOCKER_DESKTOP!" (
-  echo ERROR: Docker Desktop was not found in a standard location.
-  echo Start Docker Desktop manually, then run RESET-LOCAL.cmd again.
-  goto fail
+  echo ERROR: Docker Desktop was not found. Start it manually and retry.
+  exit /b 1
 )
-
 echo Launching Docker Desktop...
 start "" "!DOCKER_DESKTOP!"
-echo Waiting for Docker Engine...
 set /a DOCKER_ATTEMPTS=0
 :wait_docker
 timeout /t 4 /nobreak >nul
 docker info >nul 2>&1
-if not errorlevel 1 goto docker_ready
+if not errorlevel 1 (
+  echo Docker Engine ready.
+  exit /b 0
+)
 set /a DOCKER_ATTEMPTS+=1
 if !DOCKER_ATTEMPTS! GEQ 30 (
-  echo Docker Desktop did not become ready.
-  echo Please inspect Docker Desktop manually. No reset was performed.
-  goto fail
+  echo ERROR: Docker Desktop did not become ready within 120 seconds.
+  exit /b 1
 )
 echo Waiting for Docker Engine... !DOCKER_ATTEMPTS!/30
 goto wait_docker
 
-:docker_ready
-echo Docker Engine ready.
+:remove_project_state
+set "TARGET_PROJECT=%~1"
+for /f "delims=" %%C in ('docker ps -a --format "{{.Names}}" 2^>nul ^| findstr /I /E /C:"_!TARGET_PROJECT!"') do docker rm -f "%%C" >nul 2>&1
+for /f "delims=" %%V in ('docker volume ls --format "{{.Name}}" 2^>nul ^| findstr /I /C:"!TARGET_PROJECT!"') do docker volume rm -f "%%V" >nul 2>&1
+for /f "delims=" %%N in ('docker network ls --format "{{.Name}}" 2^>nul ^| findstr /I /C:"!TARGET_PROJECT!"') do docker network rm "%%N" >nul 2>&1
+exit /b 0
 
-set "APP_STOPPED=0"
-if exist "%REPO%.local-app-shell.pid" (
-  set /p APP_PID=<"%REPO%.local-app-shell.pid"
-  echo !APP_PID!| findstr /R "^[0-9][0-9]*$" >nul
-  if not errorlevel 1 (
-    powershell.exe -NoProfile -Command "$p=Get-CimInstance Win32_Process -Filter ('ProcessId=' + !APP_PID!) -ErrorAction SilentlyContinue; if ($p -and $p.Name -eq 'cmd.exe' -and $p.CommandLine -like '*START-LOCAL.cmd*--run-app*') { exit 0 } else { exit 1 }" >nul 2>&1
-    if not errorlevel 1 (
-      echo Stopping launcher-managed application terminal...
-      taskkill /PID !APP_PID! /T /F >nul 2>&1
-      set "APP_STOPPED=1"
-    )
-  )
-  del /q "%REPO%.local-app-shell.pid" >nul 2>&1
-)
-
-if "!APP_STOPPED!"=="0" (
-  tasklist /FI "WINDOWTITLE eq VMO AIMarTech App" /NH 2>nul | findstr /I "cmd.exe" >nul
-  if not errorlevel 1 (
-    echo Stopping launcher-managed application terminal...
-    taskkill /FI "WINDOWTITLE eq VMO AIMarTech App" /T /F >nul 2>&1
-    set "APP_STOPPED=1"
-  )
-)
-
-curl.exe --silent --fail --max-time 2 "%APP_URL%" >nul 2>&1
-if not errorlevel 1 (
-  echo ERROR: An application not managed by START-LOCAL.cmd is still using port 8080.
-  echo Stop that application manually. No database data was deleted.
-  goto fail
-)
-
-echo.
-echo Deleting ONLY Supabase project %PROJECT_ID% and its local volumes...
-call npm.cmd exec -- supabase stop --project-id "%PROJECT_ID%" --no-backup
-if errorlevel 1 (
-  echo ERROR: Supabase could not remove the local project volumes.
-  echo The reset stopped before rebuilding services.
-  goto fail
-)
-
-echo Waiting for this project's containers to be removed completely...
-set /a REMOVE_ATTEMPTS=0
-:wait_project_removed
-docker ps -a --format "{{.Names}}" 2>nul | findstr /I /E /C:"_%PROJECT_ID%" >nul
-if errorlevel 1 goto project_removed
-set /a REMOVE_ATTEMPTS+=1
-if !REMOVE_ATTEMPTS! GEQ 30 (
-  echo ERROR: Containers for %PROJECT_ID% were not removed within 60 seconds.
-  echo No unrelated container was stopped.
-  goto fail
+:wait_ports_free
+set /a WAIT_SECONDS=%~1
+set /a WAIT_TRIES=WAIT_SECONDS/2
+if !WAIT_TRIES! LSS 1 set /a WAIT_TRIES=1
+set /a WAIT_NOW=0
+:wait_ports_loop
+powershell.exe -NoProfile -Command "$ports=@(56320,56321,56322,56323,56324); $published=(& docker ps --format '{{.Ports}}' 2>$null) -join [Environment]::NewLine; foreach($p in $ports){if($published -match ('(?:0\.0\.0\.0|\[::\]):'+$p+'->')){exit 1}}; try{$listeners=Get-NetTCPConnection -State Listen -ErrorAction Stop | Where-Object{$ports -contains $_.LocalPort}; if($listeners){exit 1}}catch{}; exit 0" >nul 2>&1
+if not errorlevel 1 exit /b 0
+set /a WAIT_NOW+=1
+if !WAIT_NOW! GEQ !WAIT_TRIES! (
+  echo ERROR: Ports %SUPABASE_PORTS% are still occupied after %~1 seconds.
+  call :show_port_blockers
+  exit /b 1
 )
 timeout /t 2 /nobreak >nul
-echo Waiting for local container removal... !REMOVE_ATTEMPTS!/30
-goto wait_project_removed
+echo Waiting for local Supabase ports to become reusable... !WAIT_NOW!/!WAIT_TRIES!
+goto wait_ports_loop
 
-:project_removed
-echo Local project volumes and containers removed.
-
-if exist "%REPO%.env.local" del /q "%REPO%.env.local" >nul 2>&1
-
+:show_port_blockers
 echo.
-echo Recreating local Supabase from migrations and seed...
-call npm.cmd run dev:infra:start
-if errorlevel 1 (
-  echo ERROR: Local Supabase rebuild failed. Review the migration error above.
-  goto fail
-)
-
+echo Docker containers publishing local Supabase ports:
+docker ps --format "{{.ID}}  {{.Names}}  {{.Ports}}" 2>nul | findstr /C:"56320" /C:"56321" /C:"56322" /C:"56323" /C:"56324"
 echo.
-echo Generating a fresh local environment and cryptographically random secrets...
-call npm.cmd run dev:env
-if errorlevel 1 (
-  echo ERROR: Local environment generation failed.
-  goto fail
-)
-
-echo.
-echo Starting the application in a separate terminal...
-start "VMO AIMarTech App" /D "%REPO%" cmd.exe /k call "START-LOCAL.cmd" --run-app
-
-echo Waiting for application readiness...
-set /a APP_ATTEMPTS=0
-:wait_app
-curl.exe --silent --fail --max-time 2 "%APP_URL%" >nul 2>&1
-if not errorlevel 1 goto reset_complete
-set /a APP_ATTEMPTS+=1
-if !APP_ATTEMPTS! GEQ 30 (
-  echo ERROR: Application did not become ready at %APP_URL%
-  echo Inspect the visible VMO AIMarTech App terminal.
-  goto fail
-)
-timeout /t 3 /nobreak >nul
-echo Waiting for application... !APP_ATTEMPTS!/30
-goto wait_app
-
-:reset_complete
-start "" "%SETUP_URL%"
-echo.
-echo ========================================
-echo LOCAL RESET COMPLETE
-echo ========================================
-echo Database:  EMPTY AND REBUILT
-echo Auth users: NONE
-echo Storage:   RESET TO SEEDED BUCKETS
-echo App:       %APP_URL%
-echo Setup:     %SETUP_URL%
-echo Studio:    %STUDIO_URL%
-echo ========================================
-echo.
-echo The application terminal remains running for development.
-pause
+echo Windows listeners on those ports:
+netstat -ano 2>nul | findstr /C:":56320" /C:":56321" /C:":56322" /C:":56323" /C:":56324"
 exit /b 0
 
 :fail
