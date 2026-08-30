@@ -1,0 +1,12 @@
+---
+description: Context-first repository memory and token-efficient task routing
+alwaysApply: true
+---
+
+Before searching source, read `CONTEXT-MAP.md`, route the task to the smallest owning context, and read that `docs/contexts/<context>/CONTEXT.md`.
+
+For a scoped task, start from documented Primary Entry Points. Do not re-audit repository architecture merely for reassurance.
+
+Use FAST/SURGICAL by default. Escalate to DEEP only when ownership is unclear, code contradicts memory, the task crosses domains, or it changes DB/RLS/auth/security/public contracts.
+
+Prefer smallest valid change, targeted validation, and stop when acceptance criteria pass.

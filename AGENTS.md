@@ -1,205 +1,201 @@
-# Product AI Engineering Constitution
+# Product AI Engineering Constitution — Context-First Edition
 
 ## Mission
 
 This repository is an independent Product v1.x derived from an upstream Swiffer 4.4.6 baseline.
-Upstream is external R&D input, not the product roadmap.
+Upstream is external R&D input, not the Product roadmap.
 
-Primary product direction: Vietnam-first business operating platform for SOHO, solopreneurs and lean companies, built around Customer Data, CRM, omnichannel execution, workflow automation, AI agents, API/Webhook/MCP and measurable revenue outcomes.
+Primary direction: Vietnam-first business operating platform for SOHO, solopreneurs and lean companies, built around Customer Data, CRM, omnichannel execution, workflow automation, AI, API/Webhook/MCP and measurable revenue outcomes.
 
-## Mandatory preflight
+## Prime Directive: repository memory before repository discovery
 
-Before local development, read `docs/engineering/LOCAL-DEVELOPMENT.md`.
+The repository contains persistent architectural memory. Use it before searching source.
 
-Before any substantial code change:
+For every task:
 
-1. Read `PRODUCT.md`.
-2. Read `ARCHITECTURE.md`.
-3. For UI work, read `DESIGN.md`.
-4. For wording/localization, read `GLOSSARY.md`.
-5. Read `CONTEXT-MAP.md`, then relevant context docs.
-6. Load the most relevant `.ai/skills/<skill>/SKILL.md`.
-7. Inspect existing code and reuse existing abstractions before creating new ones.
-8. Check `docs/adr/` for decisions affecting the task.
-9. If touching an area inherited from upstream, check `docs/upstream/BASELINE.md` and recent upstream review notes.
+1. Read `CONTEXT-MAP.md`.
+2. Identify the smallest owning context.
+3. Read exactly that context's `docs/contexts/<context>/CONTEXT.md` first.
+4. Start from the documented **Primary Entry Points** and **Source of Truth**.
+5. Expand investigation only when current evidence requires it.
 
-Do not edit first and understand later.
+**Do not re-audit documented architecture merely for reassurance.**
+
+Repository documentation explains ownership, boundaries and why. Code remains the ultimate truth when the two demonstrably conflict.
+
+## Task modes
+
+### FAST / SURGICAL — default
+
+Use for a local, reversible, clearly scoped task.
+
+Read only:
+- this `AGENTS.md`;
+- `CONTEXT-MAP.md`;
+- one owning context document;
+- directly referenced source files;
+- `DESIGN.md` only when the change is visual/system-design relevant;
+- `GLOSSARY.md` only when wording/localization is relevant.
+
+Rules:
+- no repository-wide audit;
+- no broad architecture rediscovery;
+- no unrelated ADR/upstream review sweep;
+- no dependency upgrade unless required by the task;
+- no opportunistic cleanup;
+- prefer the smallest valid change;
+- verify only behavior affected by the change;
+- stop when acceptance criteria pass.
+
+### DEEP — escalate only when needed
+
+Escalate from FAST to DEEP only if one of these is true:
+- ownership is unclear or multiple contexts own meaningful writes;
+- documented entry points are missing/stale;
+- runtime/code evidence contradicts context memory;
+- task changes database schema, RLS, auth, tenant ownership, billing entitlement, identity semantics, messaging core, workflow runtime, security boundary or public API/data contract;
+- task is an architecture decision rather than an implementation;
+- Tier 3 risk is encountered.
+
+DEEP may additionally read `PRODUCT.md`, `ARCHITECTURE.md`, relevant ADRs, upstream notes and multiple context docs. Still do not audit unrelated domains.
+
+### AUDIT — explicit only
+
+Repository-wide audit is never implied by words such as "check", "ensure", "clean", "production-ready", "robust" or "optimize".
+
+Run a broad audit only when the user explicitly asks for an audit whose scope genuinely requires it.
 
 ## Core invariants
 
-### Data ownership
-
+### Tenant and data ownership
 - Platform → Organization → Workspace is the tenant hierarchy unless an ADR explicitly changes it.
-- Customer/Contact remains the canonical customer identity. Do not create a second customer source of truth for Zalo, WhatsApp, email, social, POS, etc.
-- Provider-specific identities attach to canonical contacts through identity mapping.
-- Provider payloads live at system edges. Normalize before entering core domains.
-- Shared business state has one owner. Never duplicate unread counts, lifecycle state, subscription status, deal state, or score state across competing tables/services.
+- Tenant resources preserve explicit organization/workspace ownership.
+- UI permission checks are convenience; server authorization and RLS are authority.
+- Shared business state has one owner. Do not duplicate lifecycle, deal, unread, subscription or score state across competing sources.
+
+### Customer identity
+- Contact/Customer remains the canonical customer identity.
+- External provider identities attach to canonical contacts; providers do not invent a second customer master.
+- Provider payloads remain at system edges and are normalized before entering generic core domains.
 
 ### Security
-
-- RLS is mandatory defense, never replaced by frontend guards.
-- Preserve organization/workspace ownership on all tenant data.
-- Privileged operations require server-side authorization and auditability.
-- Never expose service-role secrets to browser code.
-- Public webhooks require signature/token validation, idempotency and replay-safe processing.
-- Destructive production/data/security changes are Tier 3 and require explicit human approval.
+- RLS remains defense-in-depth and is never replaced by frontend guards.
+- Privileged operations require server-side authorization and should be auditable.
+- Service-role/provider/payment/private secrets never enter browser-visible code or `VITE_*` variables.
+- Public webhooks require appropriate validation, idempotency and replay-safe processing.
 
 ### Architecture
-
-- Provider-specific at edge; normalized in core.
-- Prefer provider/adapter/registry/config/hook over scattered branching.
+- Provider-specific at the edge; normalized in the core.
+- Prefer existing provider/adapter/registry/config/hook seams over scattered branching.
 - Prefer centralized ownership over duplicated state.
-- Prefer additive/backward-compatible database migrations.
-- Never rewrite existing migrations already used by deployed environments.
-- Do not create a new abstraction until existing abstractions are inspected and shown insufficient.
+- Do not create a new abstraction until the existing abstraction is shown insufficient.
 - No unrelated refactors inside feature work.
 
-### UI
+### Database lifecycle
+**Active state: POST-BASELINE / PRODUCT DEVELOPMENT.**
+- The 290 Product baseline migrations are immutable.
+- Never edit an applied/baseline migration.
+- New DB changes use new additive migrations.
+- Destructive operations require explicit review.
 
-- Existing design system is authoritative. Reuse existing components and tokens.
-- Do not introduce arbitrary colors, radii, typography, spacing, shadows, icon styles, or interaction patterns.
-- Do not redesign adjacent UI because a task touches one screen.
-- Any deliberate design-system change requires updating `DESIGN.md` and an ADR if broad/systemic.
-
-### Localization
-
+### UI and localization
+- Existing design system/components/tokens are authoritative.
+- Do not redesign adjacent UI because one screen is touched.
 - Vietnamese localization changes display copy, not internal identifiers, route names, table names or API contracts.
-- Use glossary-approved Vietnamese terminology.
-- Preserve placeholders, variables, template syntax and provider-specific names.
-- Do not mass find/replace vendor terms through source without understanding context.
+- Preserve placeholders/template syntax/provider names.
 
 ## Risk tiers
 
-- Tier 0: docs/copy/non-code metadata. Execute directly.
-- Tier 1: isolated UI/local logic. Inspect → plan → implement → targeted checks.
-- Tier 2: database, RLS, auth, billing, identity, messaging core, workflow runtime, external integrations. Produce impact map before implementation; run security/regression checks.
-- Tier 3: destructive migrations, production data mutation, auth/tenant model redesign, secret rotation, irreversible deployment changes. STOP and request explicit approval.
+- **Tier 0** — docs/copy/non-code metadata: execute directly.
+- **Tier 1** — isolated UI/local logic: FAST path; targeted checks.
+- **Tier 2** — DB/RLS/auth/billing/identity/messaging core/workflow runtime/external integrations/security-sensitive bootstrap: impact map + focused security/regression checks.
+- **Tier 3** — destructive migrations, production data mutation, auth/tenant model redesign, secret rotation, irreversible deployment changes: STOP for explicit approval.
 
-## Database lifecycle states
+### Setup risk split
 
-**Active state: POST-BASELINE / PRODUCT DEVELOPMENT.** Product v1.0.0 is frozen.
-The 290 baseline migrations are immutable from this point forward.
+`/setup` is not automatically Tier 2 merely because the route is named setup.
 
-### PRE-BASELINE / PRODUCT NORMALIZATION
-
-This state is historical and no longer active. Before Product v1.0.0 was
-frozen or its migration history reached production,
-vendor migrations may receive minimal in-place corrections only when a defect
-is proven, unambiguous, required for deterministic clean bootstrap, and has no
-production data impact. The correction must preserve the vendor state in Git
-history and be documented in `docs/engineering/BASELINE-FIXES.md`.
-
-### POST-BASELINE / PRODUCT DEVELOPMENT
-
-This is the active state. From the Product v1.0.0 freeze forward:
-
-- all 290 baseline migrations are immutable;
-- never modify a baseline or applied migration;
-- all database changes use new additive migrations;
-- baseline vendor fixes in `docs/engineering/BASELINE-FIXES.md` are historical
-  records only and do not authorize further in-place edits;
-- destructive operations require explicit review.
+- Presentation/layout/labels/reordering that do not alter secure contracts → Tier 1.
+- Business form mapping that reuses existing safe server functions → Tier 1/2 depending on writes.
+- `SETUP_SECRET`, setup-open state, `setup_complete`, first Super Admin bootstrap, tenant provisioning, service-role secret evaluation, migration/bootstrap execution → Tier 2 red zone.
 
 ## Engineering autonomy
 
-Proceed autonomously when a change is local, reversible, deterministic,
-unambiguous and testable.
+Proceed autonomously when a change is local, reversible, deterministic, unambiguous and testable.
+Stop only for semantic/security ambiguity, destructive/data-loss risk, production impact, external credentials/accounts or product/business decisions requiring human judgment.
 
-Stop only for semantic ambiguity, security ambiguity, destructive or data-loss
-risk, production impact, external credentials/accounts, or business/product
-decisions requiring human judgment. Do not ask for approval for routine,
-reversible engineering work.
+## External environment failure policy
 
-### Bootstrap red zone
-
-Setup-open state, `setup_complete`, Setup Secret handling, initial Super Admin
-bootstrap, migration bootstrap, and first-run environment validation are
-security-sensitive. Never weaken or bypass these controls without explicit
-architectural justification and focused security/regression tests. Durable
-bootstrap architecture is documented in `docs/engineering/PRODUCT-BOOTSTRAP.md`.
-
-### External environment failure policy
-
-When Docker, WSL, OS permissions, external registries, CLI telemetry/cache,
-networking, or another environment outside application source fails:
-
+For Docker, WSL, OS permissions, registries, CLI cache/telemetry or external networking failures:
 - diagnose once;
 - attempt at most one safe recovery;
-- if it still fails, stop and report the exact blocker;
+- if still failing, stop and report the exact blocker;
 - never enter repeated infrastructure-repair loops;
-- never use factory reset or destructive repair without explicit human approval.
+- never factory-reset external infrastructure without explicit approval.
 
-## Required task workflow
-
-For Tier 1+ tasks:
+## Task workflow
 
 ### Before change
-
-Return a short internal plan containing:
-- task intent;
-- existing architecture discovered;
-- files/subsystems affected;
-- source of truth involved;
+For Tier 1+, state briefly:
+- goal;
+- owning context;
+- documented entry points/source of truth;
+- files expected to change;
 - risk tier;
-- tests/checks to run.
+- narrow validation to run.
 
-Then implement unless Tier 3.
+Do not produce a long plan for an obvious small task.
 
 ### During change
-
 - Keep diff scoped.
-- Follow existing naming and structure.
-- Add new code to the domain that owns it.
-- If an invariant is violated, stop and redesign rather than patch around it.
+- Start from documented owners.
+- Diagnose before editing when root cause is uncertain.
+- Prefer smallest valid change.
+- If evidence requires leaving the owning context, explain why before expanding.
 
 ### After change
-
-Report:
+Report only:
 - files changed;
 - behavior changed;
-- database/security implications;
-- checks actually executed and results;
-- known limitations;
-- rollback path.
+- DB/security implications if any;
+- checks actually run and results;
+- remaining blocker/limitation if any.
 
-Update repository memory when appropriate:
-- architecture decision → ADR;
-- new stable domain concept → context/glossary;
-- new upstream adoption decision → upstream ledger;
-- recurring bug/lesson → engineering notes or regression matrix.
+## Validation policy
 
-## Quality gates
+Inspect `package.json` for available commands. Use the narrowest relevant check first.
+Common gates include `npm run typecheck`, `npm run build`, security checks and scoped tests.
 
-At minimum inspect `package.json` and run the narrowest relevant existing checks. Current upstream baseline exposes checks including:
-- `npm run typecheck`
-- `npm run lint`
-- `npm run build`
-- `npm run security:scan`
-- `npm run security:policies`
-- design audits such as branding/buttons/fonts/menu/accent where relevant.
+Inherited Swiffer lint debt is baselined. Never mass-format or mass-auto-fix as unrelated cleanup.
+A pre-existing warning is not a task failure unless the change caused or depends on it.
 
-Repository-wide lint debt inherited from Swiffer 4.4.6 is baselined by
-`docs/adr/0004-inherited-vendor-lint-debt-baseline.md`. New work must not add
-lint debt; prefer lint/checks scoped to changed files or modules. Never run a
-mass format or mass auto-fix as unrelated cleanup.
+**Do not repeat an unchanged expensive check in the same task merely for reassurance.**
 
-Do not claim tests passed if test files are absent or commands were not run.
+## Repository memory maintenance
+
+Update context memory only when durable knowledge changes:
+- new source of truth;
+- new domain owner;
+- new cross-context dependency;
+- new security/data invariant;
+- new stable entry point;
+- new validation gate;
+- architectural decision future agents could accidentally undo.
+
+Do not update architecture memory for cosmetic patches.
+
+Each context has a `Last Verified` section. A newer commit alone does not make memory stale. Memory becomes stale only when relevant ownership/entry points/contracts changed or evidence contradicts it.
 
 ## Upstream policy
 
 Product releases do not merge upstream blindly.
+For a new Swiffer release: compare → classify SECURITY/BUGFIX/ARCHITECTURE/FEATURE/DEPENDENCY/MIGRATION → decide ADOPT/ADAPT/REIMPLEMENT/IGNORE/REPLACE → port only Product-relevant changes → record outcome.
 
-When a new Swiffer version appears:
-1. compare old vendor baseline with new vendor release;
-2. classify each change: SECURITY, BUGFIX, ARCHITECTURE, FEATURE, DEPENDENCY, MIGRATION;
-3. decide: ADOPT, ADAPT, REIMPLEMENT, IGNORE, REPLACE;
-4. map database/RLS/security changes first;
-5. port only changes useful to Product roadmap;
-6. record outcome in `docs/upstream/`.
+## Token-efficiency rule
 
-Never describe this as "upgrade Product to Swiffer X". Product has its own version line.
+Optimize **total task cost**, not prompt length.
 
-## Product memory rule
+Total cost ≈ retrieval + reasoning + file reads + edits + validation + retries.
 
-Code explains what exists. Documentation explains why it exists.
-Any non-obvious architectural decision that future agents could accidentally undo must be written down.
+The default optimization is:
+**memory → owner → smallest surface → smallest valid change → targeted verify → stop.**

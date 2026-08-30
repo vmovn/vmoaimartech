@@ -1,0 +1,174 @@
+{
+  "name": "vmoaimartech-audit-memory-pack",
+  "verified_commit": "67704b8967b6db5cb2a9389d8f1a7f2f836783ea",
+  "verified_tag": "v1.0.0-localhost-1.0.5",
+  "verified_date": "2026-08-30",
+  "purpose": "Context-first persistent architecture memory to reduce repeated AI audits",
+  "files": [
+    {
+      "path": ".ai/skills/context-first/SKILL.md",
+      "sha256": "aafcaeb0cb2c31b8f2433c62a5d830abc37cccdd081d475907c306a0a146f24a",
+      "bytes": 1017
+    },
+    {
+      "path": ".cursor/rules/05-context-memory.mdc",
+      "sha256": "7df0c07298aabc4d6bf0eee0fe4f5e5dcb9d38f6097131c76867429382189336",
+      "bytes": 656
+    },
+    {
+      "path": "AGENTS.md",
+      "sha256": "d50476ef7488c37a47e3732ab120c0aa2947975a0ec4c94c2030db5da49d6646",
+      "bytes": 8746
+    },
+    {
+      "path": "AUDIT-MEMORY-README.md",
+      "sha256": "8b67aef3f003200283b8c861d4d71950b09b286e98d09d61f6a3cb1e83732a8d",
+      "bytes": 1794
+    },
+    {
+      "path": "CONTEXT-MAP.md",
+      "sha256": "bfbc70bbdbfe1fbb268bac6b848d8480c250a4682ebd81981225e4515e1aae2e",
+      "bytes": 4642
+    },
+    {
+      "path": "docs/contexts/CAPABILITY-MAP.md",
+      "sha256": "0c07ee7b4e120582327508aea65dccb6e5e0e790ac3f30a79f98ec0854c0d95d",
+      "bytes": 1955
+    },
+    {
+      "path": "docs/contexts/README.md",
+      "sha256": "d3a4f5702cee4cc85c62a79585314036cdc8e160d0fc6b783c5416404253ef0c",
+      "bytes": 1052
+    },
+    {
+      "path": "docs/contexts/SOURCE-OWNERS.md",
+      "sha256": "46deb6c7b7b3c45a69266311a92afb810396f727bde80e2b1a4c1ede024d7c00",
+      "bytes": 2138
+    },
+    {
+      "path": "docs/contexts/USER-JOURNEY-MAP.md",
+      "sha256": "1aecddb2ed7d262f97eb09a77fc8fac3b7894f92e513230d73e3f4337c8f82b9",
+      "bytes": 3683
+    },
+    {
+      "path": "docs/contexts/VALIDATION-MATRIX.md",
+      "sha256": "721d25b3fde785f33c5c8f664ab94ffaa917be2b9c2b79d3bd035b928554839e",
+      "bytes": 1494
+    },
+    {
+      "path": "docs/contexts/ai/CONTEXT.md",
+      "sha256": "a20f807c4a035b6700682f6f7ad97c8e63cf2426c10b9b8e71d31b4cb8122294",
+      "bytes": 1579
+    },
+    {
+      "path": "docs/contexts/analytics/CONTEXT.md",
+      "sha256": "3074ea3f2a04fd473fe6a16d5cdd33c5976ac93886a78ef86cc5ac57dbb9ad96",
+      "bytes": 1280
+    },
+    {
+      "path": "docs/contexts/auth/CONTEXT.md",
+      "sha256": "ca1aff13702c889028a05bb05f9eae1e2be19cf477fb03195543a2a6b034c698",
+      "bytes": 1333
+    },
+    {
+      "path": "docs/contexts/billing/CONTEXT.md",
+      "sha256": "0ebdd47a1f1cdb4f5b80cdc237e40e0eb0ff272ec2355d80fa5f4ede1249c8ef",
+      "bytes": 1479
+    },
+    {
+      "path": "docs/contexts/booking/CONTEXT.md",
+      "sha256": "104fb0c7a6401bbe22d830b4ef2d99b4b1b66445ea5eef94e9e907588d292ea8",
+      "bytes": 1388
+    },
+    {
+      "path": "docs/contexts/client-portal/CONTEXT.md",
+      "sha256": "9d54692ce7b784c9164746df2864ceea5513268d73190158c0ad48790d14deec",
+      "bytes": 1199
+    },
+    {
+      "path": "docs/contexts/commerce/CONTEXT.md",
+      "sha256": "940a85010e494fbe96c39a7f77f441b054793ee3c9cec5ee4c308204b11c6d70",
+      "bytes": 1450
+    },
+    {
+      "path": "docs/contexts/crm/CONTEXT.md",
+      "sha256": "0041d9f3c33a0f6e6f7d9e17eac552c66428e11b6426e7d7db8561d97c6e4b18",
+      "bytes": 1306
+    },
+    {
+      "path": "docs/contexts/developer/CONTEXT.md",
+      "sha256": "6381ccdac48bb4463dbaa0708ca41a050cb8ffbfd6a08163776347af9ecca45b",
+      "bytes": 1672
+    },
+    {
+      "path": "docs/contexts/environment/CONTEXT.md",
+      "sha256": "0019bde308d9b9eaeeb338d6f963a09376c69de8768e014004dabb58d3a2fdb1",
+      "bytes": 2236
+    },
+    {
+      "path": "docs/contexts/identity/CONTEXT.md",
+      "sha256": "e94c7f78ba3ec84ea0c6379386a919ea0465b8367370aaeb9ae8e4a386fec3a3",
+      "bytes": 1385
+    },
+    {
+      "path": "docs/contexts/marketing/CONTEXT.md",
+      "sha256": "c41961721245d979b6d4998bb6c4916aae2ea5ba8bf9157785a42e629fc9af8d",
+      "bytes": 1478
+    },
+    {
+      "path": "docs/contexts/messaging/CONTEXT.md",
+      "sha256": "45a30c5430d9aaae5991492b07d2f622a99c4b85f691d8261faab6d1b2455af5",
+      "bytes": 1760
+    },
+    {
+      "path": "docs/contexts/navigation/CONTEXT.md",
+      "sha256": "4da63853754bbabc3d2f01bb6df61c1ad0ddbd5ffd9fb302330293ab08088a8c",
+      "bytes": 1286
+    },
+    {
+      "path": "docs/contexts/platform/CONTEXT.md",
+      "sha256": "733cb789fafb1554176b4f8f32dcee3b1fb42025ca4f49d5ce3b9ba15d3d425e",
+      "bytes": 1646
+    },
+    {
+      "path": "docs/contexts/platform-admin/CONTEXT.md",
+      "sha256": "14855066cfa73ba61fc530f4950f24da79142f128b2ccf1ed5165e7a8dded943",
+      "bytes": 1195
+    },
+    {
+      "path": "docs/contexts/sales/CONTEXT.md",
+      "sha256": "19549297e4399e721ecd3d3575e250bff75ca4f4387ee5ba0e98078d4df92855",
+      "bytes": 1131
+    },
+    {
+      "path": "docs/contexts/service/CONTEXT.md",
+      "sha256": "ca23e64bac1c41ab3296fba187a3a1bf9d500af06d928a7871829a3dbdd15641",
+      "bytes": 1345
+    },
+    {
+      "path": "docs/contexts/setup/CONTEXT.md",
+      "sha256": "d941243ac2fa79f20f096fb75294cb443097c5772a89a03e2eae23f703382555",
+      "bytes": 2798
+    },
+    {
+      "path": "docs/contexts/vietnam/CONTEXT.md",
+      "sha256": "9ead986a56936df7c8c33aadf9a8d3a76c623d860bd4dcd470af0116bffaefd2",
+      "bytes": 1325
+    },
+    {
+      "path": "docs/contexts/workflow/CONTEXT.md",
+      "sha256": "b0f2c25ee1f6f37859d5a273467a261d4f0892a1a3684b409174f60736e2c6ac",
+      "bytes": 1399
+    },
+    {
+      "path": "docs/engineering/AI-TASK-MODES.md",
+      "sha256": "e8792da1d420db67f4c4f718385ee696d0e48789e30d00557fd6261d7ec61faa",
+      "bytes": 1272
+    },
+    {
+      "path": "docs/engineering/CONTEXT-MAINTENANCE.md",
+      "sha256": "25b55a134cfeee59c72d4fff8702e0a26c5bb4aff0dc57571ea7a90d1c5e9248",
+      "bytes": 1262
+    }
+  ]
+}
