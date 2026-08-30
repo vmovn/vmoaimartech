@@ -28,7 +28,6 @@ import { setCurrentUserId } from "@/lib/storage/active-user";
 import { auditAuthEvent } from "@/lib/security/audit-telemetry";
 
 import { ThemeProvider } from "@/shared/providers/theme-provider";
-import { DemoModeBanner } from "@/components/demo-mode-banner";
 import { CookieConsentBanner } from "@/components/cookie-consent-banner";
 import { PwaProvider } from "@/components/pwa/pwa-provider";
 import { PlatformBrandingApplier } from "@/components/platform-branding-applier";
@@ -337,7 +336,6 @@ function RootComponent() {
         <MediaLightboxProvider>
         <PlatformBrandingApplier />
         <AnalyticsProvider />
-        <DemoModeBanner />
         <PwaProvider />
         <OrgUrlSync />
         <PlatformMaintenanceGate>

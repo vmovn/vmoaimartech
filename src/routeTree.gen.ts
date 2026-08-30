@@ -27,7 +27,6 @@ import { Route as InstallRouteImport } from './routes/install'
 import { Route as HeaderHeightProbeRouteImport } from './routes/header-height-probe'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as FeaturesRouteImport } from './routes/features'
-import { Route as DemoLoginRouteImport } from './routes/demo-login'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AboutRouteImport } from './routes/about'
@@ -485,11 +484,6 @@ const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
 const FeaturesRoute = FeaturesRouteImport.update({
   id: '/features',
   path: '/features',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DemoLoginRoute = DemoLoginRouteImport.update({
-  id: '/demo-login',
-  path: '/demo-login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ContactRoute = ContactRouteImport.update({
@@ -2576,7 +2570,6 @@ export interface FileRoutesByFullPath {
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
-  '/demo-login': typeof DemoLoginRoute
   '/features': typeof FeaturesRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/header-height-probe': typeof HeaderHeightProbeRoute
@@ -2961,7 +2954,6 @@ export interface FileRoutesByTo {
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
-  '/demo-login': typeof DemoLoginRoute
   '/features': typeof FeaturesRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/header-height-probe': typeof HeaderHeightProbeRoute
@@ -3338,7 +3330,6 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
-  '/demo-login': typeof DemoLoginRoute
   '/features': typeof FeaturesRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/header-height-probe': typeof HeaderHeightProbeRoute
@@ -3726,7 +3717,6 @@ export interface FileRouteTypes {
     | '/about'
     | '/auth'
     | '/contact'
-    | '/demo-login'
     | '/features'
     | '/forgot-password'
     | '/header-height-probe'
@@ -4111,7 +4101,6 @@ export interface FileRouteTypes {
     | '/about'
     | '/auth'
     | '/contact'
-    | '/demo-login'
     | '/features'
     | '/forgot-password'
     | '/header-height-probe'
@@ -4487,7 +4476,6 @@ export interface FileRouteTypes {
     | '/about'
     | '/auth'
     | '/contact'
-    | '/demo-login'
     | '/features'
     | '/forgot-password'
     | '/header-height-probe'
@@ -4875,7 +4863,6 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   AuthRoute: typeof AuthRoute
   ContactRoute: typeof ContactRoute
-  DemoLoginRoute: typeof DemoLoginRoute
   FeaturesRoute: typeof FeaturesRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   HeaderHeightProbeRoute: typeof HeaderHeightProbeRoute
@@ -5123,13 +5110,6 @@ declare module '@tanstack/react-router' {
       path: '/features'
       fullPath: '/features'
       preLoaderRoute: typeof FeaturesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/demo-login': {
-      id: '/demo-login'
-      path: '/demo-login'
-      fullPath: '/demo-login'
-      preLoaderRoute: typeof DemoLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/contact': {
@@ -8545,7 +8525,6 @@ const rootRouteChildren: RootRouteChildren = {
   AboutRoute: AboutRoute,
   AuthRoute: AuthRoute,
   ContactRoute: ContactRoute,
-  DemoLoginRoute: DemoLoginRoute,
   FeaturesRoute: FeaturesRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   HeaderHeightProbeRoute: HeaderHeightProbeRoute,

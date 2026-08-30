@@ -16,8 +16,8 @@ export const Route = createFileRoute("/_authenticated/release-readiness")({
   beforeLoad: requireWorkspaceRole("owner", "admin"),
   head: () => ({
     meta: [
-      { title: "Release Readiness — Security, Compliance & CodeCanyon" },
-      { name: "description", content: "Enterprise release checklist covering security, compliance, backups, DevOps, and CodeCanyon publication." },
+      { title: "Product Release Readiness" },
+      { name: "description", content: "Product release checklist covering security, compliance, backups, and DevOps." },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -63,7 +63,7 @@ function ReleaseReadinessPage() {
         <div>
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Release Readiness</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Phase 15 — Security, Compliance, Backup, DevOps & CodeCanyon publication checklist.
+            Security, compliance, backup, DevOps, and Product release checklist.
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -174,7 +174,7 @@ function ReleaseReadinessPage() {
             { l: "Backup & restore", h: docsUrl("index", "backup-restore") },
             { l: "Security hardening", h: docsUrl("index", "security-hardening") },
             { l: "GDPR compliance", h: docsUrl("index", "gdpr") },
-            { l: "CodeCanyon release checklist", h: docsUrl("index", "codecanyon-release") },
+            { l: "Product bootstrap", h: "/docs/engineering/PRODUCT-BOOTSTRAP.md" },
             { l: "Incident response", h: docsUrl("index", "incident-response") },
           ].map((d) => (
             <a key={d.l} href={d.h} className="rounded-md border border-border p-3 hover:bg-muted/60 transition-colors">

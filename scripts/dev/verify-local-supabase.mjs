@@ -3,7 +3,11 @@ import { createClient } from "@supabase/supabase-js";
 const url = process.env.SUPABASE_URL;
 const key = process.env.SUPABASE_PUBLISHABLE_KEY;
 const email = process.env.LOCAL_DEV_EMAIL ?? "dev@local.test";
-const password = process.env.LOCAL_DEV_PASSWORD ?? "LocalDevOnly!2026";
+const password = process.env.LOCAL_DEV_PASSWORD;
+
+if (!password) {
+  throw new Error("LOCAL_DEV_PASSWORD is required. Generate .env.local with `npm run dev:env`.");
+}
 
 if (!url || !key) throw new Error("Run `npm run dev:env` before local verification.");
 

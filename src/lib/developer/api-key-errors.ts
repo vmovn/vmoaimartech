@@ -106,14 +106,6 @@ function classify(e: unknown, action: "create" | "revoke"): ApiKeyErrorInfo {
     );
   }
 
-  // --- Demo mode ---------------------------------------------------------
-  if (msg.includes("demo mode") || msg.includes("read-only")) {
-    return of(
-      "Demo mode is read-only",
-      "Switch to production mode to create or revoke real API keys.",
-    );
-  }
-
   // --- Validation --------------------------------------------------------
   if (msg.includes("string must contain at least 1") || msg.includes("too_small") && msg.includes("name")) {
     return of("Name is required", "Give the key a name so you can recognise it later.", "name");

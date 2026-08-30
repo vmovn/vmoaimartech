@@ -6,6 +6,9 @@ if /I "%~1"=="--run-app" goto run_app
 title VMO AIMarTech Local Launcher
 cd /d "%~dp0"
 set "REPO=%~dp0"
+set "SUPABASE_PROJECT_ID=vmoaimartech-local"
+set "VITE_SUPABASE_PROJECT_ID=vmoaimartech-local"
+set "SUPABASE_TELEMETRY_DISABLED=1"
 set "APP_URL=http://127.0.0.1:8080/"
 set "STUDIO_URL=http://127.0.0.1:56323/"
 

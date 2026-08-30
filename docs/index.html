@@ -54,7 +54,6 @@
       <h4>Features</h4>
       <ul>
         <li><a href="#features">Features</a></li>
-        <li><a href="#demo-mode">Demo Mode</a></li>
         <li><a href="#setup-wizard">Setup Wizard</a></li>
       </ul>
     </div>
@@ -103,7 +102,6 @@
         <li><a href="#doc-codecanyon-release-notes-v3-4-6">Swiffer v3.4.6 — CodeCanyon Release Notes</a></li>
         <li><a href="#doc-codecanyon-release">Swiffer — CodeCanyon Release Checklist</a></li>
         <li><a href="#doc-codecanyon-support">Swiffer — Support & Updates Policy</a></li>
-        <li><a href="#doc-demo-mode">Environment Mode System — Demo vs Production</a></li>
         <li><a href="#doc-deployment">Swiffer — Deployment Guide</a></li>
         <li><a href="#doc-enterprise-review-v1-0-0">Swiffer v1.0.0 — Enterprise Readiness Review</a></li>
         <li><a href="#doc-extension-sdk">Swiffer Extension SDK</a></li>
@@ -294,13 +292,12 @@ docker run -p 8080:8080 --env-file .env swiffer</code></pre>
 │   │   ├── index.tsx           # Marketing landing
 │   │   ├── auth.tsx            # Sign-in / sign-up
 │   │   ├── setup.tsx           # 6-step onboarding wizard
-│   │   ├── install.tsx         # License / bootstrap
+│   │   ├── install.tsx         # Legacy redirect to Product setup
 │   │   ├── _authenticated/     # Protected app subtree
 │   │   └── api/public/*        # Webhooks & external HTTP
 │   ├── components/             # UI components (shadcn + custom)
 │   ├── lib/                    # Business logic + server fns
 │   │   ├── setup/              # Setup wizard server fns
-│   │   ├── demo/               # Demo-mode utilities & guards
 │   │   ├── admin/              # Platform settings
 │   │   ├── messaging/          # Provider abstraction
 │   │   └── pwa/                # Service worker registrar
@@ -353,9 +350,9 @@ docker run -p 8080:8080 --env-file .env swiffer</code></pre>
           <tr><td><code>SUPABASE_URL</code></td><td>Server</td><td>Same URL for server fns</td></tr>
           <tr><td><code>SUPABASE_PUBLISHABLE_KEY</code></td><td>Server</td><td>Server-side publishable key</td></tr>
           <tr><td><code>SUPABASE_SERVICE_ROLE_KEY</code></td><td>Server</td><td>Privileged admin key — never expose</td></tr>
-          <tr><td><code>APP_MODE</code></td><td>Server</td><td><code>demo</code> or <code>production</code></td></tr>
-          <tr><td><code>VITE_APP_MODE</code></td><td>Client</td><td>Mirrors <code>APP_MODE</code> for UI gating</td></tr>
-          <tr><td><code>LOVABLE_API_KEY</code></td><td>Server</td><td>AI Gateway key (Gemini / GPT / Claude)</td></tr>
+          <tr><td><code>DATABASE_URL</code></td><td>Server</td><td>Direct PostgreSQL connection for deterministic migration startup</td></tr>
+          <tr><td><code>SETUP_SECRET</code></td><td>Server</td><td>First-run Product setup challenge; minimum 24 characters</td></tr>
+          <tr><td><code>LOVABLE_API_KEY</code></td><td>Server</td><td>Optional AI Gateway key</td></tr>
         </tbody>
       </table>
 
@@ -424,48 +421,9 @@ docker run -p 8080:8080 --env-file .env swiffer</code></pre>
       <h3>Setup Wizard System</h3>
       <p>See <a href="#setup-wizard">Setup Wizard</a>.</p>
 
-      <h3>Demo System</h3>
-      <p>See <a href="#demo-mode">Demo Mode</a>.</p>
 
       <h3>Notification System</h3>
       <p>In-app toasts (Sonner), realtime notifications table with per-user preferences, and optional web push via the service worker.</p>
-    </section>
-
-    <!-- ===== G. DEMO MODE ===== -->
-    <section id="demo-mode">
-      <h2>Demo / Test Mode (.env Controlled)</h2>
-      <p>Demo mode is a single environment switch controlling both UI visibility and server-side CRUD enforcement.</p>
-
-      <h3>Enable</h3>
-<pre><code class="language-bash">APP_MODE=demo
-VITE_APP_MODE=demo</code></pre>
-
-      <h3>Behavior Matrix</h3>
-      <table class="tbl">
-        <thead><tr><th></th><th><code>APP_MODE=demo</code></th><th><code>APP_MODE=production</code></th></tr></thead>
-        <tbody>
-          <tr><td>Quick-login buttons</td><td class="badge success">Visible</td><td class="badge">Hidden</td></tr>
-          <tr><td>Demo credentials on <code>/auth</code></td><td class="badge success">Visible</td><td class="badge">Hidden</td></tr>
-          <tr><td><code>/demo-login</code> route</td><td class="badge success">Available</td><td>Redirects to <code>/auth</code></td></tr>
-          <tr><td>Demo Mode banner</td><td class="badge warning">Shown for demo users</td><td class="badge">Hidden</td></tr>
-          <tr><td>Destructive CRUD (delete/bulk)</td><td class="badge danger">Blocked (423)</td><td class="badge success">Allowed</td></tr>
-          <tr><td>Read operations</td><td class="badge success">Allowed</td><td class="badge success">Allowed</td></tr>
-        </tbody>
-      </table>
-
-      <h3>Demo Accounts</h3>
-      <table class="tbl">
-        <thead><tr><th>Role</th><th>Email</th><th>Password</th></tr></thead>
-        <tbody>
-          <tr><td>User</td><td><code>user@demo.com</code></td><td><code>User123!</code></td></tr>
-          <tr><td>Agent</td><td><code>agent@demo.com</code></td><td><code>Agent123!</code></td></tr>
-          <tr><td>Admin</td><td><code>admin@demo.com</code></td><td><code>Admin123!</code></td></tr>
-        </tbody>
-      </table>
-      <p>Accounts are auto-provisioned on first login via the <code>provisionDemoAccounts</code> server function.</p>
-
-      <h3>Server-Side Guard</h3>
-      <p>All destructive server fns include <code>demoWriteGuard</code> middleware. Blocked calls return HTTP 423 with a user-safe <code>DemoModeBlockedError</code> and are logged as structured JSON (<code>[demo.blocked]</code>).</p>
     </section>
 
     <!-- ===== H. SETUP WIZARD ===== -->
@@ -6599,286 +6557,6 @@ WHERE scope = 'platform' AND key = 'setup_complete';</code></pre>
       <li><strong>Support:</strong> <a href="https://wrapcoders.com/support">https://wrapcoders.com/support</a></li>
       <li><strong>Security:</strong> <a href="mailto:security@wrapcoders.com">security@wrapcoders.com</a></li>
       <li><strong>Demo:</strong> <a href="https://wrapcoders.com/swiffer-demo">https://wrapcoders.com/swiffer-demo</a></li>
-      </ul>
-
-    </section>
-    <section id="doc-demo-mode">
-      <h2>Environment Mode System — Demo vs Production</h2>
-      <p>Swiffer ships with a single, centralized mode system that flips the entire
-      application between <strong>Demo</strong> and <strong>Production</strong> behavior from one env var.
-      No code changes are needed to switch.</p>
-      <h3>1. Configuration</h3>
-      <p>Set in <code>.env</code> (or your hosting platform&#39;s env store):</p>
-      <pre><code># preferred
-      APP_MODE=demo            # or &quot;production&quot;
-      VITE_APP_MODE=demo       # client bundle needs the VITE_ variant
-
-      # legacy aliases (still honored)
-      DEMO_MODE=true
-      VITE_DEMO_MODE=true
-      </code></pre>
-      <p>Rules:</p>
-      <ul>
-      <li>If <code>APP_MODE</code> (or <code>VITE_APP_MODE</code>) is set, it wins.</li>
-      <li>Otherwise, truthy <code>DEMO_MODE</code> / <code>VITE_DEMO_MODE</code> selects demo.</li>
-      <li>Otherwise, mode is <strong>production</strong>.</li>
-      </ul>
-      <h3>2. Central APIs</h3>
-      <p>Client (<code>src/lib/demo/mode.ts</code>):</p>
-      <table>
-      <thead>
-      <tr>
-      <th>API</th>
-      <th>Purpose</th>
-      </tr>
-      </thead>
-      <tbody><tr>
-      <td><code>isDemoMode()</code> / <code>isProductionMode()</code></td>
-      <td>boolean predicates</td>
-      </tr>
-      <tr>
-      <td><code>APP_MODE</code> / <code>DEMO_MODE_ENABLED</code></td>
-      <td>constants resolved at load</td>
-      </tr>
-      <tr>
-      <td><code>canCreate/Update/Delete/Restore/Duplicate/Import/Bulk/Execute/ChangeSettings/Read/Export</code></td>
-      <td>fine-grained capability checks</td>
-      </tr>
-      <tr>
-      <td><code>demoGuard(&quot;Delete customer&quot;)</code></td>
-      <td>imperative early-return; toasts + logs when blocked</td>
-      </tr>
-      <tr>
-      <td><code>productionGuard(label)</code></td>
-      <td>symmetric helper for prod-only features</td>
-      </tr>
-      <tr>
-      <td><code>useDemoGuard()</code></td>
-      <td>React hook; returns <code>{ enabled, isDemoSession, guard, canCreate, canUpdate, canDelete }</code></td>
-      </tr>
-      <tr>
-      <td><code>getBlockedLog()</code></td>
-      <td>in-memory client log (last 100 blocked attempts)</td>
-      </tr>
-      </tbody></table>
-      <p>Server (<code>src/lib/demo/mode.server.ts</code>):</p>
-      <table>
-      <thead>
-      <tr>
-      <th>API</th>
-      <th>Purpose</th>
-      </tr>
-      </thead>
-      <tbody><tr>
-      <td><code>serverAppMode()</code> / <code>isServerDemoMode()</code> / <code>isServerProductionMode()</code></td>
-      <td>request-time env resolution</td>
-      </tr>
-      <tr>
-      <td><code>demoWriteGuard(label)</code></td>
-      <td>TanStack <strong>function middleware</strong> — attach to any write server fn</td>
-      </tr>
-      <tr>
-      <td><code>assertNotDemo(label)</code></td>
-      <td>throw-guard for raw server routes and edge handlers</td>
-      </tr>
-      <tr>
-      <td><code>DemoModeBlockedError</code></td>
-      <td>user-safe error (<code>status=423</code>, <code>code=&quot;DEMO_MODE_BLOCKED&quot;</code>)</td>
-      </tr>
-      </tbody></table>
-      <h3>3. Applying the guard</h3>
-      <h4>3a. Client destructive handler</h4>
-      <pre><code class="language-tsx">import { useDemoGuard } from &quot;@/lib/demo/mode&quot;;
-
-      function DeleteBtn({ id }: { id: string }) {
-        const { guard } = useDemoGuard();
-        async function onClick() {
-          if (!guard(&quot;Delete customer&quot;)) return;   // toasts + logs, no-ops in prod
-          await api.customers.delete(id);
-        }
-        return &lt;button onClick={onClick}&gt;Delete&lt;/button&gt;;
-      }
-      </code></pre>
-      <p>Or gate rendering:</p>
-      <pre><code class="language-tsx">import { canDelete } from &quot;@/lib/demo/mode&quot;;
-      {canDelete() &amp;&amp; &lt;DeleteBtn id={id} /&gt;}
-      </code></pre>
-      <h4>3b. Server function (recommended pattern)</h4>
-      <pre><code class="language-ts">import { createServerFn } from &quot;@tanstack/react-start&quot;;
-      import { requireSupabaseAuth } from &quot;@/integrations/supabase/auth-middleware&quot;;
-      import { demoWriteGuard } from &quot;@/lib/demo/mode.server&quot;;
-
-      export const deleteCustomer = createServerFn({ method: &quot;POST&quot; })
-        .middleware([requireSupabaseAuth, demoWriteGuard(&quot;Delete customer&quot;)])
-        .inputValidator(schema)
-        .handler(async ({ data, context }) =&gt; { /* ... */ });
-      </code></pre>
-      <p>Order matters: <code>requireSupabaseAuth</code> first (so the log carries <code>userId</code>),
-      then <code>demoWriteGuard</code>.</p>
-      <h4>3c. Server route (<code>src/routes/api/**</code>)</h4>
-      <pre><code class="language-ts">import { assertNotDemo } from &quot;@/lib/demo/mode.server&quot;;
-
-      export const Route = createFileRoute(&quot;/api/plugins/install&quot;)({
-        server: {
-          handlers: {
-            POST: async ({ request }) =&gt; {
-              assertNotDemo(&quot;Install plugin&quot;);
-              // ...normal handler
-            },
-          },
-        },
-      });
-      </code></pre>
-      <h4>3d. Webhooks, cron, background jobs</h4>
-      <p>Same pattern — call <code>assertNotDemo(&quot;...&quot;)</code> at the top of any handler that
-      mutates state. Read-only webhooks (delivery receipts, analytics ingest)
-      should not be blocked; call the guard only for state-changing branches.</p>
-      <h3>4. Server error contract</h3>
-      <p><code>DemoModeBlockedError</code> produces:</p>
-      <pre><code>status: 423
-      code:   &quot;DEMO_MODE_BLOCKED&quot;
-      message: &quot;Demo Mode is enabled. &lt;Action&gt; is disabled in the live demonstration.&quot;
-      </code></pre>
-      <p>The message is user-safe and matches the client toast, so surfacing
-      <code>err.message</code> from generic error handlers gives a consistent UX. No stack
-      traces are exposed.</p>
-      <h3>5. Logging</h3>
-      <p>Blocked attempts are logged <strong>only in demo mode</strong>:</p>
-      <ul>
-      <li>Client: <code>console.info(&quot;[demo] blocked&quot;, { action, source, at, path })</code>
-      plus in-memory ring buffer via <code>getBlockedLog()</code>.</li>
-      <li>Server: single-line JSON <code>[demo.blocked] { action, endpoint, method, userId, ip, ua, at }</code> — pick up in your log aggregator by the prefix.</li>
-      </ul>
-      <p>In production, both paths are inert (guards short-circuit before any log
-      call).</p>
-      <h3>6. UI surfaces automatically driven by APP_MODE</h3>
-      <table>
-      <thead>
-      <tr>
-      <th>Surface</th>
-      <th>Behavior</th>
-      </tr>
-      </thead>
-      <tbody><tr>
-      <td><code>/auth</code> demo-credentials picker</td>
-      <td>mounted only when <code>DEMO_MODE_ENABLED</code></td>
-      </tr>
-      <tr>
-      <td><code>/demo-login</code> route</td>
-      <td><code>beforeLoad</code> redirects to <code>/auth</code> in production</td>
-      </tr>
-      <tr>
-      <td>Global &quot;Demo Mode&quot; banner (<code>__root.tsx</code>)</td>
-      <td>only mounts in demo mode; visible for demo sessions</td>
-      </tr>
-      <tr>
-      <td><code>useDemoGuard()</code> toasts</td>
-      <td>inert in production</td>
-      </tr>
-      </tbody></table>
-      <h3>7. Coverage report (what to wrap)</h3>
-      <p>The primitives above are drop-in. Below is the audit of write surfaces that
-      should get <code>demoWriteGuard(...)</code> (server) and/or <code>useDemoGuard()</code> (client).
-      Each row lists the module and the label to use so toasts + logs read well.</p>
-      <h4>CRM</h4>
-      <ul>
-      <li><code>contacts</code> create/update/delete/import — &quot;Save contact&quot;, &quot;Delete contact&quot;, &quot;Import contacts&quot;</li>
-      <li><code>companies</code> — &quot;Save company&quot;, &quot;Delete company&quot;</li>
-      <li><code>leads</code> — &quot;Save lead&quot;, &quot;Delete lead&quot;, &quot;Convert lead&quot;</li>
-      <li><code>deals</code> — &quot;Save deal&quot;, &quot;Delete deal&quot;, &quot;Move deal stage&quot;</li>
-      <li><code>activities</code>, <code>notes</code> — &quot;Save note&quot;, &quot;Delete note&quot;</li>
-      <li><code>crm_tags</code>, <code>crm_segments</code> — &quot;Save tag/segment&quot;, &quot;Delete tag/segment&quot;</li>
-      <li><code>custom_field_definitions</code> — &quot;Save custom field&quot;, &quot;Delete custom field&quot;</li>
-      </ul>
-      <h4>Inbox / Messaging</h4>
-      <ul>
-      <li><code>conversations</code> bulk update / assign / delete — &quot;Update conversation&quot;, &quot;Delete conversation&quot;</li>
-      <li><code>messages</code> send / delete — &quot;Send message&quot;, &quot;Delete message&quot;</li>
-      <li><code>message_templates</code>, <code>wa_templates</code> — &quot;Save template&quot;, &quot;Delete template&quot;</li>
-      <li><code>channel_accounts</code>, <code>inboxes</code> — &quot;Connect channel&quot;, &quot;Delete inbox&quot;</li>
-      <li>WhatsApp media upload (<code>src/routes/api/whatsapp/**</code>) — <code>assertNotDemo(&quot;Upload media&quot;)</code></li>
-      <li>Webhook receivers (Meta/Instagram/Messenger) — leave receive path enabled; block state-changing branches (e.g. auto-reply send-back) with <code>assertNotDemo</code>.</li>
-      </ul>
-      <h4>Commerce</h4>
-      <ul>
-      <li><code>commerce_orders</code>, <code>commerce_carts</code>, <code>commerce_promotions</code>, <code>commerce_inventory*</code> — all create/update/delete</li>
-      <li>Payment link create/refund — &quot;Create payment link&quot;, &quot;Refund payment&quot;</li>
-      </ul>
-      <h4>Billing</h4>
-      <ul>
-      <li><code>billing_invoices</code>, <code>billing_documents</code>, <code>billing_customers</code>, <code>billing_automation_config</code> — all writes</li>
-      <li>Stripe/Paddle webhook handlers — block plan mutation branches only</li>
-      </ul>
-      <h4>Marketing / Automation</h4>
-      <ul>
-      <li><code>campaigns</code>, <code>drip_sequences</code>, <code>automations</code>, <code>assignment_rules</code> — save/delete/enable</li>
-      <li>Campaign dispatch queue enqueue — &quot;Send campaign&quot;</li>
-      <li>Workflow builder save/publish/delete — &quot;Save workflow&quot;, &quot;Delete workflow&quot;</li>
-      </ul>
-      <h4>Chatbots</h4>
-      <ul>
-      <li><code>chatbots</code>, <code>chatbot_prompts</code>, <code>chatbot_flow_versions</code>, <code>chatbot_templates</code> — all writes</li>
-      <li>Chatbot deploy / webhook create — &quot;Deploy chatbot&quot;, &quot;Save webhook&quot;</li>
-      </ul>
-      <h4>Booking / Calendar</h4>
-      <ul>
-      <li><code>booking_event_types</code>, <code>booking_pages</code>, <code>booking_appointments</code> — save/cancel/delete</li>
-      <li>Calendar sync connect/disconnect</li>
-      </ul>
-      <h4>Helpdesk / KB</h4>
-      <ul>
-      <li>Ticket create/assign/close (via conversation surfaces above)</li>
-      <li><code>kb_articles</code>, <code>kb_categories</code>, <code>kb_collections</code> — publish/update/delete</li>
-      </ul>
-      <h4>Files &amp; Storage</h4>
-      <ul>
-      <li><code>files</code> upload/delete, avatar upload, portal attachments — &quot;Upload file&quot;, &quot;Delete file&quot;</li>
-      </ul>
-      <h4>Admin / Super Admin</h4>
-      <ul>
-      <li><code>organizations</code>, <code>workspaces</code>, membership changes — &quot;Save workspace&quot;, &quot;Delete workspace&quot;</li>
-      <li><code>user_roles</code> add/remove — &quot;Change role&quot;</li>
-      <li><code>api_keys</code>, <code>ip_allowlists</code>, <code>data_retention_policies</code> — save/delete</li>
-      <li>Plugin install/update/remove — <code>assertNotDemo(&quot;Install plugin&quot;)</code> etc.</li>
-      <li>Theme install/update/remove — same pattern</li>
-      <li>License activate/deactivate — same pattern</li>
-      <li>SMTP / Storage / Webhook settings — &quot;Update SMTP settings&quot;, etc.</li>
-      <li>Backup schedule create / restore / DB reset — <strong>always block in demo</strong></li>
-      <li>Migrations run from the install wizard — <code>/install</code> should be inert in demo (redirect to <code>/auth</code>).</li>
-      </ul>
-      <h4>Background jobs / cron / queues</h4>
-      <ul>
-      <li>Any pg_cron endpoint under <code>/api/public/cron/*</code> — call <code>assertNotDemo</code> for write branches.</li>
-      <li>Outbox dispatcher (<code>message_outbox</code>), campaign dispatcher — same.</li>
-      <li>Export jobs are allowed (read-only side effect); imports are blocked.</li>
-      </ul>
-      <h4>Allowed in demo (never gate)</h4>
-      <ul>
-      <li>Login / logout, view pages, search, filter, sort, pagination</li>
-      <li>Analytics dashboards, BI reports, KPI snapshots</li>
-      <li>Theme / language / dark-mode switching</li>
-      <li>Navigation, documentation, previews</li>
-      <li>Read APIs (<code>GET</code> handlers, <code>SELECT</code> server fns)</li>
-      <li>Exports (CSV/PDF of data the user can already see)</li>
-      </ul>
-      <h3>8. Switching modes</h3>
-      <p>Change <code>.env</code>:</p>
-      <pre><code>APP_MODE=production
-      VITE_APP_MODE=production
-      </code></pre>
-      <p>Restart the app. Every guard becomes a no-op; the banner, demo-credentials
-      UI, and <code>/demo-login</code> route disappear automatically. No code edits needed.</p>
-      <h3>9. Security notes</h3>
-      <ul>
-      <li>Frontend guards are UX only. <strong>Server middleware is authoritative</strong> —
-      a user with DevTools cannot bypass <code>demoWriteGuard</code> / <code>assertNotDemo</code>
-      because they run inside the server function/route handler before any
-      database call.</li>
-      <li>Env vars are the only switch. There is no runtime toggle, no admin UI
-      flip, no DB flag — this eliminates the &quot;someone flipped demo off in the
-      DB&quot; class of incident.</li>
-      <li><code>DemoModeBlockedError.message</code> is deliberately generic and safe to
-      surface directly to end users.</li>
       </ul>
 
     </section>

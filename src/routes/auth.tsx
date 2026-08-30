@@ -5,13 +5,12 @@ import { lovable } from "@/integrations/lovable/index";
 import { toast } from "sonner";
 import { z } from "zod";
 import { PasswordInput } from "@/components/auth/password-input";
-import { DemoCredentials } from "@/components/auth/demo-credentials";
-import { DEMO_MODE_ENABLED } from "@/lib/demo/mode";
 import { usePlatformRuntime } from "@/hooks/use-platform-runtime";
 import { usePlatformBranding } from "@/hooks/use-platform-branding";
 import swifferLogo from "@/assets/swiffer-logo.png";
 import { safeNext, safeNextFromSearch } from "@/lib/auth/next-path";
 import { APP_VERSION_LABEL } from "@/lib/app-version";
+import { getSetupStatus } from "@/lib/setup/setup.functions";
 
 export const Route = createFileRoute("/auth")({
   validateSearch: (search: Record<string, unknown>): { next?: string } => {
@@ -32,6 +31,8 @@ export const Route = createFileRoute("/auth")({
     ],
   }),
   beforeLoad: async ({ location, search }) => {
+    const setup = await getSetupStatus();
+    if (!setup.setupComplete) throw redirect({ to: "/setup" });
     if (typeof window === "undefined") return;
     
     // Use a race to avoid hanging the route transition if Supabase is slow
@@ -352,11 +353,6 @@ function AuthPage() {
             </form>
           )}
 
-          {DEMO_MODE_ENABLED && mode === "sign-in" && (
-            <div className="mt-8 border-t border-border pt-6">
-              <DemoCredentials onAutofill={(demoEmail, demoPassword) => { setEmail(demoEmail); setPassword(demoPassword); }} />
-            </div>
-          )}
         </div>
       </div>
     </div>

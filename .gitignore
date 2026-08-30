@@ -37,6 +37,7 @@ supabase/.temp/
 # Deployment env files (never commit real secrets)
 .env
 .env.local
+.env.local.tmp
 .env.development
 .env.staging
 .env.production

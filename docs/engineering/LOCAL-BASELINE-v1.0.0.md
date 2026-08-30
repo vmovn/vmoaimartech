@@ -54,7 +54,7 @@ is confined to ignored `.env.local` and server output.
 ## Baseline Fixes
 
 1. Corrected the unambiguous vCard security-policy identifiers in
-   `20260809165200_security_hardening.sql`. Full evidence and vendor provenance
+   `20260809165200_bffcae02-e6e7-46f7-8b9b-62d634d4684c.sql`. Full evidence and vendor provenance
    are recorded in `docs/engineering/BASELINE-FIXES.md`.
 2. Pointed `xlsx` 0.20.3 to the official SheetJS CDN tarball already recorded
    by the vendor Bun lock and documentation. This resolved clean npm `ETARGET`
@@ -146,7 +146,7 @@ part of freeze preparation.
 - `package-lock.json`
 - `supabase/config.toml`
 - `supabase/seed.sql`
-- `supabase/migrations/20260809165200_security_hardening.sql`
+- `supabase/migrations/20260809165200_bffcae02-e6e7-46f7-8b9b-62d634d4684c.sql`
 - `scripts/dev/generate-local-env.mjs`
 - `scripts/dev/verify-local-supabase.mjs`
 - `docs/engineering/BASELINE-FIXES.md`

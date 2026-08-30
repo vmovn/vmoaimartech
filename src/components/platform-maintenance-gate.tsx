@@ -20,7 +20,7 @@ import { usePlatformRole } from "@/shared/hooks/use-platform-role";
 const BYPASS_PREFIXES = [
   "/auth",
   "/admin",
-  "/install",
+  "/setup",
   "/maintenance",
   "/forgot-password",
   "/reset-password",

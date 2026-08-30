@@ -2,6 +2,9 @@
 setlocal EnableExtensions EnableDelayedExpansion
 title VMO AIMarTech Local Stop
 cd /d "%~dp0"
+set "SUPABASE_PROJECT_ID=vmoaimartech-local"
+set "VITE_SUPABASE_PROJECT_ID=vmoaimartech-local"
+set "SUPABASE_TELEMETRY_DISABLED=1"
 
 echo ========================================
 echo Stopping VMO AIMarTech Local Development

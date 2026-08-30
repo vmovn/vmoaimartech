@@ -16,7 +16,8 @@ RUN --mount=type=cache,target=/root/.npm \
 # ---------- 2. Build ----------
 FROM node:20-alpine AS build
 WORKDIR /app
-ENV NODE_ENV=production
+ENV NODE_ENV=production \
+    DEPLOY_TARGET=node
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 # Public build-time env (VITE_*) is baked in here.
@@ -30,7 +31,11 @@ ENV VITE_SUPABASE_URL=$VITE_SUPABASE_URL \
     APP_VERSION=$APP_VERSION
 RUN npm run build
 
-# ---------- 3. Runtime ----------
+# ---------- 3. Production dependencies ----------
+FROM deps AS production-deps
+RUN npm prune --omit=dev
+
+# ---------- 4. Runtime ----------
 FROM node:20-alpine AS runtime
 ARG APP_VERSION=4.4.6
 LABEL org.opencontainers.image.title="Swiffer" \
@@ -44,7 +49,11 @@ ENV NODE_ENV=production \
     APP_VERSION=$APP_VERSION
 RUN addgroup -S swiffer && adduser -S swiffer -G swiffer
 COPY --from=build --chown=swiffer:swiffer /app/.output ./.output
+COPY --from=production-deps --chown=swiffer:swiffer /app/node_modules ./node_modules
 COPY --from=build --chown=swiffer:swiffer /app/package.json ./package.json
+COPY --from=build --chown=swiffer:swiffer /app/app.js ./app.js
+COPY --from=build --chown=swiffer:swiffer /app/scripts/product ./scripts/product
+COPY --from=build --chown=swiffer:swiffer /app/supabase/migrations ./supabase/migrations
 
 USER swiffer
 EXPOSE 3000
@@ -52,4 +61,4 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
   CMD wget -qO- http://127.0.0.1:${PORT}/api/public/health || exit 1
 
-CMD ["node", ".output/server/index.mjs"]
+CMD ["npm", "run", "product:start"]

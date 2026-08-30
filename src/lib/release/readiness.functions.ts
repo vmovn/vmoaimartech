@@ -1,7 +1,7 @@
 /**
  * Phase 15 — Release Readiness aggregator.
  * Aggregates security, compliance, backup, and DevOps signals into a single
- * CodeCanyon-ready posture report. Read-only, RLS-scoped per workspace.
+ * Product release posture report. Read-only, RLS-scoped per workspace.
  */
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
@@ -110,12 +110,11 @@ export const getReleaseReadiness = createServerFn({ method: "GET" })
       { id: "do.migrate", label: "Idempotent database migrations", status: "pass", detail: "All migrations use IF NOT EXISTS / conditional guards." },
     ];
 
-    // Release / CodeCanyon
+    // Product release
     const releaseChecks: Check[] = [
-      { id: "rel.docs", label: "Buyer documentation (install + admin + user)", status: "info", detail: "See /docs/codecanyon/." },
-      { id: "rel.demo", label: "Demo site with seeded data", status: "info", detail: "Reset nightly via cron." },
+      { id: "rel.docs", label: "Deployment and operator documentation", status: "pass", detail: "Coolify and Product bootstrap runbooks are available." },
+      { id: "rel.setup", label: "Secure first-run setup", status: "pass", detail: "Setup Secret, Super Admin claim, and permanent setup lock." },
       { id: "rel.branding", label: "White-label / branding configurable", status: "pass", detail: "Logo, colors, domain per-tenant." },
-      { id: "rel.license", label: "License activation flow", status: "info", detail: "CodeCanyon purchase-code verification." },
       { id: "rel.updates", label: "In-app update checker", status: "info", detail: "Points to versioned release feed." },
       { id: "rel.support", label: "Support channel & SLA published", status: "info", detail: "Email + ticket portal." },
       { id: "rel.changelog", label: "Public changelog", status: "pass", detail: "Available at /developer/changelog." },
@@ -127,7 +126,7 @@ export const getReleaseReadiness = createServerFn({ method: "GET" })
       { key: "compliance", title: "Compliance",            score: score(compChecks),    checks: compChecks },
       { key: "backup",     title: "Backup & Disaster Recovery", score: score(backupChecks), checks: backupChecks },
       { key: "devops",     title: "DevOps & Operations",   score: score(devopsChecks),  checks: devopsChecks },
-      { key: "release",    title: "CodeCanyon Release",    score: score(releaseChecks), checks: releaseChecks },
+      { key: "release",    title: "Product Release",       score: score(releaseChecks), checks: releaseChecks },
     ];
     const overall = Math.round(sections.reduce((a, s) => a + s.score, 0) / sections.length);
     const failing = sections.some((s) => s.checks.some((c) => c.status === "fail"));

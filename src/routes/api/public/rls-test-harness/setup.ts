@@ -18,8 +18,7 @@ export const Route = createFileRoute("/api/public/rls-test-harness/setup")({
         if (request.headers.get("x-harness-secret") !== secret) {
           return json({ error: "unauthorized" }, 401);
         }
-        const mode = process.env.APP_MODE ?? process.env.VITE_APP_MODE;
-        if (mode === "production" && process.env.RLS_TEST_HARNESS_ALLOW_PROD !== "1") {
+        if (process.env.NODE_ENV === "production" && process.env.RLS_TEST_HARNESS_ALLOW_PROD !== "1") {
           return json({ error: "refused_in_production" }, 403);
         }
 

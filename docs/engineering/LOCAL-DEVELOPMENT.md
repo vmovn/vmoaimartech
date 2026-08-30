@@ -88,13 +88,15 @@ by Git. Never copy production values into it and never commit it.
 | `VITE_SUPABASE_URL` | Local Supabase API URL | build/runtime | browser-safe | required |
 | `VITE_SUPABASE_PUBLISHABLE_KEY` | Local publishable API key | build/runtime | browser-safe | required |
 | `VITE_APP_ENV` | Deployment label (`development`) | build | browser-safe | required locally |
-| `VITE_APP_MODE` | Real-data versus demo behavior | build | browser-safe | required; use `production` for real local Supabase |
-| `VITE_DEMO_MODE` | Legacy demo-mode alias | build | browser-safe | optional; `false` locally |
+| `DATABASE_URL` | Direct local PostgreSQL connection for the Product migration runner | runtime | server-only | required for `product:migrate` and setup validation |
 | `SUPABASE_URL` | Local Supabase API URL for server functions | runtime | server-only | required |
 | `SUPABASE_PUBLISHABLE_KEY` | Publishable key for authenticated server clients | runtime | server-only | required |
 | `SUPABASE_SERVICE_ROLE_KEY` | Local privileged key for trusted server operations | runtime | server-only | required for admin/provisioning functions |
-| `APP_MODE` | Real-data versus demo behavior | runtime | server-only | required; use `production` |
-| `DEMO_MODE` | Legacy demo-mode alias | runtime | server-only | optional; `false` locally |
+| `SESSION_SECRET` | Local application session signing | runtime | server-only | required; generated with 256 bits of entropy |
+| `SETUP_SECRET` | First-run setup challenge | runtime | server-only | required; generated with 256 bits of entropy |
+| `INTERNAL_CRON_TOKEN` / `WEBHOOK_DISPATCH_SECRET` | Protect local internal jobs and dispatch | runtime | server-only | generated locally |
+| `WIDGET_SIGNING_SECRET` / `APP_USER_CONNECTION_KEY_SECRET` | Sign widgets and encrypt local provider connections | runtime | server-only | generated locally |
+| `WA_QR_WEBHOOK_SECRET` / `WA_QR_WORKER_TOKEN` / `WA_QR_WORKER_SIGNING_SECRET` | Protect the optional local QR-worker boundary | runtime | server-only | generated locally; worker remains disabled until configured |
 | `HOST` / `PORT` | Local application bind address and port | runtime | server-only | required locally |
 | `APP_ORIGIN` | OAuth/CORS application origin | runtime | server-only | required locally |
 | `LOG_LEVEL` | Server logging verbosity | runtime | server-only | optional |
@@ -131,12 +133,12 @@ npm run dev:reset
 ```
 
 This resets only the database configured in `supabase/config.toml`, reapplies
-all 290 migrations, applies `supabase/seed.sql`, regenerates `.env.local`, and
+all 290 frozen baseline migrations plus later additive Product migrations, applies `supabase/seed.sql`, regenerates `.env.local`, and
 runs the service verification.
 
 Product v1.0.0 baseline corrections are preserved as history in
 `docs/engineering/BASELINE-FIXES.md`. The baseline is frozen: all existing 290
-migrations are immutable and every future database change uses a new migration.
+migrations are immutable and every future database change uses a new migration. The current chain contains 291 migrations: 290 frozen baseline migrations plus the additive Product bootstrap-security migration.
 
 ## Seed Development Data
 
@@ -184,15 +186,42 @@ npm run dev:infra:stop
 
 ## Reset Local Database
 
-The following command is destructive to local development data only:
+For a complete clean-room reset, double-click `RESET-LOCAL.cmd`. It requires
+typing `RESET-LOCAL` before deletion and refuses to run unless
+`supabase/config.toml` identifies the project as `vmoaimartech-local`.
+
+The launcher stops only the application terminal it owns, deletes only this
+project's local Supabase volumes with `--no-backup`, and recreates PostgreSQL,
+Auth, Storage, Realtime, migrations, and infrastructure seed. It deletes all
+local users, sessions, application rows, uploads, and Storage objects. It does
+not delete source code, dependencies, Docker Desktop, browser profiles, or
+unrelated Docker projects. When complete it starts the app and opens `/setup`.
+
+Step 7 generates a new production-strength local secret set using Node.js
+cryptographic randomness. A normal `START-LOCAL.cmd` run preserves existing
+strong values so sessions and setup authorization do not rotate every day.
+`RESET-LOCAL.cmd` deletes `.env.local`, so a factory reset always creates an
+independent secret set. Supabase's local keys come from the rebuilt stack;
+third-party credentials are never fabricated.
+
+The Windows launchers explicitly pin `SUPABASE_PROJECT_ID` to
+`vmoaimartech-local`, overriding placeholder values that may exist in a legacy
+root `.env`. After `--no-backup`, RESET waits until this project's containers
+are fully removed before starting the clean stack, avoiding stop/start races.
+
+Manual database-only fallback:
 
 ```powershell
-npm run dev:reset
+npm.cmd exec -- supabase stop --project-id vmoaimartech-local --no-backup
+npm.cmd run dev:infra:start
+npm.cmd run dev:env
+npm.cmd run dev
 ```
 
-Confirm that `supabase/config.toml` still points to `vmoaimartech-local` and the
-local `5632x` ports before resetting. Never use this workflow against a linked
-or hosted project.
+`npm.cmd run dev:reset` is a lighter reset that replays the database and runs
+verification fixtures; use `RESET-LOCAL.cmd` when testing the true first-run
+Product setup with no users. Never use either workflow against a linked or
+hosted project.
 
 ## Common Problems
 

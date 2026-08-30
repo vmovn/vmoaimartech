@@ -110,6 +110,14 @@ risk, production impact, external credentials/accounts, or business/product
 decisions requiring human judgment. Do not ask for approval for routine,
 reversible engineering work.
 
+### Bootstrap red zone
+
+Setup-open state, `setup_complete`, Setup Secret handling, initial Super Admin
+bootstrap, migration bootstrap, and first-run environment validation are
+security-sensitive. Never weaken or bypass these controls without explicit
+architectural justification and focused security/regression tests. Durable
+bootstrap architecture is documented in `docs/engineering/PRODUCT-BOOTSTRAP.md`.
+
 ### External environment failure policy
 
 When Docker, WSL, OS permissions, external registries, CLI telemetry/cache,

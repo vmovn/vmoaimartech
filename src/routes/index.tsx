@@ -1727,7 +1727,7 @@ function Footer() {
       title: "Resources",
       links: [
         { label: "Documentation", href: docsUrl() },
-        { label: "Install guide", href: "/install" },
+        { label: "Deployment guide", href: "/setup" },
         { label: "About", href: "/about" },
         { label: "Contact", href: "/contact" },
       ],
@@ -1758,7 +1758,7 @@ function Footer() {
               <a href={docsUrl()} target="_blank" rel="noreferrer" className="link-marketing-onhero inline-flex items-center gap-1">
                 <Github className="size-3.5" /> Docs
               </a>
-              <a href="/install" className="link-marketing-onhero inline-flex items-center gap-1">
+              <a href="/setup" className="link-marketing-onhero inline-flex items-center gap-1">
                 <Server className="size-3.5" /> Self-host
               </a>
             </div>
