@@ -279,7 +279,11 @@ async function probe(admin: SupabaseClient): Promise<Map<string, OperationalResu
   const list = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
   const knownPersistentFixture = list.data?.users.some((user) => {
     const email = user.email?.toLowerCase() ?? "";
-    return email.endsWith("@local.test") || email.endsWith("@example.test");
+    return (
+      email.endsWith("@local.test") ||
+      email.endsWith("@example.test") ||
+      /^fixture-[^@]+@example\.invalid$/u.test(email)
+    );
   });
   checks.set(
     "local-development",
@@ -320,8 +324,6 @@ function capabilityStatus(
   environment: EnvironmentVariableCheck[],
   operational: OperationalResult | undefined,
 ): OperationalResult {
-  if (operational) return operational;
-
   const blockingMissing = environment.some(
     (item) => item.setupBlocking === "YES" && !item.configured,
   );
@@ -342,6 +344,8 @@ function capabilityStatus(
       "Thiếu một biến môi trường bắt buộc.",
       true,
     );
+
+  if (operational) return operational;
 
   if (capability.category === "local") {
     return result(
