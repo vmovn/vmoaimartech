@@ -58,11 +58,33 @@ BEGIN
   LIMIT 1;
 
   IF v_workspace_id IS NULL THEN
-    v_slug := regexp_replace(lower(v_name), '[^a-z0-9]+', '-', 'g');
-    v_slug := trim(both '-' from v_slug) || '-' || substr(v_org_id::text, 1, 6);
-    INSERT INTO public.workspaces (name, slug, owner_id, organization_id, plan)
-    VALUES (v_name, v_slug, _user_id, v_org_id, 'free')
-    RETURNING id INTO v_workspace_id;
+    SELECT w.id INTO v_workspace_id
+    FROM public.workspaces w
+    WHERE w.owner_id = _user_id
+      AND w.organization_id IS NULL
+      AND EXISTS (
+        SELECT 1
+        FROM public.workspace_members wm
+        WHERE wm.workspace_id = w.id
+          AND wm.user_id = _user_id
+          AND wm.role = 'owner'
+          AND wm.status = 'active'
+      )
+    ORDER BY w.created_at ASC
+    LIMIT 1
+    FOR UPDATE;
+
+    IF v_workspace_id IS NOT NULL THEN
+      UPDATE public.workspaces
+      SET organization_id = v_org_id
+      WHERE id = v_workspace_id;
+    ELSE
+      v_slug := regexp_replace(lower(v_name), '[^a-z0-9]+', '-', 'g');
+      v_slug := trim(both '-' from v_slug) || '-' || substr(v_org_id::text, 1, 6);
+      INSERT INTO public.workspaces (name, slug, owner_id, organization_id, plan)
+      VALUES (v_name, v_slug, _user_id, v_org_id, 'free')
+      RETURNING id INTO v_workspace_id;
+    END IF;
   END IF;
 
   INSERT INTO public.workspace_members (workspace_id, user_id, role, status)

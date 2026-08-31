@@ -64,6 +64,10 @@ async function cleanupFixtures() {
       cleanupErrors.push(error instanceof Error ? error.message : String(error));
     }
   }
+  await Promise.allSettled([
+    ...fixtureClients.map((supabase) => supabase.realtime.disconnect()),
+    admin.realtime.disconnect(),
+  ]);
   if (cleanupErrors.length > 0) throw new Error(cleanupErrors.join("; "));
 }
 
@@ -71,6 +75,22 @@ let verificationError;
 try {
   const primary = await authenticate(fixtureAddresses[0]);
   const secondary = await authenticate(fixtureAddresses[1]);
+
+  const primaryOrganization = await admin.rpc("ensure_personal_organization", {
+    _user_id: primary.user.id,
+    _email: fixtureAddresses[0],
+  });
+  if (primaryOrganization.error || !primaryOrganization.data) {
+    throw primaryOrganization.error ?? new Error("Primary organization provisioning failed");
+  }
+
+  const secondaryOrganization = await admin.rpc("ensure_personal_organization", {
+    _user_id: secondary.user.id,
+    _email: fixtureAddresses[1],
+  });
+  if (secondaryOrganization.error || !secondaryOrganization.data) {
+    throw secondaryOrganization.error ?? new Error("Secondary organization provisioning failed");
+  }
 
   const profile = await primary.supabase
     .from("profiles")
@@ -94,6 +114,36 @@ try {
     .eq("user_id", secondary.user.id);
   if (secondaryMemberships.error || secondaryMemberships.data.length !== 1) {
     throw secondaryMemberships.error ?? new Error("Secondary workspace provisioning failed");
+  }
+
+  const primaryOwnedWorkspaces = await admin
+    .from("workspaces")
+    .select("id, organization_id")
+    .eq("owner_id", primary.user.id);
+  if (
+    primaryOwnedWorkspaces.error ||
+    primaryOwnedWorkspaces.data.length !== 1 ||
+    primaryOwnedWorkspaces.data[0].organization_id !== primaryOrganization.data
+  ) {
+    throw (
+      primaryOwnedWorkspaces.error ??
+      new Error("Personal organization provisioning created a duplicate workspace")
+    );
+  }
+
+  const secondaryOwnedWorkspaces = await admin
+    .from("workspaces")
+    .select("id, organization_id")
+    .eq("owner_id", secondary.user.id);
+  if (
+    secondaryOwnedWorkspaces.error ||
+    secondaryOwnedWorkspaces.data.length !== 1 ||
+    secondaryOwnedWorkspaces.data[0].organization_id !== secondaryOrganization.data
+  ) {
+    throw (
+      secondaryOwnedWorkspaces.error ??
+      new Error("Secondary personal organization provisioning created a duplicate workspace")
+    );
   }
 
   const primaryWorkspace = primaryMemberships.data[0].workspace_id;
@@ -163,6 +213,7 @@ console.log(
       auth: true,
       profile_trigger: true,
       workspace_trigger: true,
+      tenant_provisioning_idempotent: true,
       cross_tenant_rls: true,
       storage: true,
       realtime: true,
