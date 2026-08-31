@@ -82,7 +82,7 @@ CREATE TABLE IF NOT EXISTS public.backup_schedules (
   scope public.backup_scope NOT NULL DEFAULT 'full',
   backup_type public.backup_type NOT NULL DEFAULT 'full',
   cron_expression TEXT NOT NULL DEFAULT '0 3 * * *',
-  timezone TEXT NOT NULL DEFAULT 'UTC',
+  timezone TEXT NOT NULL DEFAULT 'Asia/Ho_Chi_Minh',
   retention_days INT NOT NULL DEFAULT 30,
   keep_last_n INT NOT NULL DEFAULT 30,
   destination public.backup_destination NOT NULL DEFAULT 'lovable_cloud',

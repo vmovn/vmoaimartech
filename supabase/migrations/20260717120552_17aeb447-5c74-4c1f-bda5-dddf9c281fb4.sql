@@ -96,7 +96,7 @@ BEGIN
   UNION ALL
   (
     SELECT 'conversation'::text, conv.id, conv.id,
-      coalesce(conv.subject, ct.display_name, 'Conversation'),
+      coalesce(conv.subject, ct.display_name, 'Cuộc hội thoại'),
       coalesce(conv.last_message_preview, ''),
       public.similarity(coalesce(conv.subject,'') || ' ' || coalesce(conv.last_message_preview,''), _q)::real,
       conv.created_at,
@@ -132,7 +132,7 @@ BEGIN
   UNION ALL
   (
     SELECT 'attachment'::text, ma.id, m.conversation_id,
-      coalesce(ma.file_name, 'Attachment'),
+      coalesce(ma.file_name, 'Tệp đính kèm'),
       coalesce(ma.mime_type, ''),
       public.similarity(coalesce(ma.file_name,''), _q)::real,
       ma.created_at,

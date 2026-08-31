@@ -202,7 +202,7 @@ BEGIN
   ON CONFLICT (id) DO NOTHING;
 
   ws_slug := lower(regexp_replace(coalesce(split_part(NEW.email,'@',1),'workspace') || '-' || substr(NEW.id::text,1,6), '[^a-z0-9]+','-','g'));
-  INSERT INTO public.workspaces (name, slug, owner_id) VALUES (initcap(split_part(NEW.email,'@',1)) || '''s Workspace', ws_slug, NEW.id) RETURNING id INTO ws_id;
+  INSERT INTO public.workspaces (name, slug, owner_id) VALUES ('Không gian làm việc của ' || initcap(split_part(NEW.email,'@',1)), ws_slug, NEW.id) RETURNING id INTO ws_id;
   INSERT INTO public.workspace_members (workspace_id, user_id, role) VALUES (ws_id, NEW.id, 'owner');
   RETURN NEW;
 END; $$;
