@@ -35,8 +35,8 @@ BEGIN
     END IF;
     v_slug := v_base_slug || '-' || substr(_user_id::text, 1, 6);
     v_name := CASE
-      WHEN _email IS NOT NULL AND _email <> '' THEN split_part(_email, '@', 1) || '''s Workspace'
-      ELSE 'My Workspace'
+      WHEN _email IS NOT NULL AND _email <> '' THEN 'Tổ chức của ' || initcap(split_part(_email, '@', 1))
+      ELSE 'Tổ chức của tôi'
     END;
 
     INSERT INTO public.organizations (name, slug, owner_id, billing_email)
@@ -48,7 +48,7 @@ BEGIN
     ON CONFLICT DO NOTHING;
   ELSE
     SELECT name INTO v_name FROM public.organizations WHERE id = v_org_id;
-    v_name := COALESCE(v_name, 'My Workspace');
+    v_name := COALESCE(v_name, 'Tổ chức của tôi');
   END IF;
 
   SELECT id INTO v_workspace_id
