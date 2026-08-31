@@ -3,7 +3,7 @@
 ALTER TABLE public.deal_pipelines
   ADD COLUMN IF NOT EXISTS color text,
   ADD COLUMN IF NOT EXISTS icon text,
-  ADD COLUMN IF NOT EXISTS default_currency text NOT NULL DEFAULT 'USD',
+  ADD COLUMN IF NOT EXISTS default_currency text NOT NULL DEFAULT 'VND',
   ADD COLUMN IF NOT EXISTS stale_after_days integer NOT NULL DEFAULT 14;
 
 -- 2) Extend deal_stages
@@ -148,43 +148,43 @@ FOR EACH ROW EXECUTE FUNCTION public.tg_set_updated_at();
 INSERT INTO public.pipeline_templates (workspace_id, name, description, icon, color, category, is_builtin, stages)
 SELECT NULL, v.name, v.description, v.icon, v.color, v.category, true, v.stages
 FROM (VALUES
-  ('Standard Sales', 'Classic 5-stage B2B sales pipeline', 'briefcase', '#6366f1', 'sales', '[
-    {"name":"Lead","probability":10,"color":"#94a3b8","stage_type":"qualifying","aging_days":7},
-    {"name":"Qualified","probability":25,"color":"#3b82f6","stage_type":"qualifying","aging_days":10},
-    {"name":"Proposal","probability":50,"color":"#8b5cf6","stage_type":"normal","aging_days":14},
-    {"name":"Negotiation","probability":75,"color":"#f59e0b","stage_type":"normal","aging_days":14},
-    {"name":"Closed Won","probability":100,"color":"#10b981","stage_type":"won"},
-    {"name":"Closed Lost","probability":0,"color":"#ef4444","stage_type":"lost"}
+  ('Bán hàng tiêu chuẩn', 'Quy trình bán hàng B2B tiêu chuẩn từ khách hàng tiềm năng đến khi chốt giao dịch.', 'briefcase', '#6366f1', 'sales', '[
+    {"name":"Khách hàng tiềm năng","probability":10,"color":"#94a3b8","stage_type":"qualifying","aging_days":7},
+    {"name":"Đủ điều kiện","probability":25,"color":"#3b82f6","stage_type":"qualifying","aging_days":10},
+    {"name":"Đề xuất / Báo giá","probability":50,"color":"#8b5cf6","stage_type":"normal","aging_days":14},
+    {"name":"Đàm phán","probability":75,"color":"#f59e0b","stage_type":"normal","aging_days":14},
+    {"name":"Thành công","probability":100,"color":"#10b981","stage_type":"won"},
+    {"name":"Thất bại","probability":0,"color":"#ef4444","stage_type":"lost"}
   ]'::jsonb),
-  ('SaaS Subscription', 'Trial-driven SaaS sales flow', 'cloud', '#0ea5e9', 'saas', '[
-    {"name":"Signup","probability":15,"color":"#94a3b8","stage_type":"qualifying","aging_days":3},
-    {"name":"Trial","probability":30,"color":"#3b82f6","stage_type":"normal","aging_days":14},
-    {"name":"Demo Booked","probability":50,"color":"#8b5cf6","stage_type":"normal","aging_days":7},
-    {"name":"Contract Sent","probability":80,"color":"#f59e0b","stage_type":"normal","aging_days":7},
-    {"name":"Subscribed","probability":100,"color":"#10b981","stage_type":"won"},
-    {"name":"Churned","probability":0,"color":"#ef4444","stage_type":"lost"}
+  ('Đăng ký dịch vụ SaaS', 'Quy trình bán dịch vụ SaaS từ đăng ký, dùng thử, demo đến chuyển đổi trả phí.', 'cloud', '#0ea5e9', 'saas', '[
+    {"name":"Đăng ký","probability":15,"color":"#94a3b8","stage_type":"qualifying","aging_days":3},
+    {"name":"Dùng thử","probability":30,"color":"#3b82f6","stage_type":"normal","aging_days":14},
+    {"name":"Đã đặt lịch demo","probability":50,"color":"#8b5cf6","stage_type":"normal","aging_days":7},
+    {"name":"Đã gửi hợp đồng","probability":80,"color":"#f59e0b","stage_type":"normal","aging_days":7},
+    {"name":"Đã đăng ký trả phí","probability":100,"color":"#10b981","stage_type":"won"},
+    {"name":"Ngừng sử dụng","probability":0,"color":"#ef4444","stage_type":"lost"}
   ]'::jsonb),
-  ('E-commerce Order', 'B2C order fulfilment pipeline', 'shopping-cart', '#f43f5e', 'ecommerce', '[
-    {"name":"Cart","probability":10,"color":"#94a3b8","stage_type":"qualifying","aging_days":1},
-    {"name":"Checkout","probability":40,"color":"#f59e0b","stage_type":"normal","aging_days":1},
-    {"name":"Paid","probability":80,"color":"#3b82f6","stage_type":"normal"},
-    {"name":"Shipped","probability":95,"color":"#8b5cf6","stage_type":"normal","aging_days":5},
-    {"name":"Delivered","probability":100,"color":"#10b981","stage_type":"won"},
-    {"name":"Cancelled","probability":0,"color":"#ef4444","stage_type":"lost"}
+  ('Đơn hàng thương mại điện tử', 'Quy trình xử lý đơn hàng từ giỏ hàng đến giao hàng hoàn tất.', 'shopping-cart', '#f43f5e', 'ecommerce', '[
+    {"name":"Giỏ hàng","probability":10,"color":"#94a3b8","stage_type":"qualifying","aging_days":1},
+    {"name":"Xác nhận đơn hàng","probability":40,"color":"#f59e0b","stage_type":"normal","aging_days":1},
+    {"name":"Đã thanh toán","probability":80,"color":"#3b82f6","stage_type":"normal"},
+    {"name":"Đang giao hàng","probability":95,"color":"#8b5cf6","stage_type":"normal","aging_days":5},
+    {"name":"Đã giao hàng","probability":100,"color":"#10b981","stage_type":"won"},
+    {"name":"Đã hủy","probability":0,"color":"#ef4444","stage_type":"lost"}
   ]'::jsonb),
-  ('Real Estate', 'Property brokerage sales pipeline', 'home', '#a16207', 'real_estate', '[
-    {"name":"Inquiry","probability":10,"color":"#94a3b8","stage_type":"qualifying","aging_days":3},
-    {"name":"Viewing","probability":25,"color":"#3b82f6","stage_type":"normal","aging_days":10},
-    {"name":"Offer","probability":50,"color":"#8b5cf6","stage_type":"normal","aging_days":14},
-    {"name":"Under Contract","probability":80,"color":"#f59e0b","stage_type":"normal","aging_days":30},
-    {"name":"Closed","probability":100,"color":"#10b981","stage_type":"won"},
-    {"name":"Lost","probability":0,"color":"#ef4444","stage_type":"lost"}
+  ('Bất động sản', 'Quy trình bán hàng môi giới bất động sản từ khách quan tâm đến hoàn tất giao dịch.', 'home', '#a16207', 'real_estate', '[
+    {"name":"Khách quan tâm","probability":10,"color":"#94a3b8","stage_type":"qualifying","aging_days":3},
+    {"name":"Xem bất động sản","probability":25,"color":"#3b82f6","stage_type":"normal","aging_days":10},
+    {"name":"Đề nghị","probability":50,"color":"#8b5cf6","stage_type":"normal","aging_days":14},
+    {"name":"Đang làm hợp đồng","probability":80,"color":"#f59e0b","stage_type":"normal","aging_days":30},
+    {"name":"Thành công","probability":100,"color":"#10b981","stage_type":"won"},
+    {"name":"Thất bại","probability":0,"color":"#ef4444","stage_type":"lost"}
   ]'::jsonb),
-  ('Simple 3-Stage', 'Minimal to-do / sold / cancelled flow', 'zap', '#10b981', 'simple', '[
-    {"name":"To Do","probability":10,"color":"#94a3b8","stage_type":"qualifying"},
-    {"name":"In Progress","probability":50,"color":"#3b82f6","stage_type":"normal","aging_days":7},
-    {"name":"Done","probability":100,"color":"#10b981","stage_type":"won"},
-    {"name":"Cancelled","probability":0,"color":"#ef4444","stage_type":"lost"}
+  ('Quy trình đơn giản', 'Quy trình tối giản để theo dõi công việc hoặc cơ hội từ bắt đầu đến hoàn tất.', 'zap', '#10b981', 'simple', '[
+    {"name":"Cần xử lý","probability":10,"color":"#94a3b8","stage_type":"qualifying"},
+    {"name":"Đang xử lý","probability":50,"color":"#3b82f6","stage_type":"normal","aging_days":7},
+    {"name":"Hoàn thành","probability":100,"color":"#10b981","stage_type":"won"},
+    {"name":"Đã hủy","probability":0,"color":"#ef4444","stage_type":"lost"}
   ]'::jsonb)
 ) AS v(name, description, icon, color, category, stages)
 WHERE NOT EXISTS (

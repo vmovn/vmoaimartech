@@ -115,7 +115,7 @@ CREATE TABLE public.bi_scheduled_reports (
   report_id uuid NOT NULL REFERENCES public.bi_reports(id) ON DELETE CASCADE,
   name text NOT NULL,
   cron text NOT NULL, -- e.g. "0 8 * * 1"
-  timezone text NOT NULL DEFAULT 'UTC',
+  timezone text NOT NULL DEFAULT 'Asia/Ho_Chi_Minh',
   recipients text[] NOT NULL DEFAULT '{}',
   format text NOT NULL DEFAULT 'pdf' CHECK (format IN ('pdf','csv','xlsx','json')),
   delivery text NOT NULL DEFAULT 'email' CHECK (delivery IN ('email','webhook','slack')),

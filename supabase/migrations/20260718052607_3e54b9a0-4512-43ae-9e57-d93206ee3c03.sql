@@ -239,10 +239,10 @@ CREATE POLICY "Billing admins view events" ON public.billing_events
 
 -- Seed core usage meters
 INSERT INTO public.usage_meters (code, name, unit, aggregation, description) VALUES
-  ('messages_sent',    'Messages Sent',    'count',  'sum', 'Outbound WhatsApp messages'),
-  ('ai_tokens',        'AI Tokens',        'tokens', 'sum', 'AI Gateway token usage'),
-  ('seats',            'Seats',            'count',  'max', 'Active user seats'),
-  ('storage_bytes',    'Storage',          'bytes',  'max', 'Media/document storage'),
-  ('automation_runs',  'Automation Runs',  'count',  'sum', 'Workflow execution count'),
-  ('campaigns_sent',   'Campaigns Sent',   'count',  'sum', 'Marketing campaign dispatches')
+  ('messages_sent',    'Tin nhắn đã gửi',       'count',  'sum', 'Tổng số tin nhắn gửi ra'),
+  ('ai_tokens',        'Token AI',              'tokens', 'sum', 'Tổng lượng token AI đã sử dụng'),
+  ('seats',            'Người dùng',            'count',  'max', 'Số lượng người dùng đang hoạt động'),
+  ('storage_bytes',    'Dung lượng lưu trữ',    'bytes',  'max', 'Dung lượng tệp và tài liệu đã sử dụng'),
+  ('automation_runs',  'Lượt chạy tự động hóa', 'count',  'sum', 'Tổng số lần thực thi quy trình tự động hóa'),
+  ('campaigns_sent',   'Chiến dịch đã gửi',     'count',  'sum', 'Tổng số chiến dịch marketing đã gửi')
 ON CONFLICT (code) DO NOTHING;

@@ -120,7 +120,7 @@ CREATE TABLE public.csat_surveys (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   workspace_id uuid NOT NULL,
   name text NOT NULL,
-  question text NOT NULL DEFAULT 'How would you rate this support experience?',
+  question text NOT NULL DEFAULT 'Bạn đánh giá trải nghiệm hỗ trợ vừa rồi như thế nào?',
   scale text NOT NULL DEFAULT 'stars_5', -- stars_5|nps_10|thumbs
   follow_up_question text,
   send_on text NOT NULL DEFAULT 'resolved', -- resolved|closed
