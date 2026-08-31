@@ -9,10 +9,8 @@ Deployment opens `/setup` once → authorized operator initializes platform → 
 ## Primary Entry Points
 - `src/routes/setup.tsx` — user-facing wizard and route guard.
 - `src/lib/setup/setup.functions.ts` — server functions for setup operations.
-- `src/lib/setup/setup-lock.server.ts` — bootstrap lock/concurrency support.
-- `src/lib/setup/setup-state.server.ts` — open/closed setup state.
-- `src/lib/setup/setup-steps.ts` — step definitions.
-- `src/lib/setup/setup-store.ts` — client wizard state.
+- `src/lib/setup/setup-security.server.ts` — server-only Setup Secret session/security handling.
+- `src/lib/setup/environment-readiness.server.ts` — server-only environment/capability readiness evaluation.
 
 ## Source of Truth
 - platform setting `setup_complete` controls permanent completion state.
@@ -39,13 +37,18 @@ First Super Admin; initial settings; initial organization/workspace context as s
 Baseline migrations, RLS policies, global auth architecture, unrelated settings/providers.
 
 ## Current UI note
-The verified GitHub checkpoint had a six-step wizard (Environment, Administrator, Branding, System, SaaS, Launch). UI step count/labels are **not an invariant**. A later scoped Product cleanup may simplify the presentation without requiring rediscovery of the secure server contract.
+The verified Product setup is four steps:
+
+`System → Owner → Business → Review & Finish`.
+
+Step labels are presentation, but the secure server contract remains invariant.
 
 ## Validation
 Presentation-only → setup route compile/typecheck + targeted browser view.
 Security/bootstrap logic → targeted setup-state/access tests; verify first admin and post-completion lock; use fresh reset only when the changed behavior requires it.
 
 ## Last Verified
-- Base checkpoint: `v1.0.0-localhost-1.0.5` / `67704b8967b6db5cb2a9389d8f1a7f2f836783ea`
-- Date: 2026-08-30
-- Newer commit alone does not invalidate this memory. Re-audit only if the listed owner/source-of-truth disappears or current evidence contradicts the contract.
+- Runtime baseline: `v1.0.0-localhost-1.0.6.2`.
+- Memory installation checkpoint: `v1.0.0-localhost-1.0.7` / `0f401975274490d0201581325a932d7865f73208`.
+- Date: 2026-08-31.
+- Verification scope: Primary Entry Points and verified four-step setup presentation only; secure setup semantics were not re-audited here.

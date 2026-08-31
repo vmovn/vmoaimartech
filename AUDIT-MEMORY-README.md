@@ -2,7 +2,11 @@
 
 Purpose: make Codex/Cursor consume durable repository memory before rediscovering Swiffer architecture on every task.
 
-Built from a targeted GitHub architecture scan of `vmovn/vmoaimartech` at `v1.0.0-localhost-1.0.5` / `67704b8967b6db5cb2a9389d8f1a7f2f836783ea` (2026-08-30), plus the established Product architecture/governance already in the repository.
+Memory installation checkpoint: `v1.0.0-localhost-1.0.7` / `0f401975274490d0201581325a932d7865f73208` (2026-08-31).
+
+Runtime baseline: `v1.0.0-localhost-1.0.6.2`.
+
+The 1.0.7 checkpoint path-verifies repository memory and governance; it does not claim a semantic re-audit of every domain.
 
 ## Install
 
@@ -27,4 +31,4 @@ Code remains authoritative if a documented path disappears or behavior contradic
 
 ## Active setup/env task note
 
-The repository `main` checkpoint scanned here predates any uncommitted local changes currently being made by Codex after `v1.0.0-localhost-1.0.5`. `setup` and `environment` context files therefore contain explicit staleness rules: UI step labels may change without invalidating the secure bootstrap architecture; a newly added environment catalog/readiness module should be adopted as the canonical metadata source after it is committed.
+The memory checkpoint distinguishes runtime verification from memory verification. Setup and environment context now record the verified four-step setup and canonical environment artifacts; future changes should update those contexts only when their durable owners or contracts change.

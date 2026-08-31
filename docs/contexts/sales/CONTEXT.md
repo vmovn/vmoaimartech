@@ -4,11 +4,12 @@
 Owns opportunity execution from Deal/Pipeline through products, quotes, invoices and sales activities.
 
 ## Primary Entry Points
-- `src/lib/deals.ts`
-- `src/lib/products.ts`
-- `src/lib/quotes.ts`
-- `src/lib/invoices.ts`
-- `src/lib/activities.ts`
+- `src/hooks/use-deals.ts`
+- `src/hooks/use-products.ts`
+- `src/hooks/use-quotes.ts`
+- `src/hooks/use-invoices.ts`
+- `src/hooks/use-sales-activities.ts`
+- Server-side owner path: targeted discovery required for a specific write operation.
 - routes `/deals`, `/sales`, `/products`, `/quotes`, `/invoices`, `/activities`, `/sales-ai`.
 
 ## Source of Truth
@@ -23,6 +24,7 @@ Deal/Pipeline owns opportunity progression. Products/quotes/invoices own their o
 Target the changed entity and any explicit conversion/link boundary only.
 
 ## Last Verified
-- Base checkpoint: `v1.0.0-localhost-1.0.5` / `67704b8967b6db5cb2a9389d8f1a7f2f836783ea`
-- Date: 2026-08-30
-- Newer commit alone does not invalidate this memory. Re-audit only if the listed owner/source-of-truth disappears or current evidence contradicts the contract.
+- Runtime baseline: `v1.0.0-localhost-1.0.6.2`.
+- Memory installation checkpoint: `v1.0.0-localhost-1.0.7` / `0f401975274490d0201581325a932d7865f73208`.
+- Date: 2026-08-31.
+- Verification scope: Primary Entry Point paths only; domain semantics were not re-audited.

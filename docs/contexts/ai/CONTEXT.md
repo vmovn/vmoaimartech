@@ -12,7 +12,7 @@ Owns AI provider configuration, completion/orchestration helpers, AI analytics/c
 - `src/lib/ai/omnichannel.functions.ts`
 - `src/lib/ai/automations.functions.ts`
 - `src/lib/ai/analytics.functions.ts`
-- `src/lib/ai/providers/**`, `src/lib/ai-providers/**`.
+- `src/lib/ai/providers/**`, `src/lib/admin/ai-providers.functions.ts`.
 
 ## Source of Truth
 AI owns suggestions/generation/orchestration metadata; domain services own canonical business state.
@@ -27,6 +27,7 @@ AI owns suggestions/generation/orchestration metadata; domain services own canon
 Provider/config change → provider/config tests and secret boundary. Domain assistant change → targeted domain behavior, not whole-repo AI audit.
 
 ## Last Verified
-- Base checkpoint: `v1.0.0-localhost-1.0.5` / `67704b8967b6db5cb2a9389d8f1a7f2f836783ea`
-- Date: 2026-08-30
-- Newer commit alone does not invalidate this memory. Re-audit only if the listed owner/source-of-truth disappears or current evidence contradicts the contract.
+- Runtime baseline: `v1.0.0-localhost-1.0.6.2`.
+- Memory installation checkpoint: `v1.0.0-localhost-1.0.7` / `0f401975274490d0201581325a932d7865f73208`.
+- Date: 2026-08-31.
+- Verification scope: Primary Entry Point paths only; domain semantics were not re-audited.

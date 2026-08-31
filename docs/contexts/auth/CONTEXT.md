@@ -25,6 +25,7 @@ Authentication answers **who is this user?** Platform/RBAC/RLS answer **what may
 Use the narrowest auth flow affected: session/login/logout/redirect/server function. Escalate to tenant/RLS tests only if authorization boundary changed.
 
 ## Last Verified
-- Base checkpoint: `v1.0.0-localhost-1.0.5` / `67704b8967b6db5cb2a9389d8f1a7f2f836783ea`
-- Date: 2026-08-30
-- Newer commit alone does not invalidate this memory. Re-audit only if the listed owner/source-of-truth disappears or current evidence contradicts the contract.
+- Runtime baseline: `v1.0.0-localhost-1.0.6.2`.
+- Memory installation checkpoint: `v1.0.0-localhost-1.0.7` / `0f401975274490d0201581325a932d7865f73208`.
+- Date: 2026-08-31.
+- Verification scope: Primary Entry Point paths only; domain semantics were not re-audited.

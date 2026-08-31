@@ -23,7 +23,7 @@ Automation Flows; Webhook Automation; Advanced Workflows; AI Chatbots; Chat Widg
 ## Insights
 Analytics; Campaign Analytics; AI Analytics; Omnichannel Analytics; Helpdesk Analytics; Live Chat Analytics; Commerce Analytics; Booking Analytics; Reports; BI; Forecasting; Monitoring; Export Center.
 
-## API configuration catalog (verified current checkpoint)
+## API configuration catalog (runtime baseline `v1.0.0-localhost-1.0.6.2`)
 AI; WhatsApp Health/Accounts/Webhook/QR/Devices/Warmer/Forms/REST/Conversational/Template/API Dashboard/Templates; Messenger Accounts/Chatbot; Instagram Accounts/Chatbot/Comment Automation; Telegram Bots; Email Accounts; SMS Numbers; Meta App; Synchronization; Provider Registry; API Keys.
 
 ## Important negative capability

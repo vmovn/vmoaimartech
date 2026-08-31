@@ -5,10 +5,13 @@ Owns classification of environment configuration: public build variables, server
 
 ## Primary Entry Points
 - `.env.example` — deployable template.
-- `package.json` — scripts/runtime contract.
-- `scripts/dev/generate-local-env.mjs` and related `scripts/dev/**` — local environment generation/verification.
-- `supabase/config.toml` and deployment/Docker files where relevant.
-- If present after the active Product cleanup: `src/lib/environment/environment-catalog.ts`, `src/lib/setup/environment-readiness.server.ts`, `scripts/ai/env-audit.mjs` become the preferred metadata/readiness/drift owners.
+- `src/lib/environment/environment-catalog.json` — canonical 74-key metadata catalog.
+- `src/lib/environment/environment-catalog.ts` — typed shared metadata export.
+- `src/lib/setup/environment-readiness.server.ts` — server-only readiness evaluation.
+- `scripts/ai/env-audit.mjs` — deterministic drift validator.
+- `docs/engineering/ENVIRONMENT-VARIABLES.md` — canonical human reference.
+- `docs/engineering/COOLIFY-ENV-CHECKLIST.md` — deployment checklist.
+- `scripts/dev/generate-local-env.mjs` — local environment generation.
 
 ## Source of Truth
 Executable environment reads are truth; the canonical catalog/example must mirror them. Metadata may be shared, secret-value evaluation must remain server-side.
@@ -40,7 +43,11 @@ If a new executable environment read is introduced or an env key is removed/rena
 ## Validation
 Prefer deterministic env-drift audit when present, plus build/public-bundle secret scan for public/private boundary changes.
 
+## Drift Contract
+`npm run env:audit` verifies the completed `74 active executable keys = 74 catalog keys = 74 .env.example keys` contract. Do not re-scan environment implementation merely to re-establish this completed checkpoint.
+
 ## Last Verified
-- Base checkpoint: `v1.0.0-localhost-1.0.5` / `67704b8967b6db5cb2a9389d8f1a7f2f836783ea`
-- Date: 2026-08-30
-- Newer commit alone does not invalidate this memory. Re-audit only if the listed owner/source-of-truth disappears or current evidence contradicts the contract.
+- Runtime baseline: `v1.0.0-localhost-1.0.6.2`.
+- Memory installation checkpoint: `v1.0.0-localhost-1.0.7` / `0f401975274490d0201581325a932d7865f73208`.
+- Date: 2026-08-31.
+- Verification scope: canonical environment artifacts and the completed 74/74/74 drift contract; environment implementation was not re-audited here.

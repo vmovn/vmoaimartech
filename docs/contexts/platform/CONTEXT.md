@@ -7,10 +7,11 @@ Owns Platform → Organization → Workspace hierarchy, membership, roles/permis
 - `src/lib/tenant/active-tenant.ts`
 - `src/lib/tenant/provision.functions.ts`
 - `src/lib/tenant/org-url-sync.tsx`
-- `src/lib/organization.ts`
-- `src/lib/workspace.ts`
-- `src/lib/workspace-service.ts`
-- `src/lib/rbac/**`, `src/lib/organizations/**`
+- `src/lib/rbac.ts`
+- `src/lib/rbac-org.ts`
+- `src/lib/rbac.functions.ts`
+- `src/hooks/use-organization.ts`
+- `src/hooks/use-workspace.ts`
 
 ## Source of Truth
 Organization/workspace membership and server/RLS authorization are authoritative. UI role labels are presentation only.
@@ -29,6 +30,7 @@ CRM, Messaging, Workflow, Commerce, Marketing, Service, Booking, Billing and Dev
 Scoped tenant context/membership tests; RLS/security tests only when access semantics change.
 
 ## Last Verified
-- Base checkpoint: `v1.0.0-localhost-1.0.5` / `67704b8967b6db5cb2a9389d8f1a7f2f836783ea`
-- Date: 2026-08-30
-- Newer commit alone does not invalidate this memory. Re-audit only if the listed owner/source-of-truth disappears or current evidence contradicts the contract.
+- Runtime baseline: `v1.0.0-localhost-1.0.6.2`.
+- Memory installation checkpoint: `v1.0.0-localhost-1.0.7` / `0f401975274490d0201581325a932d7865f73208`.
+- Date: 2026-08-31.
+- Verification scope: Primary Entry Point paths only; domain semantics were not re-audited.

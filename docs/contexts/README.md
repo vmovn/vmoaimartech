@@ -24,4 +24,7 @@ Update a context when ownership, source of truth, stable entry points, cross-con
 Do not update it for cosmetic patches.
 
 ### Verification checkpoint
-Base scan: `v1.0.0-localhost-1.0.5` / `67704b8967b6db5cb2a9389d8f1a7f2f836783ea`, 2026-08-30.
+
+- Runtime baseline: `v1.0.0-localhost-1.0.6.2`.
+- Memory installation checkpoint: `v1.0.0-localhost-1.0.7` / `0f401975274490d0201581325a932d7865f73208`, 2026-08-31.
+- This checkpoint verifies context paths and memory governance. It does not claim a semantic re-audit of every domain.
