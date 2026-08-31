@@ -10,48 +10,2178 @@ ALTER TABLE public.plans
   ADD COLUMN IF NOT EXISTS highlight boolean NOT NULL DEFAULT false,
   ADD COLUMN IF NOT EXISTS monthly_plan_code text;
 
-CREATE INDEX IF NOT EXISTS idx_plans_tier_interval ON public.plans (tier, interval) WHERE is_active;
+CREATE INDEX IF NOT EXISTS idx_plans_tier_interval
+  ON public.plans (tier, interval)
+  WHERE is_active;
 
+-- 2. Preserve original plan-management RLS policy.
 DROP POLICY IF EXISTS "Super admins manage plans" ON public.plans;
 CREATE POLICY "Super admins manage plans" ON public.plans
   FOR ALL TO authenticated
-  USING (EXISTS (SELECT 1 FROM public.user_roles ur WHERE ur.user_id = auth.uid() AND ur.role IN ('superadmin','support')))
-  WITH CHECK (EXISTS (SELECT 1 FROM public.user_roles ur WHERE ur.user_id = auth.uid() AND ur.role = 'superadmin'));
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.user_roles ur
+      WHERE ur.user_id = auth.uid()
+        AND ur.role IN ('superadmin','support')
+    )
+  )
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM public.user_roles ur
+      WHERE ur.user_id = auth.uid()
+        AND ur.role = 'superadmin'
+    )
+  );
 
-UPDATE public.plans SET tier='free' WHERE code='free';
-UPDATE public.plans SET tier='professional', badge='Most Popular', highlight=true, tagline='For growing teams that need power and AI' WHERE code='pro';
-UPDATE public.plans SET tier='business', tagline='For companies scaling WhatsApp operations' WHERE code='business';
-UPDATE public.plans SET tier='enterprise', tagline='Custom limits, SSO, and dedicated support', cta_label='Contact sales' WHERE code='enterprise';
+-- 3. Retire the legacy Pro SKU without deleting history/FK references.
+UPDATE public.plans
+SET is_active=false, is_public=false, highlight=false, badge='Legacy', sort_order=900
+WHERE code IN ('pro','pro_yearly');
 
-INSERT INTO public.plans (code, name, tier, description, tagline, price_cents, currency, interval, trial_days, features, limits, sort_order, is_public, badge, highlight)
-VALUES
-  ('starter', 'Starter', 'starter', 'Great for solo founders getting started.',
-   'For solo operators and side projects', 1900, 'USD', 'month', 14,
-   '{"channels":1,"agents":2,"broadcasts":true,"ai":false,"api":false,"support":"community"}'::jsonb,
-   '{"messages_per_month":2500,"contacts":1000,"agents":2}'::jsonb,
-   20, true, null, false),
-  ('professional', 'Professional', 'professional', 'For growing teams that need scale, AI and automations.',
-   'For growing teams that need scale and AI', 4900, 'USD', 'month', 14,
-   '{"channels":3,"agents":10,"broadcasts":true,"ai":true,"automations":true,"api":true,"support":"email"}'::jsonb,
-   '{"messages_per_month":25000,"contacts":25000,"agents":10}'::jsonb,
-   30, true, 'Most Popular', true)
-ON CONFLICT (code) DO NOTHING;
+-- 4. Canonical catalog.
+-- Every SKU repeats full JSON intentionally so each can be edited in isolation.
 
-INSERT INTO public.plans (code, name, tier, description, tagline, price_cents, currency, interval, trial_days, features, limits, sort_order, is_public, monthly_plan_code)
-SELECT p.code || '_yearly', p.name || ' (Yearly)', p.tier, p.description, p.tagline,
-       (p.price_cents * 12 * 0.8)::int, p.currency, 'year'::plan_interval, p.trial_days,
-       p.features, p.limits, p.sort_order + 1, p.is_public, p.code
-FROM public.plans p
-WHERE p.code IN ('starter','pro','professional','business')
-  AND p.interval='month'
-ON CONFLICT (code) DO NOTHING;
+-- ═════════════════════════ FREE ═════════════════════════
 
-INSERT INTO public.plans (code, name, tier, description, tagline, price_cents, currency, interval, trial_days, features, limits, sort_order, is_public, cta_label)
-VALUES
-  ('enterprise_lifetime', 'Enterprise Lifetime', 'enterprise',
-   'One-time payment, unlimited use. Contact sales for custom terms.',
-   'Pay once, own forever', 999900, 'USD', 'lifetime', 0,
-   '{"channels":"unlimited","agents":"unlimited","broadcasts":true,"ai":true,"automations":true,"api":true,"sso":true,"sla":true,"support":"dedicated"}'::jsonb,
-   '{"messages_per_month":-1,"contacts":-1,"agents":-1}'::jsonb,
-   90, false, 'Contact sales')
-ON CONFLICT (code) DO NOTHING;
+-- free | month | $0.00
+INSERT INTO public.plans (
+  code, name, tier, description, tagline, badge, cta_label,
+  price_cents, currency, interval, trial_days, features, limits,
+  sort_order, is_active, is_public, is_custom, highlight, monthly_plan_code
+)
+VALUES (
+  'free',
+  'Free',
+  'free',
+  'A permanent free plan for solo founders, household businesses, and small teams evaluating the platform. Organize customer data, manage essential conversations, and test core CRM workflows with conservative limits before moving to a paid operating plan.',
+  'Explore the core CRM, inbox, and customer workspace at no cost.',
+  NULL,
+  'Start free',
+  0,
+  'USD',
+  'month',
+  0,
+  $features_1$
+{
+  "ai.reply_assistant": false,
+  "ai.knowledge_base": false,
+  "automations.enabled": false,
+  "marketing.ab_testing": false,
+  "marketing.drip_sequences": false,
+  "bi.custom_dashboards": false,
+  "bi.scheduled_reports": false,
+  "api.public_access": false,
+  "security.sso": false,
+  "security.audit_export": false,
+  "inbox": true,
+  "broadcasts": false,
+  "templates": true,
+  "automations": false,
+  "chatbot": false,
+  "ai": false,
+  "crm": true,
+  "commerce": false,
+  "analytics": false,
+  "api": false,
+  "white_label": false,
+  "sso": false,
+  "audit_export": false,
+  "sla": false,
+  "support": "community",
+  "channels": 1
+}
+$features_1$::jsonb,
+  $limits_1$
+{
+  "seats": 2,
+  "organizations": 1,
+  "workspaces": 1,
+  "contacts": 500,
+  "companies": 100,
+  "deals": 50,
+  "pipelines": 1,
+  "campaigns_per_month": 1,
+  "broadcasts_per_month": 100,
+  "templates": 5,
+  "workflows": 2,
+  "ai_requests_per_month": 50,
+  "storage_mb": 250,
+  "api_requests_per_month": 1000,
+  "phone_numbers": 1,
+  "whatsapp_accounts": 1,
+  "custom_fields": 5,
+  "reports": 3,
+  "exports_per_month": 5,
+  "messages_per_month": 500,
+  "agents": 1,
+  "storage_gb": 0.25
+}
+$limits_1$::jsonb,
+  10,
+  true,
+  true,
+  false,
+  false,
+  NULL
+)
+ON CONFLICT (code) DO UPDATE SET
+  name=EXCLUDED.name,
+  tier=EXCLUDED.tier,
+  description=EXCLUDED.description,
+  tagline=EXCLUDED.tagline,
+  badge=EXCLUDED.badge,
+  cta_label=EXCLUDED.cta_label,
+  price_cents=EXCLUDED.price_cents,
+  currency=EXCLUDED.currency,
+  interval=EXCLUDED.interval,
+  trial_days=EXCLUDED.trial_days,
+  features=EXCLUDED.features,
+  limits=EXCLUDED.limits,
+  sort_order=EXCLUDED.sort_order,
+  is_active=EXCLUDED.is_active,
+  is_public=EXCLUDED.is_public,
+  is_custom=EXCLUDED.is_custom,
+  highlight=EXCLUDED.highlight,
+  monthly_plan_code=EXCLUDED.monthly_plan_code;
+
+-- free_yearly | year | $0.00
+INSERT INTO public.plans (
+  code, name, tier, description, tagline, badge, cta_label,
+  price_cents, currency, interval, trial_days, features, limits,
+  sort_order, is_active, is_public, is_custom, highlight, monthly_plan_code
+)
+VALUES (
+  'free_yearly',
+  'Free (Yearly)',
+  'free',
+  'A permanent free plan for solo founders, household businesses, and small teams evaluating the platform. Organize customer data, manage essential conversations, and test core CRM workflows with conservative limits before moving to a paid operating plan. This administrative yearly variant is hidden from public pricing because the Free plan does not require annual billing.',
+  'A free workspace with no annual commitment.',
+  NULL,
+  'Start free',
+  0,
+  'USD',
+  'year',
+  0,
+  $features_2$
+{
+  "ai.reply_assistant": false,
+  "ai.knowledge_base": false,
+  "automations.enabled": false,
+  "marketing.ab_testing": false,
+  "marketing.drip_sequences": false,
+  "bi.custom_dashboards": false,
+  "bi.scheduled_reports": false,
+  "api.public_access": false,
+  "security.sso": false,
+  "security.audit_export": false,
+  "inbox": true,
+  "broadcasts": false,
+  "templates": true,
+  "automations": false,
+  "chatbot": false,
+  "ai": false,
+  "crm": true,
+  "commerce": false,
+  "analytics": false,
+  "api": false,
+  "white_label": false,
+  "sso": false,
+  "audit_export": false,
+  "sla": false,
+  "support": "community",
+  "channels": 1
+}
+$features_2$::jsonb,
+  $limits_2$
+{
+  "seats": 2,
+  "organizations": 1,
+  "workspaces": 1,
+  "contacts": 500,
+  "companies": 100,
+  "deals": 50,
+  "pipelines": 1,
+  "campaigns_per_month": 1,
+  "broadcasts_per_month": 100,
+  "templates": 5,
+  "workflows": 2,
+  "ai_requests_per_month": 50,
+  "storage_mb": 250,
+  "api_requests_per_month": 1000,
+  "phone_numbers": 1,
+  "whatsapp_accounts": 1,
+  "custom_fields": 5,
+  "reports": 3,
+  "exports_per_month": 5,
+  "messages_per_month": 500,
+  "agents": 1,
+  "storage_gb": 0.25
+}
+$limits_2$::jsonb,
+  11,
+  false,
+  false,
+  false,
+  false,
+  'free'
+)
+ON CONFLICT (code) DO UPDATE SET
+  name=EXCLUDED.name,
+  tier=EXCLUDED.tier,
+  description=EXCLUDED.description,
+  tagline=EXCLUDED.tagline,
+  badge=EXCLUDED.badge,
+  cta_label=EXCLUDED.cta_label,
+  price_cents=EXCLUDED.price_cents,
+  currency=EXCLUDED.currency,
+  interval=EXCLUDED.interval,
+  trial_days=EXCLUDED.trial_days,
+  features=EXCLUDED.features,
+  limits=EXCLUDED.limits,
+  sort_order=EXCLUDED.sort_order,
+  is_active=EXCLUDED.is_active,
+  is_public=EXCLUDED.is_public,
+  is_custom=EXCLUDED.is_custom,
+  highlight=EXCLUDED.highlight,
+  monthly_plan_code=EXCLUDED.monthly_plan_code;
+
+-- free_lifetime | lifetime | $0.00
+INSERT INTO public.plans (
+  code, name, tier, description, tagline, badge, cta_label,
+  price_cents, currency, interval, trial_days, features, limits,
+  sort_order, is_active, is_public, is_custom, highlight, monthly_plan_code
+)
+VALUES (
+  'free_lifetime',
+  'Free Lifetime',
+  'free',
+  'A permanent free plan for solo founders, household businesses, and small teams evaluating the platform. Organize customer data, manage essential conversations, and test core CRM workflows with conservative limits before moving to a paid operating plan. This compatibility variant is hidden and is not intended to be sold.',
+  'A private free-plan compatibility variant with no recurring subscription.',
+  NULL,
+  'Start free',
+  0,
+  'USD',
+  'lifetime',
+  0,
+  $features_3$
+{
+  "ai.reply_assistant": false,
+  "ai.knowledge_base": false,
+  "automations.enabled": false,
+  "marketing.ab_testing": false,
+  "marketing.drip_sequences": false,
+  "bi.custom_dashboards": false,
+  "bi.scheduled_reports": false,
+  "api.public_access": false,
+  "security.sso": false,
+  "security.audit_export": false,
+  "inbox": true,
+  "broadcasts": false,
+  "templates": true,
+  "automations": false,
+  "chatbot": false,
+  "ai": false,
+  "crm": true,
+  "commerce": false,
+  "analytics": false,
+  "api": false,
+  "white_label": false,
+  "sso": false,
+  "audit_export": false,
+  "sla": false,
+  "support": "community",
+  "channels": 1
+}
+$features_3$::jsonb,
+  $limits_3$
+{
+  "seats": 2,
+  "organizations": 1,
+  "workspaces": 1,
+  "contacts": 500,
+  "companies": 100,
+  "deals": 50,
+  "pipelines": 1,
+  "campaigns_per_month": 1,
+  "broadcasts_per_month": 100,
+  "templates": 5,
+  "workflows": 2,
+  "ai_requests_per_month": 50,
+  "storage_mb": 250,
+  "api_requests_per_month": 1000,
+  "phone_numbers": 1,
+  "whatsapp_accounts": 1,
+  "custom_fields": 5,
+  "reports": 3,
+  "exports_per_month": 5,
+  "messages_per_month": 500,
+  "agents": 1,
+  "storage_gb": 0.25
+}
+$limits_3$::jsonb,
+  12,
+  false,
+  false,
+  false,
+  false,
+  'free'
+)
+ON CONFLICT (code) DO UPDATE SET
+  name=EXCLUDED.name,
+  tier=EXCLUDED.tier,
+  description=EXCLUDED.description,
+  tagline=EXCLUDED.tagline,
+  badge=EXCLUDED.badge,
+  cta_label=EXCLUDED.cta_label,
+  price_cents=EXCLUDED.price_cents,
+  currency=EXCLUDED.currency,
+  interval=EXCLUDED.interval,
+  trial_days=EXCLUDED.trial_days,
+  features=EXCLUDED.features,
+  limits=EXCLUDED.limits,
+  sort_order=EXCLUDED.sort_order,
+  is_active=EXCLUDED.is_active,
+  is_public=EXCLUDED.is_public,
+  is_custom=EXCLUDED.is_custom,
+  highlight=EXCLUDED.highlight,
+  monthly_plan_code=EXCLUDED.monthly_plan_code;
+
+-- ═════════════════════════ STARTER ═════════════════════════
+
+-- starter | month | $9.00
+INSERT INTO public.plans (
+  code, name, tier, description, tagline, badge, cta_label,
+  price_cents, currency, interval, trial_days, features, limits,
+  sort_order, is_active, is_public, is_custom, highlight, monthly_plan_code
+)
+VALUES (
+  'starter',
+  'Starter',
+  'starter',
+  'Designed for household businesses, solo operators, and very small teams that need a practical CRM and omnichannel workspace without enterprise complexity. Includes lightweight AI assistance, basic automation, broadcasts, and enough capacity to run day-to-day customer operations.',
+  'Start selling and serving customers with a lean AI-assisted workspace.',
+  NULL,
+  'Start free trial',
+  900,
+  'USD',
+  'month',
+  14,
+  $features_4$
+{
+  "ai.reply_assistant": true,
+  "ai.knowledge_base": false,
+  "automations.enabled": true,
+  "marketing.ab_testing": false,
+  "marketing.drip_sequences": false,
+  "bi.custom_dashboards": false,
+  "bi.scheduled_reports": false,
+  "api.public_access": false,
+  "security.sso": false,
+  "security.audit_export": false,
+  "inbox": true,
+  "broadcasts": true,
+  "templates": true,
+  "automations": true,
+  "chatbot": false,
+  "ai": true,
+  "crm": true,
+  "commerce": false,
+  "analytics": false,
+  "api": false,
+  "white_label": false,
+  "sso": false,
+  "audit_export": false,
+  "sla": false,
+  "support": "community",
+  "channels": 2
+}
+$features_4$::jsonb,
+  $limits_4$
+{
+  "seats": 3,
+  "organizations": 1,
+  "workspaces": 2,
+  "contacts": 3000,
+  "companies": 500,
+  "deals": 500,
+  "pipelines": 2,
+  "campaigns_per_month": 5,
+  "broadcasts_per_month": 2500,
+  "templates": 20,
+  "workflows": 10,
+  "ai_requests_per_month": 500,
+  "storage_mb": 1024,
+  "api_requests_per_month": 25000,
+  "phone_numbers": 1,
+  "whatsapp_accounts": 1,
+  "custom_fields": 20,
+  "reports": 10,
+  "exports_per_month": 50,
+  "messages_per_month": 2500,
+  "agents": 2,
+  "storage_gb": 1
+}
+$limits_4$::jsonb,
+  20,
+  true,
+  true,
+  false,
+  false,
+  NULL
+)
+ON CONFLICT (code) DO UPDATE SET
+  name=EXCLUDED.name,
+  tier=EXCLUDED.tier,
+  description=EXCLUDED.description,
+  tagline=EXCLUDED.tagline,
+  badge=EXCLUDED.badge,
+  cta_label=EXCLUDED.cta_label,
+  price_cents=EXCLUDED.price_cents,
+  currency=EXCLUDED.currency,
+  interval=EXCLUDED.interval,
+  trial_days=EXCLUDED.trial_days,
+  features=EXCLUDED.features,
+  limits=EXCLUDED.limits,
+  sort_order=EXCLUDED.sort_order,
+  is_active=EXCLUDED.is_active,
+  is_public=EXCLUDED.is_public,
+  is_custom=EXCLUDED.is_custom,
+  highlight=EXCLUDED.highlight,
+  monthly_plan_code=EXCLUDED.monthly_plan_code;
+
+-- starter_yearly | year | $86.40
+INSERT INTO public.plans (
+  code, name, tier, description, tagline, badge, cta_label,
+  price_cents, currency, interval, trial_days, features, limits,
+  sort_order, is_active, is_public, is_custom, highlight, monthly_plan_code
+)
+VALUES (
+  'starter_yearly',
+  'Starter (Yearly)',
+  'starter',
+  'Designed for household businesses, solo operators, and very small teams that need a practical CRM and omnichannel workspace without enterprise complexity. Includes lightweight AI assistance, basic automation, broadcasts, and enough capacity to run day-to-day customer operations. Billed annually with a 20% discount compared with paying the monthly price for twelve months.',
+  'Start selling and serving customers with a lean AI-assisted workspace — billed annually with 20% savings.',
+  NULL,
+  'Start free trial',
+  8640,
+  'USD',
+  'year',
+  14,
+  $features_5$
+{
+  "ai.reply_assistant": true,
+  "ai.knowledge_base": false,
+  "automations.enabled": true,
+  "marketing.ab_testing": false,
+  "marketing.drip_sequences": false,
+  "bi.custom_dashboards": false,
+  "bi.scheduled_reports": false,
+  "api.public_access": false,
+  "security.sso": false,
+  "security.audit_export": false,
+  "inbox": true,
+  "broadcasts": true,
+  "templates": true,
+  "automations": true,
+  "chatbot": false,
+  "ai": true,
+  "crm": true,
+  "commerce": false,
+  "analytics": false,
+  "api": false,
+  "white_label": false,
+  "sso": false,
+  "audit_export": false,
+  "sla": false,
+  "support": "community",
+  "channels": 2
+}
+$features_5$::jsonb,
+  $limits_5$
+{
+  "seats": 3,
+  "organizations": 1,
+  "workspaces": 2,
+  "contacts": 3000,
+  "companies": 500,
+  "deals": 500,
+  "pipelines": 2,
+  "campaigns_per_month": 5,
+  "broadcasts_per_month": 2500,
+  "templates": 20,
+  "workflows": 10,
+  "ai_requests_per_month": 500,
+  "storage_mb": 1024,
+  "api_requests_per_month": 25000,
+  "phone_numbers": 1,
+  "whatsapp_accounts": 1,
+  "custom_fields": 20,
+  "reports": 10,
+  "exports_per_month": 50,
+  "messages_per_month": 2500,
+  "agents": 2,
+  "storage_gb": 1
+}
+$limits_5$::jsonb,
+  21,
+  true,
+  true,
+  false,
+  false,
+  'starter'
+)
+ON CONFLICT (code) DO UPDATE SET
+  name=EXCLUDED.name,
+  tier=EXCLUDED.tier,
+  description=EXCLUDED.description,
+  tagline=EXCLUDED.tagline,
+  badge=EXCLUDED.badge,
+  cta_label=EXCLUDED.cta_label,
+  price_cents=EXCLUDED.price_cents,
+  currency=EXCLUDED.currency,
+  interval=EXCLUDED.interval,
+  trial_days=EXCLUDED.trial_days,
+  features=EXCLUDED.features,
+  limits=EXCLUDED.limits,
+  sort_order=EXCLUDED.sort_order,
+  is_active=EXCLUDED.is_active,
+  is_public=EXCLUDED.is_public,
+  is_custom=EXCLUDED.is_custom,
+  highlight=EXCLUDED.highlight,
+  monthly_plan_code=EXCLUDED.monthly_plan_code;
+
+-- starter_lifetime | lifetime | $299.00
+INSERT INTO public.plans (
+  code, name, tier, description, tagline, badge, cta_label,
+  price_cents, currency, interval, trial_days, features, limits,
+  sort_order, is_active, is_public, is_custom, highlight, monthly_plan_code
+)
+VALUES (
+  'starter_lifetime',
+  'Starter Lifetime',
+  'starter',
+  'Designed for household businesses, solo operators, and very small teams that need a practical CRM and omnichannel workspace without enterprise complexity. Includes lightweight AI assistance, basic automation, broadcasts, and enough capacity to run day-to-day customer operations. This is a one-time platform license for this tier. Included usage quotas remain governed by the plan; messaging, AI, telephony, cloud, payment, and other third-party provider charges are not included unless explicitly stated in the commercial agreement.',
+  'One payment for long-term platform access at Starter capacity.',
+  'Private Offer',
+  'Contact sales',
+  29900,
+  'USD',
+  'lifetime',
+  0,
+  $features_6$
+{
+  "ai.reply_assistant": true,
+  "ai.knowledge_base": false,
+  "automations.enabled": true,
+  "marketing.ab_testing": false,
+  "marketing.drip_sequences": false,
+  "bi.custom_dashboards": false,
+  "bi.scheduled_reports": false,
+  "api.public_access": false,
+  "security.sso": false,
+  "security.audit_export": false,
+  "inbox": true,
+  "broadcasts": true,
+  "templates": true,
+  "automations": true,
+  "chatbot": false,
+  "ai": true,
+  "crm": true,
+  "commerce": false,
+  "analytics": false,
+  "api": false,
+  "white_label": false,
+  "sso": false,
+  "audit_export": false,
+  "sla": false,
+  "support": "community",
+  "channels": 2
+}
+$features_6$::jsonb,
+  $limits_6$
+{
+  "seats": 3,
+  "organizations": 1,
+  "workspaces": 2,
+  "contacts": 3000,
+  "companies": 500,
+  "deals": 500,
+  "pipelines": 2,
+  "campaigns_per_month": 5,
+  "broadcasts_per_month": 2500,
+  "templates": 20,
+  "workflows": 10,
+  "ai_requests_per_month": 500,
+  "storage_mb": 1024,
+  "api_requests_per_month": 25000,
+  "phone_numbers": 1,
+  "whatsapp_accounts": 1,
+  "custom_fields": 20,
+  "reports": 10,
+  "exports_per_month": 50,
+  "messages_per_month": 2500,
+  "agents": 2,
+  "storage_gb": 1
+}
+$limits_6$::jsonb,
+  22,
+  true,
+  false,
+  false,
+  false,
+  'starter'
+)
+ON CONFLICT (code) DO UPDATE SET
+  name=EXCLUDED.name,
+  tier=EXCLUDED.tier,
+  description=EXCLUDED.description,
+  tagline=EXCLUDED.tagline,
+  badge=EXCLUDED.badge,
+  cta_label=EXCLUDED.cta_label,
+  price_cents=EXCLUDED.price_cents,
+  currency=EXCLUDED.currency,
+  interval=EXCLUDED.interval,
+  trial_days=EXCLUDED.trial_days,
+  features=EXCLUDED.features,
+  limits=EXCLUDED.limits,
+  sort_order=EXCLUDED.sort_order,
+  is_active=EXCLUDED.is_active,
+  is_public=EXCLUDED.is_public,
+  is_custom=EXCLUDED.is_custom,
+  highlight=EXCLUDED.highlight,
+  monthly_plan_code=EXCLUDED.monthly_plan_code;
+
+-- ═════════════════════════ PROFESSIONAL ═════════════════════════
+
+-- professional | month | $19.00
+INSERT INTO public.plans (
+  code, name, tier, description, tagline, badge, cta_label,
+  price_cents, currency, interval, trial_days, features, limits,
+  sort_order, is_active, is_public, is_custom, highlight, monthly_plan_code
+)
+VALUES (
+  'professional',
+  'Professional',
+  'professional',
+  'Built for growing service businesses and sales teams that need more than basic CRM. Add AI-powered assistance and knowledge, multi-step automation, campaign experimentation, richer dashboards, and public API access while keeping the workspace simple enough for a lean team to operate every day.',
+  'Run a complete customer, sales, marketing, and automation stack for a growing team.',
+  'Most Popular',
+  'Start free trial',
+  1900,
+  'USD',
+  'month',
+  14,
+  $features_7$
+{
+  "ai.reply_assistant": true,
+  "ai.knowledge_base": true,
+  "automations.enabled": true,
+  "marketing.ab_testing": true,
+  "marketing.drip_sequences": true,
+  "bi.custom_dashboards": true,
+  "bi.scheduled_reports": false,
+  "api.public_access": true,
+  "security.sso": false,
+  "security.audit_export": false,
+  "inbox": true,
+  "broadcasts": true,
+  "templates": true,
+  "automations": true,
+  "chatbot": true,
+  "ai": true,
+  "crm": true,
+  "commerce": true,
+  "analytics": true,
+  "api": true,
+  "white_label": false,
+  "sso": false,
+  "audit_export": false,
+  "sla": false,
+  "support": "email",
+  "channels": 3
+}
+$features_7$::jsonb,
+  $limits_7$
+{
+  "seats": 7,
+  "organizations": 1,
+  "workspaces": 3,
+  "contacts": 10000,
+  "companies": 2000,
+  "deals": 2000,
+  "pipelines": 5,
+  "campaigns_per_month": 15,
+  "broadcasts_per_month": 10000,
+  "templates": 50,
+  "workflows": 30,
+  "ai_requests_per_month": 10000,
+  "storage_mb": 5120,
+  "api_requests_per_month": 100000,
+  "phone_numbers": 3,
+  "whatsapp_accounts": 2,
+  "custom_fields": 50,
+  "reports": 25,
+  "exports_per_month": 250,
+  "messages_per_month": 10000,
+  "agents": 5,
+  "storage_gb": 5
+}
+$limits_7$::jsonb,
+  30,
+  true,
+  true,
+  false,
+  true,
+  NULL
+)
+ON CONFLICT (code) DO UPDATE SET
+  name=EXCLUDED.name,
+  tier=EXCLUDED.tier,
+  description=EXCLUDED.description,
+  tagline=EXCLUDED.tagline,
+  badge=EXCLUDED.badge,
+  cta_label=EXCLUDED.cta_label,
+  price_cents=EXCLUDED.price_cents,
+  currency=EXCLUDED.currency,
+  interval=EXCLUDED.interval,
+  trial_days=EXCLUDED.trial_days,
+  features=EXCLUDED.features,
+  limits=EXCLUDED.limits,
+  sort_order=EXCLUDED.sort_order,
+  is_active=EXCLUDED.is_active,
+  is_public=EXCLUDED.is_public,
+  is_custom=EXCLUDED.is_custom,
+  highlight=EXCLUDED.highlight,
+  monthly_plan_code=EXCLUDED.monthly_plan_code;
+
+-- professional_yearly | year | $182.40
+INSERT INTO public.plans (
+  code, name, tier, description, tagline, badge, cta_label,
+  price_cents, currency, interval, trial_days, features, limits,
+  sort_order, is_active, is_public, is_custom, highlight, monthly_plan_code
+)
+VALUES (
+  'professional_yearly',
+  'Professional (Yearly)',
+  'professional',
+  'Built for growing service businesses and sales teams that need more than basic CRM. Add AI-powered assistance and knowledge, multi-step automation, campaign experimentation, richer dashboards, and public API access while keeping the workspace simple enough for a lean team to operate every day. Billed annually with a 20% discount compared with paying the monthly price for twelve months.',
+  'Run a complete customer, sales, marketing, and automation stack for a growing team — billed annually with 20% savings.',
+  'Best Value',
+  'Start free trial',
+  18240,
+  'USD',
+  'year',
+  14,
+  $features_8$
+{
+  "ai.reply_assistant": true,
+  "ai.knowledge_base": true,
+  "automations.enabled": true,
+  "marketing.ab_testing": true,
+  "marketing.drip_sequences": true,
+  "bi.custom_dashboards": true,
+  "bi.scheduled_reports": false,
+  "api.public_access": true,
+  "security.sso": false,
+  "security.audit_export": false,
+  "inbox": true,
+  "broadcasts": true,
+  "templates": true,
+  "automations": true,
+  "chatbot": true,
+  "ai": true,
+  "crm": true,
+  "commerce": true,
+  "analytics": true,
+  "api": true,
+  "white_label": false,
+  "sso": false,
+  "audit_export": false,
+  "sla": false,
+  "support": "email",
+  "channels": 3
+}
+$features_8$::jsonb,
+  $limits_8$
+{
+  "seats": 7,
+  "organizations": 1,
+  "workspaces": 3,
+  "contacts": 10000,
+  "companies": 2000,
+  "deals": 2000,
+  "pipelines": 5,
+  "campaigns_per_month": 15,
+  "broadcasts_per_month": 10000,
+  "templates": 50,
+  "workflows": 30,
+  "ai_requests_per_month": 10000,
+  "storage_mb": 5120,
+  "api_requests_per_month": 100000,
+  "phone_numbers": 3,
+  "whatsapp_accounts": 2,
+  "custom_fields": 50,
+  "reports": 25,
+  "exports_per_month": 250,
+  "messages_per_month": 10000,
+  "agents": 5,
+  "storage_gb": 5
+}
+$limits_8$::jsonb,
+  31,
+  true,
+  true,
+  false,
+  true,
+  'professional'
+)
+ON CONFLICT (code) DO UPDATE SET
+  name=EXCLUDED.name,
+  tier=EXCLUDED.tier,
+  description=EXCLUDED.description,
+  tagline=EXCLUDED.tagline,
+  badge=EXCLUDED.badge,
+  cta_label=EXCLUDED.cta_label,
+  price_cents=EXCLUDED.price_cents,
+  currency=EXCLUDED.currency,
+  interval=EXCLUDED.interval,
+  trial_days=EXCLUDED.trial_days,
+  features=EXCLUDED.features,
+  limits=EXCLUDED.limits,
+  sort_order=EXCLUDED.sort_order,
+  is_active=EXCLUDED.is_active,
+  is_public=EXCLUDED.is_public,
+  is_custom=EXCLUDED.is_custom,
+  highlight=EXCLUDED.highlight,
+  monthly_plan_code=EXCLUDED.monthly_plan_code;
+
+-- professional_lifetime | lifetime | $599.00
+INSERT INTO public.plans (
+  code, name, tier, description, tagline, badge, cta_label,
+  price_cents, currency, interval, trial_days, features, limits,
+  sort_order, is_active, is_public, is_custom, highlight, monthly_plan_code
+)
+VALUES (
+  'professional_lifetime',
+  'Professional Lifetime',
+  'professional',
+  'Built for growing service businesses and sales teams that need more than basic CRM. Add AI-powered assistance and knowledge, multi-step automation, campaign experimentation, richer dashboards, and public API access while keeping the workspace simple enough for a lean team to operate every day. This is a one-time platform license for this tier. Included usage quotas remain governed by the plan; messaging, AI, telephony, cloud, payment, and other third-party provider charges are not included unless explicitly stated in the commercial agreement.',
+  'One payment for long-term platform access at Professional capacity.',
+  'Private Offer',
+  'Contact sales',
+  59900,
+  'USD',
+  'lifetime',
+  0,
+  $features_9$
+{
+  "ai.reply_assistant": true,
+  "ai.knowledge_base": true,
+  "automations.enabled": true,
+  "marketing.ab_testing": true,
+  "marketing.drip_sequences": true,
+  "bi.custom_dashboards": true,
+  "bi.scheduled_reports": false,
+  "api.public_access": true,
+  "security.sso": false,
+  "security.audit_export": false,
+  "inbox": true,
+  "broadcasts": true,
+  "templates": true,
+  "automations": true,
+  "chatbot": true,
+  "ai": true,
+  "crm": true,
+  "commerce": true,
+  "analytics": true,
+  "api": true,
+  "white_label": false,
+  "sso": false,
+  "audit_export": false,
+  "sla": false,
+  "support": "email",
+  "channels": 3
+}
+$features_9$::jsonb,
+  $limits_9$
+{
+  "seats": 7,
+  "organizations": 1,
+  "workspaces": 3,
+  "contacts": 10000,
+  "companies": 2000,
+  "deals": 2000,
+  "pipelines": 5,
+  "campaigns_per_month": 15,
+  "broadcasts_per_month": 10000,
+  "templates": 50,
+  "workflows": 30,
+  "ai_requests_per_month": 10000,
+  "storage_mb": 5120,
+  "api_requests_per_month": 100000,
+  "phone_numbers": 3,
+  "whatsapp_accounts": 2,
+  "custom_fields": 50,
+  "reports": 25,
+  "exports_per_month": 250,
+  "messages_per_month": 10000,
+  "agents": 5,
+  "storage_gb": 5
+}
+$limits_9$::jsonb,
+  32,
+  true,
+  false,
+  false,
+  false,
+  'professional'
+)
+ON CONFLICT (code) DO UPDATE SET
+  name=EXCLUDED.name,
+  tier=EXCLUDED.tier,
+  description=EXCLUDED.description,
+  tagline=EXCLUDED.tagline,
+  badge=EXCLUDED.badge,
+  cta_label=EXCLUDED.cta_label,
+  price_cents=EXCLUDED.price_cents,
+  currency=EXCLUDED.currency,
+  interval=EXCLUDED.interval,
+  trial_days=EXCLUDED.trial_days,
+  features=EXCLUDED.features,
+  limits=EXCLUDED.limits,
+  sort_order=EXCLUDED.sort_order,
+  is_active=EXCLUDED.is_active,
+  is_public=EXCLUDED.is_public,
+  is_custom=EXCLUDED.is_custom,
+  highlight=EXCLUDED.highlight,
+  monthly_plan_code=EXCLUDED.monthly_plan_code;
+
+-- ═════════════════════════ GROWTH ═════════════════════════
+
+-- growth | month | $39.00
+INSERT INTO public.plans (
+  code, name, tier, description, tagline, badge, cta_label,
+  price_cents, currency, interval, trial_days, features, limits,
+  sort_order, is_active, is_public, is_custom, highlight, monthly_plan_code
+)
+VALUES (
+  'growth',
+  'Growth',
+  'growth',
+  'Designed for companies that have moved beyond a single sales workflow and need a coordinated growth engine. Manage larger audiences, more automations and campaigns, scheduled reporting, multiple workspaces, and higher AI and API throughput while keeping marketing, sales, and customer conversations connected.',
+  'Scale acquisition, nurturing, and revenue operations across multiple channels and workspaces.',
+  NULL,
+  'Start free trial',
+  3900,
+  'USD',
+  'month',
+  14,
+  $features_10$
+{
+  "ai.reply_assistant": true,
+  "ai.knowledge_base": true,
+  "automations.enabled": true,
+  "marketing.ab_testing": true,
+  "marketing.drip_sequences": true,
+  "bi.custom_dashboards": true,
+  "bi.scheduled_reports": true,
+  "api.public_access": true,
+  "security.sso": false,
+  "security.audit_export": false,
+  "inbox": true,
+  "broadcasts": true,
+  "templates": true,
+  "automations": true,
+  "chatbot": true,
+  "ai": true,
+  "crm": true,
+  "commerce": true,
+  "analytics": true,
+  "api": true,
+  "white_label": false,
+  "sso": false,
+  "audit_export": false,
+  "sla": false,
+  "support": "priority",
+  "channels": 5
+}
+$features_10$::jsonb,
+  $limits_10$
+{
+  "seats": 15,
+  "organizations": 2,
+  "workspaces": 5,
+  "contacts": 25000,
+  "companies": 5000,
+  "deals": 5000,
+  "pipelines": 10,
+  "campaigns_per_month": 40,
+  "broadcasts_per_month": 25000,
+  "templates": 100,
+  "workflows": 75,
+  "ai_requests_per_month": 25000,
+  "storage_mb": 20480,
+  "api_requests_per_month": 300000,
+  "phone_numbers": 5,
+  "whatsapp_accounts": 3,
+  "custom_fields": 150,
+  "reports": 50,
+  "exports_per_month": 1000,
+  "messages_per_month": 25000,
+  "agents": 10,
+  "storage_gb": 20
+}
+$limits_10$::jsonb,
+  40,
+  true,
+  true,
+  false,
+  false,
+  NULL
+)
+ON CONFLICT (code) DO UPDATE SET
+  name=EXCLUDED.name,
+  tier=EXCLUDED.tier,
+  description=EXCLUDED.description,
+  tagline=EXCLUDED.tagline,
+  badge=EXCLUDED.badge,
+  cta_label=EXCLUDED.cta_label,
+  price_cents=EXCLUDED.price_cents,
+  currency=EXCLUDED.currency,
+  interval=EXCLUDED.interval,
+  trial_days=EXCLUDED.trial_days,
+  features=EXCLUDED.features,
+  limits=EXCLUDED.limits,
+  sort_order=EXCLUDED.sort_order,
+  is_active=EXCLUDED.is_active,
+  is_public=EXCLUDED.is_public,
+  is_custom=EXCLUDED.is_custom,
+  highlight=EXCLUDED.highlight,
+  monthly_plan_code=EXCLUDED.monthly_plan_code;
+
+-- growth_yearly | year | $374.40
+INSERT INTO public.plans (
+  code, name, tier, description, tagline, badge, cta_label,
+  price_cents, currency, interval, trial_days, features, limits,
+  sort_order, is_active, is_public, is_custom, highlight, monthly_plan_code
+)
+VALUES (
+  'growth_yearly',
+  'Growth (Yearly)',
+  'growth',
+  'Designed for companies that have moved beyond a single sales workflow and need a coordinated growth engine. Manage larger audiences, more automations and campaigns, scheduled reporting, multiple workspaces, and higher AI and API throughput while keeping marketing, sales, and customer conversations connected. Billed annually with a 20% discount compared with paying the monthly price for twelve months.',
+  'Scale acquisition, nurturing, and revenue operations across multiple channels and workspaces — billed annually with 20% savings.',
+  NULL,
+  'Start free trial',
+  37440,
+  'USD',
+  'year',
+  14,
+  $features_11$
+{
+  "ai.reply_assistant": true,
+  "ai.knowledge_base": true,
+  "automations.enabled": true,
+  "marketing.ab_testing": true,
+  "marketing.drip_sequences": true,
+  "bi.custom_dashboards": true,
+  "bi.scheduled_reports": true,
+  "api.public_access": true,
+  "security.sso": false,
+  "security.audit_export": false,
+  "inbox": true,
+  "broadcasts": true,
+  "templates": true,
+  "automations": true,
+  "chatbot": true,
+  "ai": true,
+  "crm": true,
+  "commerce": true,
+  "analytics": true,
+  "api": true,
+  "white_label": false,
+  "sso": false,
+  "audit_export": false,
+  "sla": false,
+  "support": "priority",
+  "channels": 5
+}
+$features_11$::jsonb,
+  $limits_11$
+{
+  "seats": 15,
+  "organizations": 2,
+  "workspaces": 5,
+  "contacts": 25000,
+  "companies": 5000,
+  "deals": 5000,
+  "pipelines": 10,
+  "campaigns_per_month": 40,
+  "broadcasts_per_month": 25000,
+  "templates": 100,
+  "workflows": 75,
+  "ai_requests_per_month": 25000,
+  "storage_mb": 20480,
+  "api_requests_per_month": 300000,
+  "phone_numbers": 5,
+  "whatsapp_accounts": 3,
+  "custom_fields": 150,
+  "reports": 50,
+  "exports_per_month": 1000,
+  "messages_per_month": 25000,
+  "agents": 10,
+  "storage_gb": 20
+}
+$limits_11$::jsonb,
+  41,
+  true,
+  true,
+  false,
+  false,
+  'growth'
+)
+ON CONFLICT (code) DO UPDATE SET
+  name=EXCLUDED.name,
+  tier=EXCLUDED.tier,
+  description=EXCLUDED.description,
+  tagline=EXCLUDED.tagline,
+  badge=EXCLUDED.badge,
+  cta_label=EXCLUDED.cta_label,
+  price_cents=EXCLUDED.price_cents,
+  currency=EXCLUDED.currency,
+  interval=EXCLUDED.interval,
+  trial_days=EXCLUDED.trial_days,
+  features=EXCLUDED.features,
+  limits=EXCLUDED.limits,
+  sort_order=EXCLUDED.sort_order,
+  is_active=EXCLUDED.is_active,
+  is_public=EXCLUDED.is_public,
+  is_custom=EXCLUDED.is_custom,
+  highlight=EXCLUDED.highlight,
+  monthly_plan_code=EXCLUDED.monthly_plan_code;
+
+-- growth_lifetime | lifetime | $1,199.00
+INSERT INTO public.plans (
+  code, name, tier, description, tagline, badge, cta_label,
+  price_cents, currency, interval, trial_days, features, limits,
+  sort_order, is_active, is_public, is_custom, highlight, monthly_plan_code
+)
+VALUES (
+  'growth_lifetime',
+  'Growth Lifetime',
+  'growth',
+  'Designed for companies that have moved beyond a single sales workflow and need a coordinated growth engine. Manage larger audiences, more automations and campaigns, scheduled reporting, multiple workspaces, and higher AI and API throughput while keeping marketing, sales, and customer conversations connected. This is a one-time platform license for this tier. Included usage quotas remain governed by the plan; messaging, AI, telephony, cloud, payment, and other third-party provider charges are not included unless explicitly stated in the commercial agreement.',
+  'One payment for long-term platform access at Growth capacity.',
+  'Private Offer',
+  'Contact sales',
+  119900,
+  'USD',
+  'lifetime',
+  0,
+  $features_12$
+{
+  "ai.reply_assistant": true,
+  "ai.knowledge_base": true,
+  "automations.enabled": true,
+  "marketing.ab_testing": true,
+  "marketing.drip_sequences": true,
+  "bi.custom_dashboards": true,
+  "bi.scheduled_reports": true,
+  "api.public_access": true,
+  "security.sso": false,
+  "security.audit_export": false,
+  "inbox": true,
+  "broadcasts": true,
+  "templates": true,
+  "automations": true,
+  "chatbot": true,
+  "ai": true,
+  "crm": true,
+  "commerce": true,
+  "analytics": true,
+  "api": true,
+  "white_label": false,
+  "sso": false,
+  "audit_export": false,
+  "sla": false,
+  "support": "priority",
+  "channels": 5
+}
+$features_12$::jsonb,
+  $limits_12$
+{
+  "seats": 15,
+  "organizations": 2,
+  "workspaces": 5,
+  "contacts": 25000,
+  "companies": 5000,
+  "deals": 5000,
+  "pipelines": 10,
+  "campaigns_per_month": 40,
+  "broadcasts_per_month": 25000,
+  "templates": 100,
+  "workflows": 75,
+  "ai_requests_per_month": 25000,
+  "storage_mb": 20480,
+  "api_requests_per_month": 300000,
+  "phone_numbers": 5,
+  "whatsapp_accounts": 3,
+  "custom_fields": 150,
+  "reports": 50,
+  "exports_per_month": 1000,
+  "messages_per_month": 25000,
+  "agents": 10,
+  "storage_gb": 20
+}
+$limits_12$::jsonb,
+  42,
+  true,
+  false,
+  false,
+  false,
+  'growth'
+)
+ON CONFLICT (code) DO UPDATE SET
+  name=EXCLUDED.name,
+  tier=EXCLUDED.tier,
+  description=EXCLUDED.description,
+  tagline=EXCLUDED.tagline,
+  badge=EXCLUDED.badge,
+  cta_label=EXCLUDED.cta_label,
+  price_cents=EXCLUDED.price_cents,
+  currency=EXCLUDED.currency,
+  interval=EXCLUDED.interval,
+  trial_days=EXCLUDED.trial_days,
+  features=EXCLUDED.features,
+  limits=EXCLUDED.limits,
+  sort_order=EXCLUDED.sort_order,
+  is_active=EXCLUDED.is_active,
+  is_public=EXCLUDED.is_public,
+  is_custom=EXCLUDED.is_custom,
+  highlight=EXCLUDED.highlight,
+  monthly_plan_code=EXCLUDED.monthly_plan_code;
+
+-- ═════════════════════════ BUSINESS ═════════════════════════
+
+-- business | month | $79.00
+INSERT INTO public.plans (
+  code, name, tier, description, tagline, badge, cta_label,
+  price_cents, currency, interval, trial_days, features, limits,
+  sort_order, is_active, is_public, is_custom, highlight, monthly_plan_code
+)
+VALUES (
+  'business',
+  'Business',
+  'business',
+  'For established businesses running several teams, workspaces, brands, or customer programs. Adds substantially higher operating limits, SSO, audit export, advanced reporting, API capacity, and governance controls so customer acquisition, sales, service, and automation can scale without losing operational visibility.',
+  'Standardize multi-team revenue operations with governance, security, and higher capacity.',
+  NULL,
+  'Start free trial',
+  7900,
+  'USD',
+  'month',
+  14,
+  $features_13$
+{
+  "ai.reply_assistant": true,
+  "ai.knowledge_base": true,
+  "automations.enabled": true,
+  "marketing.ab_testing": true,
+  "marketing.drip_sequences": true,
+  "bi.custom_dashboards": true,
+  "bi.scheduled_reports": true,
+  "api.public_access": true,
+  "security.sso": true,
+  "security.audit_export": true,
+  "inbox": true,
+  "broadcasts": true,
+  "templates": true,
+  "automations": true,
+  "chatbot": true,
+  "ai": true,
+  "crm": true,
+  "commerce": true,
+  "analytics": true,
+  "api": true,
+  "white_label": false,
+  "sso": true,
+  "audit_export": true,
+  "sla": false,
+  "support": "priority",
+  "channels": 10
+}
+$features_13$::jsonb,
+  $limits_13$
+{
+  "seats": 30,
+  "organizations": 5,
+  "workspaces": 15,
+  "contacts": 100000,
+  "companies": 25000,
+  "deals": 25000,
+  "pipelines": 25,
+  "campaigns_per_month": 100,
+  "broadcasts_per_month": 100000,
+  "templates": 300,
+  "workflows": 250,
+  "ai_requests_per_month": 100000,
+  "storage_mb": 102400,
+  "api_requests_per_month": 1000000,
+  "phone_numbers": 15,
+  "whatsapp_accounts": 10,
+  "custom_fields": 500,
+  "reports": 200,
+  "exports_per_month": 5000,
+  "messages_per_month": 100000,
+  "agents": 25,
+  "storage_gb": 100
+}
+$limits_13$::jsonb,
+  50,
+  true,
+  true,
+  false,
+  false,
+  NULL
+)
+ON CONFLICT (code) DO UPDATE SET
+  name=EXCLUDED.name,
+  tier=EXCLUDED.tier,
+  description=EXCLUDED.description,
+  tagline=EXCLUDED.tagline,
+  badge=EXCLUDED.badge,
+  cta_label=EXCLUDED.cta_label,
+  price_cents=EXCLUDED.price_cents,
+  currency=EXCLUDED.currency,
+  interval=EXCLUDED.interval,
+  trial_days=EXCLUDED.trial_days,
+  features=EXCLUDED.features,
+  limits=EXCLUDED.limits,
+  sort_order=EXCLUDED.sort_order,
+  is_active=EXCLUDED.is_active,
+  is_public=EXCLUDED.is_public,
+  is_custom=EXCLUDED.is_custom,
+  highlight=EXCLUDED.highlight,
+  monthly_plan_code=EXCLUDED.monthly_plan_code;
+
+-- business_yearly | year | $758.40
+INSERT INTO public.plans (
+  code, name, tier, description, tagline, badge, cta_label,
+  price_cents, currency, interval, trial_days, features, limits,
+  sort_order, is_active, is_public, is_custom, highlight, monthly_plan_code
+)
+VALUES (
+  'business_yearly',
+  'Business (Yearly)',
+  'business',
+  'For established businesses running several teams, workspaces, brands, or customer programs. Adds substantially higher operating limits, SSO, audit export, advanced reporting, API capacity, and governance controls so customer acquisition, sales, service, and automation can scale without losing operational visibility. Billed annually with a 20% discount compared with paying the monthly price for twelve months.',
+  'Standardize multi-team revenue operations with governance, security, and higher capacity — billed annually with 20% savings.',
+  NULL,
+  'Start free trial',
+  75840,
+  'USD',
+  'year',
+  14,
+  $features_14$
+{
+  "ai.reply_assistant": true,
+  "ai.knowledge_base": true,
+  "automations.enabled": true,
+  "marketing.ab_testing": true,
+  "marketing.drip_sequences": true,
+  "bi.custom_dashboards": true,
+  "bi.scheduled_reports": true,
+  "api.public_access": true,
+  "security.sso": true,
+  "security.audit_export": true,
+  "inbox": true,
+  "broadcasts": true,
+  "templates": true,
+  "automations": true,
+  "chatbot": true,
+  "ai": true,
+  "crm": true,
+  "commerce": true,
+  "analytics": true,
+  "api": true,
+  "white_label": false,
+  "sso": true,
+  "audit_export": true,
+  "sla": false,
+  "support": "priority",
+  "channels": 10
+}
+$features_14$::jsonb,
+  $limits_14$
+{
+  "seats": 30,
+  "organizations": 5,
+  "workspaces": 15,
+  "contacts": 100000,
+  "companies": 25000,
+  "deals": 25000,
+  "pipelines": 25,
+  "campaigns_per_month": 100,
+  "broadcasts_per_month": 100000,
+  "templates": 300,
+  "workflows": 250,
+  "ai_requests_per_month": 100000,
+  "storage_mb": 102400,
+  "api_requests_per_month": 1000000,
+  "phone_numbers": 15,
+  "whatsapp_accounts": 10,
+  "custom_fields": 500,
+  "reports": 200,
+  "exports_per_month": 5000,
+  "messages_per_month": 100000,
+  "agents": 25,
+  "storage_gb": 100
+}
+$limits_14$::jsonb,
+  51,
+  true,
+  true,
+  false,
+  false,
+  'business'
+)
+ON CONFLICT (code) DO UPDATE SET
+  name=EXCLUDED.name,
+  tier=EXCLUDED.tier,
+  description=EXCLUDED.description,
+  tagline=EXCLUDED.tagline,
+  badge=EXCLUDED.badge,
+  cta_label=EXCLUDED.cta_label,
+  price_cents=EXCLUDED.price_cents,
+  currency=EXCLUDED.currency,
+  interval=EXCLUDED.interval,
+  trial_days=EXCLUDED.trial_days,
+  features=EXCLUDED.features,
+  limits=EXCLUDED.limits,
+  sort_order=EXCLUDED.sort_order,
+  is_active=EXCLUDED.is_active,
+  is_public=EXCLUDED.is_public,
+  is_custom=EXCLUDED.is_custom,
+  highlight=EXCLUDED.highlight,
+  monthly_plan_code=EXCLUDED.monthly_plan_code;
+
+-- business_lifetime | lifetime | $2,399.00
+INSERT INTO public.plans (
+  code, name, tier, description, tagline, badge, cta_label,
+  price_cents, currency, interval, trial_days, features, limits,
+  sort_order, is_active, is_public, is_custom, highlight, monthly_plan_code
+)
+VALUES (
+  'business_lifetime',
+  'Business Lifetime',
+  'business',
+  'For established businesses running several teams, workspaces, brands, or customer programs. Adds substantially higher operating limits, SSO, audit export, advanced reporting, API capacity, and governance controls so customer acquisition, sales, service, and automation can scale without losing operational visibility. This is a one-time platform license for this tier. Included usage quotas remain governed by the plan; messaging, AI, telephony, cloud, payment, and other third-party provider charges are not included unless explicitly stated in the commercial agreement.',
+  'One payment for long-term platform access at Business capacity.',
+  'Private Offer',
+  'Contact sales',
+  239900,
+  'USD',
+  'lifetime',
+  0,
+  $features_15$
+{
+  "ai.reply_assistant": true,
+  "ai.knowledge_base": true,
+  "automations.enabled": true,
+  "marketing.ab_testing": true,
+  "marketing.drip_sequences": true,
+  "bi.custom_dashboards": true,
+  "bi.scheduled_reports": true,
+  "api.public_access": true,
+  "security.sso": true,
+  "security.audit_export": true,
+  "inbox": true,
+  "broadcasts": true,
+  "templates": true,
+  "automations": true,
+  "chatbot": true,
+  "ai": true,
+  "crm": true,
+  "commerce": true,
+  "analytics": true,
+  "api": true,
+  "white_label": false,
+  "sso": true,
+  "audit_export": true,
+  "sla": false,
+  "support": "priority",
+  "channels": 10
+}
+$features_15$::jsonb,
+  $limits_15$
+{
+  "seats": 30,
+  "organizations": 5,
+  "workspaces": 15,
+  "contacts": 100000,
+  "companies": 25000,
+  "deals": 25000,
+  "pipelines": 25,
+  "campaigns_per_month": 100,
+  "broadcasts_per_month": 100000,
+  "templates": 300,
+  "workflows": 250,
+  "ai_requests_per_month": 100000,
+  "storage_mb": 102400,
+  "api_requests_per_month": 1000000,
+  "phone_numbers": 15,
+  "whatsapp_accounts": 10,
+  "custom_fields": 500,
+  "reports": 200,
+  "exports_per_month": 5000,
+  "messages_per_month": 100000,
+  "agents": 25,
+  "storage_gb": 100
+}
+$limits_15$::jsonb,
+  52,
+  true,
+  false,
+  false,
+  false,
+  'business'
+)
+ON CONFLICT (code) DO UPDATE SET
+  name=EXCLUDED.name,
+  tier=EXCLUDED.tier,
+  description=EXCLUDED.description,
+  tagline=EXCLUDED.tagline,
+  badge=EXCLUDED.badge,
+  cta_label=EXCLUDED.cta_label,
+  price_cents=EXCLUDED.price_cents,
+  currency=EXCLUDED.currency,
+  interval=EXCLUDED.interval,
+  trial_days=EXCLUDED.trial_days,
+  features=EXCLUDED.features,
+  limits=EXCLUDED.limits,
+  sort_order=EXCLUDED.sort_order,
+  is_active=EXCLUDED.is_active,
+  is_public=EXCLUDED.is_public,
+  is_custom=EXCLUDED.is_custom,
+  highlight=EXCLUDED.highlight,
+  monthly_plan_code=EXCLUDED.monthly_plan_code;
+
+-- ═════════════════════════ ENTERPRISE ═════════════════════════
+
+-- enterprise | month | $199.00
+INSERT INTO public.plans (
+  code, name, tier, description, tagline, badge, cta_label,
+  price_cents, currency, interval, trial_days, features, limits,
+  sort_order, is_active, is_public, is_custom, highlight, monthly_plan_code
+)
+VALUES (
+  'enterprise',
+  'Enterprise',
+  'enterprise',
+  'A sales-assisted plan for larger organizations that need high operating capacity, stronger governance, white-label options, SSO, auditability, SLA-backed support, and implementation guidance. Default limits provide a safe enterprise baseline and can be adjusted through a commercial agreement when the deployment requires more capacity.',
+  'Operate high-volume customer and revenue workflows with enterprise controls and dedicated support.',
+  'Contact Sales',
+  'Contact sales',
+  19900,
+  'USD',
+  'month',
+  0,
+  $features_16$
+{
+  "ai.reply_assistant": true,
+  "ai.knowledge_base": true,
+  "automations.enabled": true,
+  "marketing.ab_testing": true,
+  "marketing.drip_sequences": true,
+  "bi.custom_dashboards": true,
+  "bi.scheduled_reports": true,
+  "api.public_access": true,
+  "security.sso": true,
+  "security.audit_export": true,
+  "inbox": true,
+  "broadcasts": true,
+  "templates": true,
+  "automations": true,
+  "chatbot": true,
+  "ai": true,
+  "crm": true,
+  "commerce": true,
+  "analytics": true,
+  "api": true,
+  "white_label": true,
+  "sso": true,
+  "audit_export": true,
+  "sla": true,
+  "support": "dedicated",
+  "channels": 25
+}
+$features_16$::jsonb,
+  $limits_16$
+{
+  "seats": 100,
+  "organizations": 10,
+  "workspaces": 50,
+  "contacts": 500000,
+  "companies": 100000,
+  "deals": 100000,
+  "pipelines": 100,
+  "campaigns_per_month": 500,
+  "broadcasts_per_month": 500000,
+  "templates": 1000,
+  "workflows": 1000,
+  "ai_requests_per_month": 500000,
+  "storage_mb": 524288,
+  "api_requests_per_month": 5000000,
+  "phone_numbers": 50,
+  "whatsapp_accounts": 25,
+  "custom_fields": 2000,
+  "reports": 1000,
+  "exports_per_month": 20000,
+  "messages_per_month": 500000,
+  "agents": 100,
+  "storage_gb": 512
+}
+$limits_16$::jsonb,
+  60,
+  true,
+  true,
+  false,
+  false,
+  NULL
+)
+ON CONFLICT (code) DO UPDATE SET
+  name=EXCLUDED.name,
+  tier=EXCLUDED.tier,
+  description=EXCLUDED.description,
+  tagline=EXCLUDED.tagline,
+  badge=EXCLUDED.badge,
+  cta_label=EXCLUDED.cta_label,
+  price_cents=EXCLUDED.price_cents,
+  currency=EXCLUDED.currency,
+  interval=EXCLUDED.interval,
+  trial_days=EXCLUDED.trial_days,
+  features=EXCLUDED.features,
+  limits=EXCLUDED.limits,
+  sort_order=EXCLUDED.sort_order,
+  is_active=EXCLUDED.is_active,
+  is_public=EXCLUDED.is_public,
+  is_custom=EXCLUDED.is_custom,
+  highlight=EXCLUDED.highlight,
+  monthly_plan_code=EXCLUDED.monthly_plan_code;
+
+-- enterprise_yearly | year | $1,910.40
+INSERT INTO public.plans (
+  code, name, tier, description, tagline, badge, cta_label,
+  price_cents, currency, interval, trial_days, features, limits,
+  sort_order, is_active, is_public, is_custom, highlight, monthly_plan_code
+)
+VALUES (
+  'enterprise_yearly',
+  'Enterprise (Yearly)',
+  'enterprise',
+  'A sales-assisted plan for larger organizations that need high operating capacity, stronger governance, white-label options, SSO, auditability, SLA-backed support, and implementation guidance. Default limits provide a safe enterprise baseline and can be adjusted through a commercial agreement when the deployment requires more capacity. Billed annually with a 20% discount compared with paying the monthly price for twelve months.',
+  'Operate high-volume customer and revenue workflows with enterprise controls and dedicated support — billed annually with 20% savings.',
+  'Contact Sales',
+  'Contact sales',
+  191040,
+  'USD',
+  'year',
+  0,
+  $features_17$
+{
+  "ai.reply_assistant": true,
+  "ai.knowledge_base": true,
+  "automations.enabled": true,
+  "marketing.ab_testing": true,
+  "marketing.drip_sequences": true,
+  "bi.custom_dashboards": true,
+  "bi.scheduled_reports": true,
+  "api.public_access": true,
+  "security.sso": true,
+  "security.audit_export": true,
+  "inbox": true,
+  "broadcasts": true,
+  "templates": true,
+  "automations": true,
+  "chatbot": true,
+  "ai": true,
+  "crm": true,
+  "commerce": true,
+  "analytics": true,
+  "api": true,
+  "white_label": true,
+  "sso": true,
+  "audit_export": true,
+  "sla": true,
+  "support": "dedicated",
+  "channels": 25
+}
+$features_17$::jsonb,
+  $limits_17$
+{
+  "seats": 100,
+  "organizations": 10,
+  "workspaces": 50,
+  "contacts": 500000,
+  "companies": 100000,
+  "deals": 100000,
+  "pipelines": 100,
+  "campaigns_per_month": 500,
+  "broadcasts_per_month": 500000,
+  "templates": 1000,
+  "workflows": 1000,
+  "ai_requests_per_month": 500000,
+  "storage_mb": 524288,
+  "api_requests_per_month": 5000000,
+  "phone_numbers": 50,
+  "whatsapp_accounts": 25,
+  "custom_fields": 2000,
+  "reports": 1000,
+  "exports_per_month": 20000,
+  "messages_per_month": 500000,
+  "agents": 100,
+  "storage_gb": 512
+}
+$limits_17$::jsonb,
+  61,
+  true,
+  false,
+  false,
+  false,
+  'enterprise'
+)
+ON CONFLICT (code) DO UPDATE SET
+  name=EXCLUDED.name,
+  tier=EXCLUDED.tier,
+  description=EXCLUDED.description,
+  tagline=EXCLUDED.tagline,
+  badge=EXCLUDED.badge,
+  cta_label=EXCLUDED.cta_label,
+  price_cents=EXCLUDED.price_cents,
+  currency=EXCLUDED.currency,
+  interval=EXCLUDED.interval,
+  trial_days=EXCLUDED.trial_days,
+  features=EXCLUDED.features,
+  limits=EXCLUDED.limits,
+  sort_order=EXCLUDED.sort_order,
+  is_active=EXCLUDED.is_active,
+  is_public=EXCLUDED.is_public,
+  is_custom=EXCLUDED.is_custom,
+  highlight=EXCLUDED.highlight,
+  monthly_plan_code=EXCLUDED.monthly_plan_code;
+
+-- enterprise_lifetime | lifetime | $5,999.00
+INSERT INTO public.plans (
+  code, name, tier, description, tagline, badge, cta_label,
+  price_cents, currency, interval, trial_days, features, limits,
+  sort_order, is_active, is_public, is_custom, highlight, monthly_plan_code
+)
+VALUES (
+  'enterprise_lifetime',
+  'Enterprise Lifetime',
+  'enterprise',
+  'A sales-assisted plan for larger organizations that need high operating capacity, stronger governance, white-label options, SSO, auditability, SLA-backed support, and implementation guidance. Default limits provide a safe enterprise baseline and can be adjusted through a commercial agreement when the deployment requires more capacity. This is a one-time platform license for this tier. Included usage quotas remain governed by the plan; messaging, AI, telephony, cloud, payment, and other third-party provider charges are not included unless explicitly stated in the commercial agreement.',
+  'One payment for long-term platform access at Enterprise capacity.',
+  'Private Offer',
+  'Contact sales',
+  599900,
+  'USD',
+  'lifetime',
+  0,
+  $features_18$
+{
+  "ai.reply_assistant": true,
+  "ai.knowledge_base": true,
+  "automations.enabled": true,
+  "marketing.ab_testing": true,
+  "marketing.drip_sequences": true,
+  "bi.custom_dashboards": true,
+  "bi.scheduled_reports": true,
+  "api.public_access": true,
+  "security.sso": true,
+  "security.audit_export": true,
+  "inbox": true,
+  "broadcasts": true,
+  "templates": true,
+  "automations": true,
+  "chatbot": true,
+  "ai": true,
+  "crm": true,
+  "commerce": true,
+  "analytics": true,
+  "api": true,
+  "white_label": true,
+  "sso": true,
+  "audit_export": true,
+  "sla": true,
+  "support": "dedicated",
+  "channels": 25
+}
+$features_18$::jsonb,
+  $limits_18$
+{
+  "seats": 100,
+  "organizations": 10,
+  "workspaces": 50,
+  "contacts": 500000,
+  "companies": 100000,
+  "deals": 100000,
+  "pipelines": 100,
+  "campaigns_per_month": 500,
+  "broadcasts_per_month": 500000,
+  "templates": 1000,
+  "workflows": 1000,
+  "ai_requests_per_month": 500000,
+  "storage_mb": 524288,
+  "api_requests_per_month": 5000000,
+  "phone_numbers": 50,
+  "whatsapp_accounts": 25,
+  "custom_fields": 2000,
+  "reports": 1000,
+  "exports_per_month": 20000,
+  "messages_per_month": 500000,
+  "agents": 100,
+  "storage_gb": 512
+}
+$limits_18$::jsonb,
+  62,
+  true,
+  false,
+  false,
+  false,
+  'enterprise'
+)
+ON CONFLICT (code) DO UPDATE SET
+  name=EXCLUDED.name,
+  tier=EXCLUDED.tier,
+  description=EXCLUDED.description,
+  tagline=EXCLUDED.tagline,
+  badge=EXCLUDED.badge,
+  cta_label=EXCLUDED.cta_label,
+  price_cents=EXCLUDED.price_cents,
+  currency=EXCLUDED.currency,
+  interval=EXCLUDED.interval,
+  trial_days=EXCLUDED.trial_days,
+  features=EXCLUDED.features,
+  limits=EXCLUDED.limits,
+  sort_order=EXCLUDED.sort_order,
+  is_active=EXCLUDED.is_active,
+  is_public=EXCLUDED.is_public,
+  is_custom=EXCLUDED.is_custom,
+  highlight=EXCLUDED.highlight,
+  monthly_plan_code=EXCLUDED.monthly_plan_code;
+
+-- ═════════════════════════ CUSTOM ═════════════════════════
+
+-- custom | month | $0.00
+INSERT INTO public.plans (
+  code, name, tier, description, tagline, badge, cta_label,
+  price_cents, currency, interval, trial_days, features, limits,
+  sort_order, is_active, is_public, is_custom, highlight, monthly_plan_code
+)
+VALUES (
+  'custom',
+  'Custom',
+  'custom',
+  'A private plan template for deployments that do not fit the standard ladder. Use it for negotiated capacity, custom integrations, special hosting or data requirements, implementation services, reseller arrangements, or other commercial terms. The seeded limits are conservative placeholders and should be reviewed before this plan is assigned to a customer.',
+  'A negotiated deployment for organizations with unique limits, integrations, hosting, or commercial terms.',
+  'Tailored',
+  'Contact sales',
+  0,
+  'USD',
+  'month',
+  0,
+  $features_19$
+{
+  "ai.reply_assistant": true,
+  "ai.knowledge_base": true,
+  "automations.enabled": true,
+  "marketing.ab_testing": true,
+  "marketing.drip_sequences": true,
+  "bi.custom_dashboards": true,
+  "bi.scheduled_reports": true,
+  "api.public_access": true,
+  "security.sso": true,
+  "security.audit_export": true,
+  "inbox": true,
+  "broadcasts": true,
+  "templates": true,
+  "automations": true,
+  "chatbot": true,
+  "ai": true,
+  "crm": true,
+  "commerce": true,
+  "analytics": true,
+  "api": true,
+  "white_label": true,
+  "sso": true,
+  "audit_export": true,
+  "sla": true,
+  "support": "dedicated",
+  "channels": 25
+}
+$features_19$::jsonb,
+  $limits_19$
+{
+  "seats": 100,
+  "organizations": 10,
+  "workspaces": 50,
+  "contacts": 500000,
+  "companies": 100000,
+  "deals": 100000,
+  "pipelines": 100,
+  "campaigns_per_month": 500,
+  "broadcasts_per_month": 500000,
+  "templates": 1000,
+  "workflows": 1000,
+  "ai_requests_per_month": 500000,
+  "storage_mb": 524288,
+  "api_requests_per_month": 5000000,
+  "phone_numbers": 50,
+  "whatsapp_accounts": 25,
+  "custom_fields": 2000,
+  "reports": 1000,
+  "exports_per_month": 20000,
+  "messages_per_month": 500000,
+  "agents": 100,
+  "storage_gb": 512
+}
+$limits_19$::jsonb,
+  70,
+  false,
+  false,
+  true,
+  false,
+  NULL
+)
+ON CONFLICT (code) DO UPDATE SET
+  name=EXCLUDED.name,
+  tier=EXCLUDED.tier,
+  description=EXCLUDED.description,
+  tagline=EXCLUDED.tagline,
+  badge=EXCLUDED.badge,
+  cta_label=EXCLUDED.cta_label,
+  price_cents=EXCLUDED.price_cents,
+  currency=EXCLUDED.currency,
+  interval=EXCLUDED.interval,
+  trial_days=EXCLUDED.trial_days,
+  features=EXCLUDED.features,
+  limits=EXCLUDED.limits,
+  sort_order=EXCLUDED.sort_order,
+  is_active=EXCLUDED.is_active,
+  is_public=EXCLUDED.is_public,
+  is_custom=EXCLUDED.is_custom,
+  highlight=EXCLUDED.highlight,
+  monthly_plan_code=EXCLUDED.monthly_plan_code;
+
+-- custom_yearly | year | $0.00
+INSERT INTO public.plans (
+  code, name, tier, description, tagline, badge, cta_label,
+  price_cents, currency, interval, trial_days, features, limits,
+  sort_order, is_active, is_public, is_custom, highlight, monthly_plan_code
+)
+VALUES (
+  'custom_yearly',
+  'Custom (Yearly)',
+  'custom',
+  'A private plan template for deployments that do not fit the standard ladder. Use it for negotiated capacity, custom integrations, special hosting or data requirements, implementation services, reseller arrangements, or other commercial terms. The seeded limits are conservative placeholders and should be reviewed before this plan is assigned to a customer. Pricing and entitlements are finalized through a private commercial agreement.',
+  'A private annual contract configured around your negotiated requirements.',
+  'Tailored',
+  'Contact sales',
+  0,
+  'USD',
+  'year',
+  0,
+  $features_20$
+{
+  "ai.reply_assistant": true,
+  "ai.knowledge_base": true,
+  "automations.enabled": true,
+  "marketing.ab_testing": true,
+  "marketing.drip_sequences": true,
+  "bi.custom_dashboards": true,
+  "bi.scheduled_reports": true,
+  "api.public_access": true,
+  "security.sso": true,
+  "security.audit_export": true,
+  "inbox": true,
+  "broadcasts": true,
+  "templates": true,
+  "automations": true,
+  "chatbot": true,
+  "ai": true,
+  "crm": true,
+  "commerce": true,
+  "analytics": true,
+  "api": true,
+  "white_label": true,
+  "sso": true,
+  "audit_export": true,
+  "sla": true,
+  "support": "dedicated",
+  "channels": 25
+}
+$features_20$::jsonb,
+  $limits_20$
+{
+  "seats": 100,
+  "organizations": 10,
+  "workspaces": 50,
+  "contacts": 500000,
+  "companies": 100000,
+  "deals": 100000,
+  "pipelines": 100,
+  "campaigns_per_month": 500,
+  "broadcasts_per_month": 500000,
+  "templates": 1000,
+  "workflows": 1000,
+  "ai_requests_per_month": 500000,
+  "storage_mb": 524288,
+  "api_requests_per_month": 5000000,
+  "phone_numbers": 50,
+  "whatsapp_accounts": 25,
+  "custom_fields": 2000,
+  "reports": 1000,
+  "exports_per_month": 20000,
+  "messages_per_month": 500000,
+  "agents": 100,
+  "storage_gb": 512
+}
+$limits_20$::jsonb,
+  71,
+  false,
+  false,
+  true,
+  false,
+  'custom'
+)
+ON CONFLICT (code) DO UPDATE SET
+  name=EXCLUDED.name,
+  tier=EXCLUDED.tier,
+  description=EXCLUDED.description,
+  tagline=EXCLUDED.tagline,
+  badge=EXCLUDED.badge,
+  cta_label=EXCLUDED.cta_label,
+  price_cents=EXCLUDED.price_cents,
+  currency=EXCLUDED.currency,
+  interval=EXCLUDED.interval,
+  trial_days=EXCLUDED.trial_days,
+  features=EXCLUDED.features,
+  limits=EXCLUDED.limits,
+  sort_order=EXCLUDED.sort_order,
+  is_active=EXCLUDED.is_active,
+  is_public=EXCLUDED.is_public,
+  is_custom=EXCLUDED.is_custom,
+  highlight=EXCLUDED.highlight,
+  monthly_plan_code=EXCLUDED.monthly_plan_code;
+
+-- custom_lifetime | lifetime | $0.00
+INSERT INTO public.plans (
+  code, name, tier, description, tagline, badge, cta_label,
+  price_cents, currency, interval, trial_days, features, limits,
+  sort_order, is_active, is_public, is_custom, highlight, monthly_plan_code
+)
+VALUES (
+  'custom_lifetime',
+  'Custom Lifetime',
+  'custom',
+  'A private plan template for deployments that do not fit the standard ladder. Use it for negotiated capacity, custom integrations, special hosting or data requirements, implementation services, reseller arrangements, or other commercial terms. The seeded limits are conservative placeholders and should be reviewed before this plan is assigned to a customer. Commercial scope, implementation, hosting, and provider charges must be defined in the signed agreement.',
+  'A one-time custom agreement for a privately negotiated deployment.',
+  'Tailored',
+  'Contact sales',
+  0,
+  'USD',
+  'lifetime',
+  0,
+  $features_21$
+{
+  "ai.reply_assistant": true,
+  "ai.knowledge_base": true,
+  "automations.enabled": true,
+  "marketing.ab_testing": true,
+  "marketing.drip_sequences": true,
+  "bi.custom_dashboards": true,
+  "bi.scheduled_reports": true,
+  "api.public_access": true,
+  "security.sso": true,
+  "security.audit_export": true,
+  "inbox": true,
+  "broadcasts": true,
+  "templates": true,
+  "automations": true,
+  "chatbot": true,
+  "ai": true,
+  "crm": true,
+  "commerce": true,
+  "analytics": true,
+  "api": true,
+  "white_label": true,
+  "sso": true,
+  "audit_export": true,
+  "sla": true,
+  "support": "dedicated",
+  "channels": 25
+}
+$features_21$::jsonb,
+  $limits_21$
+{
+  "seats": 100,
+  "organizations": 10,
+  "workspaces": 50,
+  "contacts": 500000,
+  "companies": 100000,
+  "deals": 100000,
+  "pipelines": 100,
+  "campaigns_per_month": 500,
+  "broadcasts_per_month": 500000,
+  "templates": 1000,
+  "workflows": 1000,
+  "ai_requests_per_month": 500000,
+  "storage_mb": 524288,
+  "api_requests_per_month": 5000000,
+  "phone_numbers": 50,
+  "whatsapp_accounts": 25,
+  "custom_fields": 2000,
+  "reports": 1000,
+  "exports_per_month": 20000,
+  "messages_per_month": 500000,
+  "agents": 100,
+  "storage_gb": 512
+}
+$limits_21$::jsonb,
+  72,
+  false,
+  false,
+  true,
+  false,
+  'custom'
+)
+ON CONFLICT (code) DO UPDATE SET
+  name=EXCLUDED.name,
+  tier=EXCLUDED.tier,
+  description=EXCLUDED.description,
+  tagline=EXCLUDED.tagline,
+  badge=EXCLUDED.badge,
+  cta_label=EXCLUDED.cta_label,
+  price_cents=EXCLUDED.price_cents,
+  currency=EXCLUDED.currency,
+  interval=EXCLUDED.interval,
+  trial_days=EXCLUDED.trial_days,
+  features=EXCLUDED.features,
+  limits=EXCLUDED.limits,
+  sort_order=EXCLUDED.sort_order,
+  is_active=EXCLUDED.is_active,
+  is_public=EXCLUDED.is_public,
+  is_custom=EXCLUDED.is_custom,
+  highlight=EXCLUDED.highlight,
+  monthly_plan_code=EXCLUDED.monthly_plan_code;
+
+-- 5. Visibility defaults
+-- Public monthly: Free, Starter, Professional, Growth, Business, Enterprise.
+-- Public yearly : Starter, Professional, Growth, Business.
+-- Hidden        : all Lifetime, all Custom, Free Yearly/Lifetime,
+--                 Enterprise Yearly/Lifetime.
+--
+-- Custom rows are intentionally inactive/private. Review price, limits,
+-- features, commercial terms, then activate only for the intended customer.
+-- End.
