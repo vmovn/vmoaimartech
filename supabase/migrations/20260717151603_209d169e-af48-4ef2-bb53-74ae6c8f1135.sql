@@ -8,7 +8,7 @@ ALTER TABLE public.campaigns
   ADD COLUMN IF NOT EXISTS media_url text,
   ADD COLUMN IF NOT EXISTS segment_id uuid,
   ADD COLUMN IF NOT EXISTS audience_snapshot jsonb NOT NULL DEFAULT '{}'::jsonb,
-  ADD COLUMN IF NOT EXISTS timezone text NOT NULL DEFAULT 'UTC',
+  ADD COLUMN IF NOT EXISTS timezone text NOT NULL DEFAULT 'Asia/Ho_Chi_Minh',
   ADD COLUMN IF NOT EXISTS send_window jsonb,
   ADD COLUMN IF NOT EXISTS throttle_per_minute integer NOT NULL DEFAULT 60,
   ADD COLUMN IF NOT EXISTS ab_test jsonb,

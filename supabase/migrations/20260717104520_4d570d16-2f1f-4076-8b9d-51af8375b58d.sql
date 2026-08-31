@@ -16,8 +16,8 @@ ALTER TABLE public.contacts
   ADD COLUMN IF NOT EXISTS owner_id uuid REFERENCES auth.users(id) ON DELETE SET NULL,
   ADD COLUMN IF NOT EXISTS source text,
   ADD COLUMN IF NOT EXISTS do_not_contact boolean NOT NULL DEFAULT false,
-  ADD COLUMN IF NOT EXISTS timezone text,
-  ADD COLUMN IF NOT EXISTS locale text,
+  ADD COLUMN IF NOT EXISTS timezone text DEFAULT 'Asia/Ho_Chi_Minh',
+  ADD COLUMN IF NOT EXISTS locale text DEFAULT 'vi-VN',
   ADD COLUMN IF NOT EXISTS custom_fields jsonb NOT NULL DEFAULT '{}'::jsonb,
   ADD COLUMN IF NOT EXISTS deleted_at timestamptz;
 
@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS public.companies (
   name text NOT NULL,
   legal_name text, domain text, website text, industry text,
   company_size text CHECK (company_size IN ('1-10','11-50','51-200','201-500','501-1000','1001-5000','5000+') OR company_size IS NULL),
-  annual_revenue numeric(18,2), currency text DEFAULT 'USD',
+  annual_revenue numeric(18,2), currency text DEFAULT 'VND',
   phone text, email text, description text, logo_url text,
   linkedin_url text, twitter_handle text,
   status text NOT NULL DEFAULT 'active' CHECK (status IN ('active','inactive','archived')),
@@ -159,7 +159,7 @@ CREATE TABLE IF NOT EXISTS public.deals (
   company_id uuid REFERENCES public.companies(id) ON DELETE SET NULL,
   title text NOT NULL, description text,
   amount numeric(18,2) NOT NULL DEFAULT 0,
-  currency text NOT NULL DEFAULT 'USD',
+  currency text NOT NULL DEFAULT 'VND',
   probability numeric(5,2) NOT NULL DEFAULT 0 CHECK (probability >= 0 AND probability <= 100),
   expected_close_date date, actual_close_date date,
   status text NOT NULL DEFAULT 'open' CHECK (status IN ('open','won','lost','abandoned')),

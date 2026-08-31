@@ -69,7 +69,7 @@ CREATE TABLE IF NOT EXISTS public.kb_articles (
   is_faq boolean NOT NULL DEFAULT false,
   faq_question text,
   is_training boolean NOT NULL DEFAULT false,
-  language text DEFAULT 'en',
+  language text DEFAULT 'vi',
   source_type public.kb_source_type NOT NULL DEFAULT 'manual',
   source_filename text,
   source_path text,

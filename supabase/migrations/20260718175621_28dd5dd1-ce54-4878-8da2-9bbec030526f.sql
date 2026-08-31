@@ -77,19 +77,19 @@ CREATE POLICY "users manage own availability" ON public.agent_availability
 -- ============ business_hours ============
 CREATE TABLE IF NOT EXISTS public.business_hours (
   workspace_id UUID PRIMARY KEY REFERENCES public.workspaces(id) ON DELETE CASCADE,
-  timezone TEXT NOT NULL DEFAULT 'UTC',
+  timezone TEXT NOT NULL DEFAULT 'Asia/Ho_Chi_Minh',
   -- weekly schedule stored as jsonb: { "mon":{"open":"09:00","close":"17:00","enabled":true}, ... }
   weekly_schedule JSONB NOT NULL DEFAULT jsonb_build_object(
-    'mon', jsonb_build_object('open','09:00','close','17:00','enabled',true),
-    'tue', jsonb_build_object('open','09:00','close','17:00','enabled',true),
-    'wed', jsonb_build_object('open','09:00','close','17:00','enabled',true),
-    'thu', jsonb_build_object('open','09:00','close','17:00','enabled',true),
-    'fri', jsonb_build_object('open','09:00','close','17:00','enabled',true),
-    'sat', jsonb_build_object('open','09:00','close','17:00','enabled',false),
+    'mon', jsonb_build_object('open','08:00','close','17:30','enabled',true),
+    'tue', jsonb_build_object('open','08:00','close','17:30','enabled',true),
+    'wed', jsonb_build_object('open','08:00','close','17:30','enabled',true),
+    'thu', jsonb_build_object('open','08:00','close','17:30','enabled',true),
+    'fri', jsonb_build_object('open','08:00','close','17:30','enabled',true),
+    'sat', jsonb_build_object('open','08:00','close','12:00','enabled',true),
     'sun', jsonb_build_object('open','09:00','close','17:00','enabled',false)
   ),
   holidays JSONB NOT NULL DEFAULT '[]'::jsonb,
-  offline_message TEXT NOT NULL DEFAULT 'We''re currently offline. Leave a message and we''ll get back to you soon.',
+  offline_message TEXT NOT NULL DEFAULT 'Hiện tại chúng tôi đang ngoài giờ làm việc. Vui lòng để lại tin nhắn, đội ngũ sẽ phản hồi bạn sớm nhất có thể.',
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_by UUID REFERENCES auth.users(id) ON DELETE SET NULL
 );
