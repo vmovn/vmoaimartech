@@ -53,7 +53,7 @@ import {
   usePublicPlans,
 } from "@/lib/billing/public-plans";
 
-import landingLogo from "@/assets/landing-logo.png";
+import { PmAiLogo } from "@/components/branding/pm-ai-logo";
 import stepperInboxImg from "@/assets/marketing/stepper-inbox.jpg";
 import tourInboxImg from "@/assets/marketing/tour-inbox.jpg";
 import tourAutomationImg from "@/assets/marketing/tour-automation.jpg";
@@ -168,7 +168,7 @@ function Nav() {
     <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-md">
       <div className="container-marketing grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 h-16 md:flex md:justify-between">
         <div className="flex min-w-0 items-center gap-3">
-          <img src={landingLogo} alt="logo" className="brand-logo-raster w-9 h-9 shrink-0 object-contain" />
+          <PmAiLogo className="size-9 text-foreground" />
           <span className="font-display font-bold text-2xl tracking-tight truncate"><Brand /></span>
         </div>
         <nav className="hidden md:flex items-center gap-8 text-sm text-muted-foreground">
@@ -1748,7 +1748,7 @@ function Footer() {
         <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-[minmax(0,1.4fr)_repeat(3,minmax(0,1fr))]">
           <div className="min-w-0">
             <div className="flex min-w-0 items-center gap-3">
-              <img src={landingLogo} alt="" className="brand-logo-raster size-8 shrink-0 object-contain" />
+              <PmAiLogo className="size-8 text-background" />
               <span className="truncate font-display text-xl font-bold tracking-tight text-background"><Brand /></span>
             </div>
             <p className="mt-4 max-w-xs text-sm text-background/70">

@@ -13,4 +13,4 @@ const fromEnv =
   (typeof import.meta !== "undefined" ? (import.meta as any).env?.VITE_BRAND_NAME : undefined) ??
   (typeof process !== "undefined" ? process.env?.["VITE_BRAND_NAME"] : undefined);
 
-export const BRAND_NAME: string = (typeof fromEnv === "string" && fromEnv.trim()) || "Swiffer";
+export const BRAND_NAME: string = (typeof fromEnv === "string" && fromEnv.trim()) || "PM.AI.VN";

@@ -11,8 +11,10 @@ import { usePlatformBranding } from "@/hooks/use-platform-branding";
 import { readActiveWorkspaceId, subscribeActiveTenant } from "@/lib/tenant/active-tenant";
 
 
-const DEFAULT_BRAND_NAME = "Swiffer";
-const DEFAULT_BRAND_INITIAL = "W";
+import { BRAND_NAME } from "@/lib/branding/brand";
+
+const DEFAULT_BRAND_NAME = BRAND_NAME;
+const DEFAULT_BRAND_INITIAL = BRAND_NAME.charAt(0).toUpperCase() || "P";
 
 export type TenantBrand = {
   name: string;
