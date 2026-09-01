@@ -6,11 +6,11 @@ ALTER TABLE public.organizations
   ADD COLUMN IF NOT EXISTS phone text,
   ADD COLUMN IF NOT EXISTS website text,
   ADD COLUMN IF NOT EXISTS address text,
-  ADD COLUMN IF NOT EXISTS timezone text NOT NULL DEFAULT 'UTC',
-  ADD COLUMN IF NOT EXISTS currency text NOT NULL DEFAULT 'USD',
-  ADD COLUMN IF NOT EXISTS language text NOT NULL DEFAULT 'en',
+  ADD COLUMN IF NOT EXISTS timezone text NOT NULL DEFAULT 'Asia/Ho_Chi_Minh',
+  ADD COLUMN IF NOT EXISTS currency text NOT NULL DEFAULT 'VND',
+  ADD COLUMN IF NOT EXISTS language text NOT NULL DEFAULT 'vi',
   ADD COLUMN IF NOT EXISTS business_hours jsonb NOT NULL DEFAULT '{}'::jsonb,
-  ADD COLUMN IF NOT EXISTS working_days smallint[] NOT NULL DEFAULT ARRAY[1,2,3,4,5]::smallint[],
+  ADD COLUMN IF NOT EXISTS working_days smallint[] NOT NULL DEFAULT ARRAY[1,2,3,4,5,6]::smallint[],
   ADD COLUMN IF NOT EXISTS brand_settings jsonb NOT NULL DEFAULT '{}'::jsonb;
 
 -- 2. Transfer ownership RPC: only the current owner can call this;

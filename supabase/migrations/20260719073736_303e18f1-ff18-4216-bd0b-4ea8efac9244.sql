@@ -88,7 +88,7 @@ CREATE TABLE public.commerce_shipping_rates (
   name TEXT NOT NULL,
   rate_type TEXT NOT NULL DEFAULT 'flat', -- flat, weight, price, free
   price NUMERIC(12,2) NOT NULL DEFAULT 0,
-  currency TEXT NOT NULL DEFAULT 'USD',
+  currency TEXT NOT NULL DEFAULT 'VND',
   min_order_total NUMERIC(12,2),
   max_order_total NUMERIC(12,2),
   estimated_days_min INTEGER,

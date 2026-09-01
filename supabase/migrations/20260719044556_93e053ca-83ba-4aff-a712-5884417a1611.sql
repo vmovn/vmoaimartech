@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS public.calendar_entries (
   start_at timestamptz NOT NULL,
   end_at timestamptz NOT NULL,
   all_day boolean NOT NULL DEFAULT false,
-  timezone text NOT NULL DEFAULT 'UTC',
+  timezone text NOT NULL DEFAULT 'Asia/Ho_Chi_Minh',
   rrule text,
   is_blocking boolean NOT NULL DEFAULT true,
   metadata jsonb NOT NULL DEFAULT '{}'::jsonb,

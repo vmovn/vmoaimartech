@@ -9,7 +9,7 @@ CREATE TABLE public.commerce_promotions (
   discount_type text NOT NULL CHECK (discount_type IN ('percent','fixed','free_shipping','bxgy','bundle')),
   percent_off numeric(5,2),
   amount_off_cents integer,
-  currency text NOT NULL DEFAULT 'USD',
+  currency text NOT NULL DEFAULT 'VND',
   min_order_cents integer,
   max_discount_cents integer,
   buy_qty integer,
@@ -64,7 +64,7 @@ CREATE TABLE public.commerce_promotion_redemptions (
   contact_id uuid,
   code_used text,
   amount_off_cents integer NOT NULL DEFAULT 0,
-  currency text NOT NULL DEFAULT 'USD',
+  currency text NOT NULL DEFAULT 'VND',
   metadata jsonb NOT NULL DEFAULT '{}'::jsonb,
   created_at timestamptz NOT NULL DEFAULT now()
 );

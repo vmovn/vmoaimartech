@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS public.lead_qualification (
 
   deal_probability numeric CHECK (deal_probability BETWEEN 0 AND 1),
   revenue_prediction numeric,
-  revenue_currency text DEFAULT 'USD',
+  revenue_currency text DEFAULT 'VND',
   clv_prediction numeric,
 
   risk_score numeric CHECK (risk_score BETWEEN 0 AND 1),

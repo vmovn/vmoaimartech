@@ -5,7 +5,7 @@ CREATE TABLE public.chatbot_templates (
   owner_user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
   description TEXT,
-  category TEXT NOT NULL DEFAULT 'Customer Support',
+  category TEXT NOT NULL DEFAULT 'Chăm sóc khách hàng',
   icon TEXT NOT NULL DEFAULT 'Bot',
   tags TEXT[] NOT NULL DEFAULT '{}',
   config JSONB NOT NULL DEFAULT '{}'::jsonb,

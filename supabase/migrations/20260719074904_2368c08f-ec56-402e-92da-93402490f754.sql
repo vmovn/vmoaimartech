@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS public.wa_catalog_config (
   business_id TEXT,
   phone_number_id TEXT,
   access_token_secret_name TEXT,
-  currency TEXT NOT NULL DEFAULT 'USD',
+  currency TEXT NOT NULL DEFAULT 'VND',
   auto_sync BOOLEAN NOT NULL DEFAULT false,
   sync_images BOOLEAN NOT NULL DEFAULT true,
   sync_inventory BOOLEAN NOT NULL DEFAULT true,

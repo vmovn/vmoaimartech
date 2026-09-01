@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS public.chatbot_prompts (
   content text NOT NULL,
   variables jsonb NOT NULL DEFAULT '[]'::jsonb,
   tags text[] NOT NULL DEFAULT '{}'::text[],
-  language text DEFAULT 'en',
+  language text DEFAULT 'vi',
   is_shared boolean NOT NULL DEFAULT false,
   is_template boolean NOT NULL DEFAULT false,
   is_active boolean NOT NULL DEFAULT true,

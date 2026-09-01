@@ -6,7 +6,7 @@ CREATE TABLE public.workflow_templates (
   owner_user_id uuid REFERENCES auth.users(id) ON DELETE SET NULL,
   name text NOT NULL,
   description text,
-  category text NOT NULL DEFAULT 'Internal Automation',
+  category text NOT NULL DEFAULT 'Tự động hóa nội bộ',
   icon text NOT NULL DEFAULT 'Workflow',
   tags text[] NOT NULL DEFAULT '{}',
   graph jsonb NOT NULL DEFAULT '{"nodes":[],"edges":[]}'::jsonb,

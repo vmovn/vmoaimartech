@@ -6,9 +6,9 @@ CREATE TABLE public.ai_prompt_settings (
   workspace_prompt text,
   default_tone text NOT NULL DEFAULT 'professional',
   default_length text NOT NULL DEFAULT 'medium',
-  default_language text,
+  default_language text DEFAULT 'vi',
   default_model text NOT NULL DEFAULT 'google/gemini-3-flash-preview',
-  fallback_message text NOT NULL DEFAULT 'I''m not sure I can help with that. Could you rephrase?',
+  fallback_message text NOT NULL DEFAULT 'Tôi chưa chắc có thể hỗ trợ yêu cầu này. Bạn vui lòng diễn đạt lại nhé.',
   updated_at timestamptz NOT NULL DEFAULT now(),
   updated_by uuid REFERENCES auth.users(id) ON DELETE SET NULL
 );
@@ -26,7 +26,7 @@ CREATE TABLE public.ai_conversations (
   workspace_id uuid NOT NULL REFERENCES public.workspaces(id) ON DELETE CASCADE,
   user_id uuid REFERENCES auth.users(id) ON DELETE SET NULL,
   customer_id uuid,
-  title text NOT NULL DEFAULT 'New conversation',
+  title text NOT NULL DEFAULT 'Cuộc hội thoại mới',
   status text NOT NULL DEFAULT 'active',
   config jsonb NOT NULL DEFAULT '{}'::jsonb,
   metadata jsonb NOT NULL DEFAULT '{}'::jsonb,

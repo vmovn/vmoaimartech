@@ -326,7 +326,7 @@ CREATE TABLE IF NOT EXISTS public.addresses (
   entity_id uuid NOT NULL,
   label text,
   address_type text CHECK (address_type IN ('billing','shipping','home','work','other') OR address_type IS NULL),
-  street1 text, street2 text, city text, region text, postal_code text, country text,
+  street1 text, street2 text, city text, region text, postal_code text, country text DEFAULT 'VN',
   latitude numeric(9,6), longitude numeric(9,6),
   is_primary boolean NOT NULL DEFAULT false,
   created_at timestamptz NOT NULL DEFAULT now(),

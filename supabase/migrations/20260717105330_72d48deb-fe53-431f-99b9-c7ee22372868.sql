@@ -3,8 +3,8 @@ ALTER TABLE public.companies
   ADD COLUMN IF NOT EXISTS business_type text,
   ADD COLUMN IF NOT EXISTS about text,
   ADD COLUMN IF NOT EXISTS address jsonb NOT NULL DEFAULT '{}'::jsonb,
-  ADD COLUMN IF NOT EXISTS country text,
-  ADD COLUMN IF NOT EXISTS timezone text,
+  ADD COLUMN IF NOT EXISTS country text DEFAULT 'VN',
+  ADD COLUMN IF NOT EXISTS timezone text DEFAULT 'Asia/Ho_Chi_Minh',
   ADD COLUMN IF NOT EXISTS assigned_team_id uuid,
   ADD COLUMN IF NOT EXISTS is_favorite boolean NOT NULL DEFAULT false,
   ADD COLUMN IF NOT EXISTS is_archived boolean NOT NULL DEFAULT false;

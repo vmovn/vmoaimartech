@@ -27,15 +27,26 @@ DECLARE
   _ws uuid; _org uuid; _actor uuid := auth.uid();
   _target_type text; _target_id text;
   _summary text; _verb text; _data jsonb := '{}'::jsonb;
+  _entity_label text;
 BEGIN
   _ws := (to_jsonb(COALESCE(NEW, OLD))->>'workspace_id')::uuid;
   _org := (to_jsonb(COALESCE(NEW, OLD))->>'organization_id')::uuid;
   _target_type := _entity;
   _target_id := (to_jsonb(COALESCE(NEW, OLD))->>'id');
+  _entity_label := CASE _entity
+    WHEN 'contact' THEN 'liên hệ'
+    WHEN 'lead' THEN 'khách hàng tiềm năng'
+    WHEN 'deal' THEN 'cơ hội bán hàng'
+    WHEN 'task' THEN 'công việc'
+    WHEN 'company' THEN 'doanh nghiệp'
+    WHEN 'quote' THEN 'báo giá'
+    WHEN 'invoice' THEN 'hóa đơn'
+    ELSE _entity
+  END;
 
   IF TG_OP = 'INSERT' THEN
     _verb := _entity || '.created';
-    _summary := 'Created ' || _entity;
+    _summary := 'Đã tạo ' || _entity_label;
     _data := jsonb_build_object('after', to_jsonb(NEW));
     INSERT INTO public.activities(organization_id, workspace_id, actor_id, verb, object_type, object_id, target_type, target_id, summary, data)
       VALUES (_org, _ws, _actor, _verb, _entity, _target_id, _target_type, _target_id, _summary, _data);
@@ -45,31 +56,31 @@ BEGIN
     IF (to_jsonb(OLD)->>'status') IS DISTINCT FROM (to_jsonb(NEW)->>'status') THEN
       INSERT INTO public.activities(organization_id, workspace_id, actor_id, verb, object_type, object_id, target_type, target_id, summary, data)
       VALUES (_org, _ws, _actor, _entity || '.status_changed', _entity, _target_id, _target_type, _target_id,
-        'Status: ' || COALESCE((to_jsonb(OLD)->>'status'),'∅') || ' → ' || COALESCE((to_jsonb(NEW)->>'status'),'∅'),
+        'Trạng thái: ' || COALESCE((to_jsonb(OLD)->>'status'),'∅') || ' → ' || COALESCE((to_jsonb(NEW)->>'status'),'∅'),
         jsonb_build_object('from', to_jsonb(OLD)->>'status', 'to', to_jsonb(NEW)->>'status'));
     END IF;
     -- assignment change (owner_id or assigned_to)
     IF (to_jsonb(OLD)->>'owner_id') IS DISTINCT FROM (to_jsonb(NEW)->>'owner_id') THEN
       INSERT INTO public.activities(organization_id, workspace_id, actor_id, verb, object_type, object_id, target_type, target_id, summary, data)
       VALUES (_org, _ws, _actor, _entity || '.assigned', _entity, _target_id, _target_type, _target_id,
-        'Owner changed', jsonb_build_object('from', to_jsonb(OLD)->>'owner_id', 'to', to_jsonb(NEW)->>'owner_id'));
+        'Đã thay đổi người phụ trách', jsonb_build_object('from', to_jsonb(OLD)->>'owner_id', 'to', to_jsonb(NEW)->>'owner_id'));
     END IF;
     IF (to_jsonb(NEW) ? 'assigned_to') AND (to_jsonb(OLD)->>'assigned_to') IS DISTINCT FROM (to_jsonb(NEW)->>'assigned_to') THEN
       INSERT INTO public.activities(organization_id, workspace_id, actor_id, verb, object_type, object_id, target_type, target_id, summary, data)
       VALUES (_org, _ws, _actor, _entity || '.assigned', _entity, _target_id, _target_type, _target_id,
-        'Assignee changed', jsonb_build_object('from', to_jsonb(OLD)->>'assigned_to', 'to', to_jsonb(NEW)->>'assigned_to'));
+        'Đã thay đổi người được giao', jsonb_build_object('from', to_jsonb(OLD)->>'assigned_to', 'to', to_jsonb(NEW)->>'assigned_to'));
     END IF;
     -- stage change for deals
     IF (to_jsonb(NEW) ? 'stage_id') AND (to_jsonb(OLD)->>'stage_id') IS DISTINCT FROM (to_jsonb(NEW)->>'stage_id') THEN
       INSERT INTO public.activities(organization_id, workspace_id, actor_id, verb, object_type, object_id, target_type, target_id, summary, data)
       VALUES (_org, _ws, _actor, _entity || '.stage_changed', _entity, _target_id, _target_type, _target_id,
-        'Stage changed', jsonb_build_object('from', to_jsonb(OLD)->>'stage_id', 'to', to_jsonb(NEW)->>'stage_id'));
+        'Đã thay đổi giai đoạn', jsonb_build_object('from', to_jsonb(OLD)->>'stage_id', 'to', to_jsonb(NEW)->>'stage_id'));
     END IF;
     -- tag change
     IF (to_jsonb(NEW) ? 'tags') AND (to_jsonb(OLD)->>'tags') IS DISTINCT FROM (to_jsonb(NEW)->>'tags') THEN
       INSERT INTO public.activities(organization_id, workspace_id, actor_id, verb, object_type, object_id, target_type, target_id, summary, data)
       VALUES (_org, _ws, _actor, _entity || '.tags_changed', _entity, _target_id, _target_type, _target_id,
-        'Tags updated', jsonb_build_object('from', to_jsonb(OLD)->'tags', 'to', to_jsonb(NEW)->'tags'));
+        'Đã cập nhật thẻ', jsonb_build_object('from', to_jsonb(OLD)->'tags', 'to', to_jsonb(NEW)->'tags'));
     END IF;
     RETURN NEW;
   END IF;
@@ -141,7 +152,7 @@ BEGIN
   FOREACH m IN ARRAY NEW.mentions LOOP
     IF m <> COALESCE(NEW.author_id, '00000000-0000-0000-0000-000000000000'::uuid) THEN
       INSERT INTO public.notifications(user_id, workspace_id, kind, title, body, data)
-      VALUES (m, NEW.workspace_id, 'mention', 'You were mentioned in a note',
+      VALUES (m, NEW.workspace_id, 'mention', 'Bạn được nhắc đến trong một ghi chú',
         left(NEW.body, 200),
         jsonb_build_object('note_id', NEW.id, 'entity_type', NEW.entity_type, 'entity_id', NEW.entity_id, 'author_id', NEW.author_id));
     END IF;

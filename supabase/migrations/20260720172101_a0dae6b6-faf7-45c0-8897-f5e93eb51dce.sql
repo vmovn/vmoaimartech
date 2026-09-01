@@ -4,7 +4,7 @@ CREATE TABLE public.contact_matching_rules (
   workspace_id UUID NOT NULL REFERENCES public.workspaces(id) ON DELETE CASCADE,
   priority INTEGER NOT NULL DEFAULT 100,
   strategy TEXT NOT NULL CHECK (strategy IN ('exact','e164','national','last_n_digits')),
-  default_country_code TEXT,
+  default_country_code TEXT DEFAULT 'VN',
   digits_to_match INTEGER CHECK (digits_to_match BETWEEN 4 AND 15),
   enabled BOOLEAN NOT NULL DEFAULT true,
   label TEXT,
@@ -36,7 +36,7 @@ CREATE TRIGGER trg_cmr_updated
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
 -- Seed a default exact-match rule for every existing workspace
-INSERT INTO public.contact_matching_rules (workspace_id, priority, strategy, enabled, label)
-SELECT id, 10, 'exact', true, 'Exact phone match'
+INSERT INTO public.contact_matching_rules (workspace_id, priority, strategy, default_country_code, enabled, label)
+SELECT id, 10, 'exact', 'VN', true, 'Khớp chính xác số điện thoại'
 FROM public.workspaces
 ON CONFLICT DO NOTHING;

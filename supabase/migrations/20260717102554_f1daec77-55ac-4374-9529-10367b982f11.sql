@@ -4,9 +4,9 @@ ALTER TABLE public.profiles
   ADD COLUMN IF NOT EXISTS job_title text,
   ADD COLUMN IF NOT EXISTS department text,
   ADD COLUMN IF NOT EXISTS bio text,
-  ADD COLUMN IF NOT EXISTS language text NOT NULL DEFAULT 'en',
-  ADD COLUMN IF NOT EXISTS timezone text NOT NULL DEFAULT 'UTC',
-  ADD COLUMN IF NOT EXISTS date_format text NOT NULL DEFAULT 'YYYY-MM-DD',
+  ADD COLUMN IF NOT EXISTS language text NOT NULL DEFAULT 'vi',
+  ADD COLUMN IF NOT EXISTS timezone text NOT NULL DEFAULT 'Asia/Ho_Chi_Minh',
+  ADD COLUMN IF NOT EXISTS date_format text NOT NULL DEFAULT 'dd/MM/yyyy',
   ADD COLUMN IF NOT EXISTS time_format text NOT NULL DEFAULT '24h',
   ADD COLUMN IF NOT EXISTS theme text NOT NULL DEFAULT 'system',
   ADD COLUMN IF NOT EXISTS notification_preferences jsonb NOT NULL DEFAULT jsonb_build_object(

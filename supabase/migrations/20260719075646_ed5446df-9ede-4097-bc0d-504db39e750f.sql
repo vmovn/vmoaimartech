@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS public.commerce_saved_carts (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   workspace_id uuid NOT NULL,
   contact_id uuid REFERENCES public.contacts(id) ON DELETE CASCADE,
-  name text NOT NULL DEFAULT 'Saved cart',
+  name text NOT NULL DEFAULT 'Giỏ hàng đã lưu',
   cart_snapshot jsonb NOT NULL DEFAULT '{}'::jsonb,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()

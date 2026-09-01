@@ -3,8 +3,8 @@ VALUES ('platform', 'general', jsonb_build_object(
   'platform_name', 'Swiffer',
   'whatsapp_cta_enabled', true,
   'whatsapp_token', '+971501234567',
-  'whatsapp_message', 'Hi! I''d like to know more about {site}.',
-  'whatsapp_cta_label', 'Chat on WhatsApp',
+  'whatsapp_message', 'Xin chào! Tôi muốn tìm hiểu thêm về {site}.',
+  'whatsapp_cta_label', 'Trò chuyện qua WhatsApp',
   'whatsapp_fallback_url', '/contact'
 ), NULL, NULL, NULL)
 ON CONFLICT (scope, organization_id, workspace_id, user_id, key)

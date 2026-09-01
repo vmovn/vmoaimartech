@@ -84,15 +84,15 @@ CREATE POLICY "plugin_categories public read"
   ON public.plugin_categories FOR SELECT TO anon, authenticated USING (true);
 
 INSERT INTO public.plugin_categories (slug, label, description, icon, sort_order) VALUES
-  ('productivity', 'Productivity', 'Time-saving tools and workflows', 'zap', 10),
-  ('ai', 'AI & Automation', 'AI assistants, automations, and copilots', 'sparkles', 20),
-  ('analytics', 'Analytics & Reporting', 'Dashboards, metrics, and insights', 'bar-chart-3', 30),
-  ('communication', 'Communication', 'Messaging, voice, and video channels', 'message-square', 40),
-  ('crm', 'CRM & Sales', 'Contact enrichment, sales tooling, deal automation', 'users', 50),
-  ('commerce', 'Commerce', 'Catalog, checkout, and order management', 'shopping-bag', 60),
-  ('integration', 'Integrations', 'Connect Swiffer to third-party services', 'plug', 70),
-  ('developer', 'Developer Tools', 'APIs, webhooks, and dev utilities', 'code-2', 80),
-  ('other', 'Other', 'Everything else', 'package', 999);
+  ('productivity', 'Năng suất', 'Công cụ và quy trình giúp tiết kiệm thời gian', 'zap', 10),
+  ('ai', 'AI và tự động hóa', 'Trợ lý AI, tự động hóa và công cụ hỗ trợ thông minh', 'sparkles', 20),
+  ('analytics', 'Phân tích và báo cáo', 'Trang tổng quan, chỉ số và thông tin chuyên sâu', 'bar-chart-3', 30),
+  ('communication', 'Giao tiếp', 'Kênh nhắn tin, thoại và video', 'message-square', 40),
+  ('crm', 'CRM và bán hàng', 'Làm giàu dữ liệu liên hệ, công cụ bán hàng và tự động hóa cơ hội', 'users', 50),
+  ('commerce', 'Thương mại', 'Danh mục, thanh toán và quản lý đơn hàng', 'shopping-bag', 60),
+  ('integration', 'Tích hợp', 'Kết nối Swiffer với các dịch vụ bên thứ ba', 'plug', 70),
+  ('developer', 'Công cụ phát triển', 'API, webhook và tiện ích dành cho nhà phát triển', 'code-2', 80),
+  ('other', 'Khác', 'Các tiện ích khác', 'package', 999);
 
 -- Add plugin settings / storage columns to installations for rich management.
 ALTER TABLE public.plugin_installations

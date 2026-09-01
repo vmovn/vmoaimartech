@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS public.message_templates (
   shortcut TEXT,                    -- e.g. "hello" -> "/hello"
   body TEXT NOT NULL,
   category TEXT,
-  language TEXT DEFAULT 'en',
+  language TEXT DEFAULT 'vi',
   is_shared BOOLEAN NOT NULL DEFAULT true,
   is_favorite BOOLEAN NOT NULL DEFAULT false,
   usage_count INTEGER NOT NULL DEFAULT 0,

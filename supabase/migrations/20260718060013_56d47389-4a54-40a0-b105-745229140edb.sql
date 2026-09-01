@@ -1,18 +1,18 @@
 
 -- Seed missing meters
 INSERT INTO public.usage_meters (code, name, unit, aggregation) VALUES
-  ('active_users', 'Active Users', 'count', 'max'),
-  ('workspace_members', 'Workspace Members', 'count', 'max'),
-  ('whatsapp_numbers', 'WhatsApp Phone Numbers', 'count', 'max'),
-  ('contacts', 'Contacts', 'count', 'max'),
-  ('messages_received', 'Messages Received', 'count', 'sum'),
-  ('broadcast_messages', 'Broadcast Messages', 'count', 'sum'),
-  ('campaigns_launched', 'Campaigns Launched', 'count', 'sum'),
-  ('ai_requests', 'AI Requests', 'count', 'sum'),
-  ('api_calls', 'API Calls', 'count', 'sum'),
-  ('workflow_executions', 'Workflow Executions', 'count', 'sum'),
-  ('media_storage_bytes', 'Media Storage', 'bytes', 'max'),
-  ('bandwidth_bytes', 'Bandwidth', 'bytes', 'sum')
+  ('active_users', 'Người dùng đang hoạt động', 'count', 'max'),
+  ('workspace_members', 'Thành viên không gian làm việc', 'count', 'max'),
+  ('whatsapp_numbers', 'Số điện thoại WhatsApp', 'count', 'max'),
+  ('contacts', 'Liên hệ', 'count', 'max'),
+  ('messages_received', 'Tin nhắn đã nhận', 'count', 'sum'),
+  ('broadcast_messages', 'Tin nhắn gửi hàng loạt', 'count', 'sum'),
+  ('campaigns_launched', 'Chiến dịch đã khởi chạy', 'count', 'sum'),
+  ('ai_requests', 'Yêu cầu AI', 'count', 'sum'),
+  ('api_calls', 'Lượt gọi API', 'count', 'sum'),
+  ('workflow_executions', 'Lượt chạy quy trình', 'count', 'sum'),
+  ('media_storage_bytes', 'Dung lượng tệp đa phương tiện', 'bytes', 'max'),
+  ('bandwidth_bytes', 'Băng thông', 'bytes', 'sum')
 ON CONFLICT (code) DO NOTHING;
 
 -- Alerts / thresholds
