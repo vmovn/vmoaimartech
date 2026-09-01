@@ -198,6 +198,7 @@ export const globalSearch = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     const q = data.query.trim();
     const like = `%${sanitizeSearchTerm(esc(q))}%`;
+    const ws = data.workspaceId;
 
     const includes = (s: SearchScope) => data.scope === "all" || data.scope === s;
 
@@ -205,7 +206,6 @@ export const globalSearch = createServerFn({ method: "POST" })
     const expandP = data.useAi ? expandQuery(ws, userId, q) : Promise.resolve({ terms: [q.toLowerCase()], intent: null, suggestions: [] });
 
     // Parallel entity searches
-    const ws = data.workspaceId;
     const contactsP = includes("contact")
       ? supabase
           .from("contacts")
@@ -736,7 +736,7 @@ export const getSearchInsights = createServerFn({ method: "POST" })
     let trends: SearchInsight[] = [];
     let businessInsights: SearchInsight[] = [];
     try {
-        const context = {
+        const aiContext = {
           totals,
           topQueries,
           openDeals: openDealsRes.data ?? [],
@@ -761,7 +761,7 @@ export const getSearchInsights = createServerFn({ method: "POST" })
                   "Trends focus on patterns in search queries and volumes. Business insights focus on pipeline, leads, and conversations. " +
                   "Each 'detail' is 1 sentence. Max 4 items per section. No fluff, no headings, no markdown.",
               },
-              { role: "user", content: JSON.stringify(context) },
+              { role: "user", content: JSON.stringify(aiContext) },
             ],
           },
         });
