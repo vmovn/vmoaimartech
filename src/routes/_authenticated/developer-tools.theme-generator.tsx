@@ -19,7 +19,7 @@ function ThemeGenerator() {
   const [slug, setSlug] = useState("midnight");
   const [name, setName] = useState("Midnight");
   const [mode, setMode] = useState<"light" | "dark">("dark");
-  const [primary, setPrimary] = useState("#A4161A");
+  const [primary, setPrimary] = useState("#a67c00");
   const [accent, setAccent] = useState("#F2C94C");
   const [background, setBackground] = useState("#0B0D10");
   const [surface, setSurface] = useState("#14171B");

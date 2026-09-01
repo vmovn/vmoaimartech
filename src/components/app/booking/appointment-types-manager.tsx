@@ -112,7 +112,7 @@ function emptyType(): EventType {
     max_participants: 1,
     price: null,
     currency: "USD",
-    color: "#A4161A",
+    color: "#a67c00",
     questions: [],
     availability_rules: { use_default_schedule: true, weekly_hours: [] },
     confirmation_message: "",
@@ -241,7 +241,7 @@ export function AppointmentTypesManager() {
                     <div className="flex items-center gap-3 min-w-0">
                       <span
                         className="h-9 w-9 rounded-lg flex items-center justify-center text-lg shrink-0"
-                        style={{ background: `${r.color ?? "#A4161A"}22`, color: r.color ?? "#A4161A" }}
+                        style={{ background: `${r.color ?? "#a67c00"}22`, color: r.color ?? "#a67c00" }}
                       >
                         {catMeta?.icon ?? "📅"}
                       </span>
@@ -423,7 +423,7 @@ function EventTypeDialog({
               </div>
               <div>
                 <Label>Color</Label>
-                <Input type="color" value={draft.color ?? "#A4161A"} onChange={(e) => patch({ color: e.target.value })} className="h-9 p-1" />
+                <Input type="color" value={draft.color ?? "#a67c00"} onChange={(e) => patch({ color: e.target.value })} className="h-9 p-1" />
               </div>
             </div>
 

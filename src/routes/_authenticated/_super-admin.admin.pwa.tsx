@@ -46,7 +46,7 @@ const DEFAULTS: PwaCfg = {
   name: `${BRAND_NAME}`,
   short_name: `${BRAND_NAME}`,
   description: "The AI-Powered WhatsApp CRM Platform",
-  theme_color: "#A4161A",
+  theme_color: "#a67c00",
   background_color: "#ffffff",
   start_url: "/",
   scope: "/",
@@ -131,7 +131,7 @@ function PwaSettingsPage() {
           <CardContent className="grid gap-4 sm:grid-cols-2">
             <Field label="Theme color">
               <div className="flex items-center gap-2">
-                <input type="color" aria-label="Theme color" value={d.theme_color ?? "#A4161A"} onChange={(e) => patch({ theme_color: e.target.value })} className="h-9 w-12 rounded border border-input bg-background" />
+                <input type="color" aria-label="Theme color" value={d.theme_color ?? "#a67c00"} onChange={(e) => patch({ theme_color: e.target.value })} className="h-9 w-12 rounded border border-input bg-background" />
                 <Input value={d.theme_color ?? ""} onChange={(e) => patch({ theme_color: e.target.value })} />
               </div>
             </Field>

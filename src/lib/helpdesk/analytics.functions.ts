@@ -241,7 +241,7 @@ export const departmentPerformance = createServerFn({ method: "GET" })
     return Object.entries(groups).map(([id, g]) => ({
       department_id: id,
       name: deptMap.get(id)?.name ?? "Department",
-      color: deptMap.get(id)?.color ?? "#A4161A",
+      color: deptMap.get(id)?.color ?? "#a67c00",
       total: g.total,
       resolved: g.resolved,
       resolution_rate: g.total ? Math.round((g.resolved / g.total) * 100) : 0,
@@ -279,7 +279,7 @@ export const categoryBreakdown = createServerFn({ method: "GET" })
     return Object.entries(groups).map(([id, g]) => ({
       category_id: id,
       name: catMap.get(id)?.name ?? "Category",
-      color: catMap.get(id)?.color ?? "#A4161A",
+      color: catMap.get(id)?.color ?? "#a67c00",
       total: g.total,
       resolved: g.resolved,
       resolution_rate: g.total ? Math.round((g.resolved / g.total) * 100) : 0,

@@ -11,7 +11,7 @@ const MAP: Record<string, { label: string; color: string; Icon: LucideIcon }> = 
   instagram: { label: "Instagram",  color: "#E4405F", Icon: Instagram },
   messenger: { label: "Messenger",  color: "#0084FF", Icon: MessageSquare },
   telegram:  { label: "Telegram",   color: "#26A5E4", Icon: Send },
-  email:     { label: "Email",      color: "#A4161A", Icon: Mail },
+  email:     { label: "Email",      color: "#a67c00", Icon: Mail },
   sms:       { label: "SMS",        color: "#F59E0B", Icon: MessagesSquare },
   livechat:  { label: "Live Chat",  color: "#6366F1", Icon: Globe },
   voice:     { label: "Voice",      color: "#0F766E", Icon: Phone },

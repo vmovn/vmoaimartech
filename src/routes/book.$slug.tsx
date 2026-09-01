@@ -128,7 +128,7 @@ export const Route = createFileRoute("/book/$slug")({
 
 function PublicBookingPage() {
   const { eventType } = Route.useLoaderData() as { eventType: EventType };
-  const brand = eventType.color ?? "#A4161A";
+  const brand = eventType.color ?? "#a67c00";
 
   const [monthAnchor, setMonthAnchor] = useState(() => startOfMonth(new Date()));
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);

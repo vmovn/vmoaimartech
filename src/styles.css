@@ -586,8 +586,8 @@
   --popover: oklch(100% 0 0);
   --popover-foreground: oklch(0.083 0.003 25);
 
-  /* Primary — dark red #A4161A */
-  --primary: oklch(0.443 0.198 28);
+  /* Primary — dark gold #a67c00 */
+  --primary: oklch(0.55 0.14 85);
   --primary-foreground: oklch(100% 0 0);
   /* Lifted variant of the live --primary so tenant accent / white-label
      overrides propagate to every glow surface instantly. */
@@ -599,9 +599,9 @@
   --secondary-foreground: oklch(0.194 0.007 240);
   --secondary-muted: color-mix(in oklab, var(--secondary) 40%, var(--surface));
 
-  /* Accent — bright red #E5383B (intentional emphasis) */
-  --accent: #d81c20; /* Brand default */
-  --accent-foreground: oklch(100% 0 0);
+  /* Accent — bright gold #ffbd24 (intentional emphasis) */
+  --accent: #ffbd24; /* Brand default */
+  --accent-foreground: oklch(0.083 0.003 25);
   /* AA-safe derivatives of the live accent:
      --accent-strong : solid fills that carry white text (>= 4.5:1)
      --accent-readable: accent used AS TEXT on light surfaces (>= 4.5:1) */
@@ -622,7 +622,7 @@
   --warning: oklch(0.78 0.14 75);
   --warning-foreground: oklch(0.22 0.02 60);
   --warning-muted: color-mix(in oklab, var(--warning) 15%, var(--surface));
-  --danger: oklch(0.487 0.216 28); /* #BA181B */
+  --danger: oklch(0.487 0.216 28); /* #c99400 */
   --danger-foreground: oklch(100% 0 0);
   --danger-muted: color-mix(in oklab, var(--danger) 12%, var(--surface));
   --info: oklch(0.55 0.14 240);
@@ -640,17 +640,17 @@
   --input: oklch(92% 0 0);
   --ring: var(--accent);
 
-  /* Chart palette — reds cascading into palette neutrals */
-  --chart-1: oklch(0.443 0.198 28); /* #A4161A */
-  --chart-2: oklch(0.601 0.223 27); /* #E5383B */
-  --chart-3: oklch(0.293 0.148 27); /* #660708 */
-  --chart-4: oklch(0.487 0.216 28); /* #BA181B */
+  /* Chart palette — golds cascading into palette neutrals */
+  --chart-1: oklch(0.55 0.14 85); /* #a67c00 */
+  --chart-2: oklch(0.84 0.16 85); /* #ffbd24 */
+  --chart-3: oklch(0.32 0.06 85); /* #4d3800 */
+  --chart-4: oklch(0.65 0.14 85); /* #c99400 */
   --chart-5: oklch(0.708 0.007 20); /* #B1A7A6 */
   --chart-6: oklch(0.194 0.007 240); /* #161A1D */
   --chart-7: oklch(0.849 0 0); /* #D3D3D3 */
   --chart-8: oklch(0.083 0.003 25); /* #0B090A */
 
-  /* Sidebar — near-black rail with red accent */
+  /* Sidebar — near-black rail with gold accent */
   --sidebar: oklch(0.083 0.003 25); /* #0B090A */
   --sidebar-foreground: oklch(0.966 0.002 20);
   --sidebar-primary: var(--accent);
@@ -669,11 +669,11 @@
   --hero-ring: rgb(255 255 255 / 0.8);
   --hero-ring-offset: rgb(0 0 0 / 0.4);
   /* Accent tint that stays legible on the dark hero gradient (icons, ticks). */
-  --hero-accent: #00df56;
+  --hero-accent: #ffe066;
   /* Dark, brand-neutral base the hero gradient is mixed into. Keeps every
      stop dark enough for AA white text no matter how light the tenant
      accent/primary is. */
-  --hero-base: oklch(0.19 0.028 25);
+  --hero-base: oklch(0.19 0.028 85);
 
   /* Gradients & glows — every stop is derived from the live theme tokens
      (--primary, --accent, --secondary, --surface*) so tenant accent and
@@ -802,8 +802,8 @@
   --popover: oklch(0.194 0.007 240);
   --popover-foreground: var(--foreground);
 
-  --primary: oklch(0.601 0.223 27); /* #E5383B pops on dark */
-  --primary-foreground: oklch(100% 0 0);
+  --primary: oklch(0.84 0.16 85); /* #ffbd24 pops on dark */
+  --primary-foreground: oklch(0.083 0.003 25);
   --primary-glow: color-mix(in oklab, var(--primary) 85%, oklch(0% 0 0) 15%);
   --primary-muted: color-mix(in oklab, var(--primary) 15%, var(--surface));
 
@@ -811,8 +811,8 @@
   --secondary-foreground: oklch(0.966 0.002 20);
   --secondary-muted: color-mix(in oklab, var(--secondary) 50%, var(--surface));
 
-  --accent: #d81c20; /* Brand default */
-  --accent-foreground: oklch(100% 0 0);
+  --accent: #ffbd24; /* Brand default */
+  --accent-foreground: oklch(0.083 0.003 25);
   /* Dark theme: fills still darken for white text; accent-as-text lightens
      so it stays readable on the dark background. */
   --accent-strong: color-mix(in oklab, var(--accent) 88%, black);
@@ -848,10 +848,10 @@
   --input: oklch(0.28 0.008 240);
   --ring: var(--accent);
 
-  --chart-1: oklch(0.601 0.223 27);
-  --chart-2: oklch(0.487 0.216 28);
-  --chart-3: oklch(0.293 0.148 27);
-  --chart-4: oklch(0.443 0.198 28);
+  --chart-1: oklch(0.84 0.16 85);
+  --chart-2: oklch(0.65 0.14 85);
+  --chart-3: oklch(0.32 0.06 85);
+  --chart-4: oklch(0.55 0.14 85);
   --chart-5: oklch(0.708 0.007 20);
   --chart-6: oklch(0.849 0 0);
   --chart-7: oklch(0.966 0.002 20);
@@ -874,8 +874,8 @@
   --hero-ring: rgb(255 255 255 / 0.8);
   --hero-ring-offset: rgb(0 0 0 / 0.4);
   /* Accent tint that stays legible on the dark hero gradient (icons, ticks). */
-  --hero-accent: #00df56;
-  --hero-base: oklch(0.14 0.024 25);
+  --hero-accent: #ffe066;
+  --hero-base: oklch(0.14 0.024 85);
 
   --gradient-hero: linear-gradient(
     140deg,
@@ -1297,6 +1297,10 @@
 }
 @utility bg-gradient-glow {
   background: var(--gradient-glow);
+}
+/** Shifts legacy red raster logos to the current gold brand accent. */
+@utility brand-logo-raster {
+  filter: hue-rotate(48deg) saturate(1.05) brightness(1.02);
 }
 @utility shadow-elegant {
   box-shadow: var(--elevation-lg);

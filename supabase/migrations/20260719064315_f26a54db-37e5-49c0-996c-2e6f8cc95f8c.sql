@@ -5,7 +5,7 @@ CREATE TABLE public.support_queues (
   workspace_id uuid NOT NULL,
   name text NOT NULL,
   description text,
-  color text DEFAULT '#A4161A',
+  color text DEFAULT '#a67c00',
   icon text,
   department_id uuid REFERENCES public.departments(id) ON DELETE SET NULL,
   inbox_id uuid REFERENCES public.inboxes(id) ON DELETE SET NULL,

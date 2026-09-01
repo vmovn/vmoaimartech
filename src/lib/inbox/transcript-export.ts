@@ -147,7 +147,7 @@ export async function buildTranscriptPdf(
     head: [["Time", "Sender", "Message", "Status"]],
     body: messages.map((m) => [fmt(m.created_at), senderLabel(m, meta.contactName), bodyText(m), m.status]),
     styles: { fontSize: 8, cellPadding: 4, overflow: "linebreak" },
-    headStyles: { fillColor: [216, 28, 32], textColor: 255 },
+    headStyles: { fillColor: [255, 189, 36], textColor: 255 },
     columnStyles: {
       0: { cellWidth: 90 },
       1: { cellWidth: 90 },

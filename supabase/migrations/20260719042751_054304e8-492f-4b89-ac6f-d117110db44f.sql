@@ -21,7 +21,7 @@ CREATE TABLE public.booking_event_types (
   location_details jsonb NOT NULL DEFAULT '{}'::jsonb,
   price numeric(12,2),
   currency text DEFAULT 'VND',
-  color text DEFAULT '#A4161A',
+  color text DEFAULT '#a67c00',
   questions jsonb NOT NULL DEFAULT '[]'::jsonb,
   redirect_url text,
   confirmation_message text,
@@ -239,7 +239,7 @@ CREATE TABLE public.booking_pages (
   event_type_ids uuid[] NOT NULL DEFAULT '{}',
   is_active boolean NOT NULL DEFAULT true,
   logo_url text,
-  brand_color text DEFAULT '#A4161A',
+  brand_color text DEFAULT '#a67c00',
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
 );

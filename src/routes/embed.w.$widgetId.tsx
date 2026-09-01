@@ -64,7 +64,7 @@ function WidgetEmbed() {
     <div className="fixed inset-0 flex flex-col bg-transparent">
       <LiveChatWidget
         chatbotId={state.data!.chatbotId!}
-        accent={typeof cfg.brandColor === "string" ? cfg.brandColor : "#A4161A"}
+        accent={typeof cfg.brandColor === "string" ? cfg.brandColor : "#a67c00"}
         compact
       />
     </div>

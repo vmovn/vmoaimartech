@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS public.departments (
   workspace_id UUID NOT NULL REFERENCES public.workspaces(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
   description TEXT,
-  color TEXT NOT NULL DEFAULT '#A4161A',
+  color TEXT NOT NULL DEFAULT '#a67c00',
   fallback_agent_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
   is_active BOOLEAN NOT NULL DEFAULT true,
   created_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,

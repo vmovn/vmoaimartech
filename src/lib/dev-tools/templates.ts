@@ -157,7 +157,7 @@ export default definePlugin({
   "name": "Midnight",
   "mode": "dark",
   "tokens": {
-    "primary": "#A4161A",
+    "primary": "#a67c00",
     "background": "#0B0D10",
     "surface": "#14171B",
     "foreground": "#E6E7EA",

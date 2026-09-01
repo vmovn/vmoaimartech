@@ -32,7 +32,7 @@ function EmbedPage() {
   const { color } = Route.useSearch();
   return (
     <div className="fixed inset-0 flex flex-col bg-background">
-      <LiveChatWidget chatbotId={botId} accent={color || "#A4161A"} compact />
+      <LiveChatWidget chatbotId={botId} accent={color || "#a67c00"} compact />
     </div>
   );
 }

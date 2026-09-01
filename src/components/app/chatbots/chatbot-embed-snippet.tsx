@@ -23,7 +23,7 @@ interface Props {
 }
 
 export function ChatbotEmbedSnippet({ chatbotId, botName }: Props) {
-  const [color, setColor] = useState("#A4161A");
+  const [color, setColor] = useState("#a67c00");
   const [position, setPosition] = useState<"br" | "bl">("br");
   const [greeting, setGreeting] = useState(`Hi! Chat with ${botName}`);
   const [copied, setCopied] = useState<string | null>(null);

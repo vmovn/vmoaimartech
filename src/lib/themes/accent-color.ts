@@ -6,7 +6,9 @@
  * same source of truth.
  */
 
-export const DEFAULT_ACCENT = '#D81C20';
+export const DEFAULT_ACCENT = '#ffbd24';
+/** Dark gold primary — mirrors `--primary` in `src/styles.css`. */
+export const DEFAULT_PRIMARY = '#a67c00';
 
 export type AccentPreset = { label: string; value: string };
 
@@ -338,7 +340,7 @@ export function accentReadable(hex: string, dark: boolean, target = 4.5): string
 }
 
 /** Dark base the hero gradient is mixed into (mirrors `--hero-base`). */
-const HERO_BASE = '#2a1a19';
+const HERO_BASE = '#2a2410';
 
 function mixHex(a: string, b: string, weight: number): string {
   const [r1, g1, b1] = expand(a);

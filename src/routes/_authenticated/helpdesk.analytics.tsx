@@ -37,7 +37,7 @@ type Filters = {
   channel?: string;
 };
 
-const CHART_COLORS = ["#A4161A", "#f59e0b", "#22c55e", "#3b82f6", "#a855f7", "#ec4899", "#14b8a6", "#eab308"];
+const CHART_COLORS = ["#a67c00", "#f59e0b", "#22c55e", "#3b82f6", "#a855f7", "#ec4899", "#14b8a6", "#eab308"];
 
 function fmtMin(min: number) {
   if (!min) return "—";
@@ -201,7 +201,7 @@ function AnalyticsPage() {
                 <YAxis fontSize={11} />
                 <Tooltip />
                 <Legend />
-                <Area type="monotone" dataKey="created" stroke="#A4161A" fill="#A4161A" fillOpacity={0.2} name="Created" />
+                <Area type="monotone" dataKey="created" stroke="#a67c00" fill="#a67c00" fillOpacity={0.2} name="Created" />
                 <Area type="monotone" dataKey="resolved" stroke="#22c55e" fill="#22c55e" fillOpacity={0.2} name="Resolved" />
                 <Area type="monotone" dataKey="escalations" stroke="#f59e0b" fill="#f59e0b" fillOpacity={0.2} name="Escalations" />
               </AreaChart>
@@ -290,7 +290,7 @@ function AnalyticsPage() {
                 <YAxis fontSize={11} />
                 <Tooltip />
                 <Legend />
-                <Bar dataKey="total" fill="#A4161A" name="Total" />
+                <Bar dataKey="total" fill="#a67c00" name="Total" />
                 <Bar dataKey="resolved" fill="#22c55e" name="Resolved" />
               </BarChart>
             </ResponsiveContainer>
@@ -351,7 +351,7 @@ function AnalyticsPage() {
                 <Tooltip />
                 <Legend />
                 <Line type="monotone" dataKey="views" stroke="#3b82f6" name="Views" />
-                <Line type="monotone" dataKey="suggested" stroke="#A4161A" name="AI suggested" />
+                <Line type="monotone" dataKey="suggested" stroke="#a67c00" name="AI suggested" />
               </LineChart>
             </ResponsiveContainer>
           </ChartCard>

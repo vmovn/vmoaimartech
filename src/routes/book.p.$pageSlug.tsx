@@ -70,7 +70,7 @@ function PublicMultiServicePage() {
     page: Page;
     eventTypes: EventType[];
   };
-  const brand = page.brand_color ?? "#A4161A";
+  const brand = page.brand_color ?? "#a67c00";
   const defaultTheme = page.theme?.mode ?? "light";
   // Ensure the html.dark class syncs with page default on first mount
   const { theme } = useBookingTheme(defaultTheme);

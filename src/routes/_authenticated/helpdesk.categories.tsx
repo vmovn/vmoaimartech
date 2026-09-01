@@ -31,7 +31,7 @@ function CategoriesPage() {
   const save = useMutation({
     mutationFn: () => saveFn({ data: {
       id: editing?.id, name: editing?.name ?? "", description: editing?.description ?? undefined,
-      color: editing?.color ?? "#A4161A", default_priority: editing?.default_priority ?? "normal",
+      color: editing?.color ?? "#a67c00", default_priority: editing?.default_priority ?? "normal",
     } as never }),
     onSuccess: () => { toast.success("Saved"); setOpen(false); setEditing(null); qc.invalidateQueries({ queryKey: ["helpdesk-cats"] }); },
     onError: (e: Error) => toast.error(e.message),
@@ -48,7 +48,7 @@ function CategoriesPage() {
           <h2 className="text-lg font-semibold">Ticket categories</h2>
           <p className="text-sm text-muted-foreground">Organize tickets and drive AI triage classification.</p>
         </div>
-        <Button onClick={() => { setEditing({ name: "", color: "#A4161A", default_priority: "normal" }); setOpen(true); }}><Plus className="h-4 w-4 mr-1" /> New category</Button>
+        <Button onClick={() => { setEditing({ name: "", color: "#a67c00", default_priority: "normal" }); setOpen(true); }}><Plus className="h-4 w-4 mr-1" /> New category</Button>
       </div>
       <Card>
         <CardContent className="p-0 divide-y">
@@ -56,7 +56,7 @@ function CategoriesPage() {
             <div className="p-8 text-sm text-muted-foreground text-center">No categories yet.</div>
           ) : (data as Category[]).map((c) => (
             <div key={c.id} className="flex items-center gap-3 p-4">
-              <span className="h-6 w-6 rounded-full border" style={{ background: c.color ?? "#A4161A" }} />
+              <span className="h-6 w-6 rounded-full border" style={{ background: c.color ?? "#a67c00" }} />
               <div className="flex-1 min-w-0">
                 <div className="font-medium flex items-center gap-2"><TagIcon className="h-4 w-4" />{c.name}</div>
                 {c.description && <div className="text-xs text-muted-foreground">{c.description}</div>}
@@ -75,7 +75,7 @@ function CategoriesPage() {
             <div><Label>Name</Label><Input value={editing?.name ?? ""} onChange={(e) => setEditing((v) => ({ ...v, name: e.target.value }))} /></div>
             <div><Label>Description</Label><Textarea rows={2} value={editing?.description ?? ""} onChange={(e) => setEditing((v) => ({ ...v, description: e.target.value }))} /></div>
             <div className="grid grid-cols-2 gap-3">
-              <div><Label>Color</Label><Input type="color" value={editing?.color ?? "#A4161A"} onChange={(e) => setEditing((v) => ({ ...v, color: e.target.value }))} /></div>
+              <div><Label>Color</Label><Input type="color" value={editing?.color ?? "#a67c00"} onChange={(e) => setEditing((v) => ({ ...v, color: e.target.value }))} /></div>
               <div>
                 <Label>Default priority</Label>
                 <Select value={editing?.default_priority ?? "normal"} onValueChange={(v) => setEditing((s) => ({ ...s, default_priority: v }))}>

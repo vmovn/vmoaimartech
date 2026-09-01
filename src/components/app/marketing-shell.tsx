@@ -10,7 +10,7 @@ export function MarketingShell({ children }: { children: ReactNode }) {
       <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-md">
         <div className="container-marketing flex items-center justify-between gap-3 h-header">
           <Link to="/" className="flex items-center gap-2 min-w-0">
-            <img src={landingLogo} alt="logo" className="w-8 h-8 shrink-0 object-contain" />
+            <img src={landingLogo} alt="logo" className="brand-logo-raster w-8 h-8 shrink-0 object-contain" />
             <span className="font-display text-2xl font-bold truncate"><Brand /></span>
           </Link>
           <nav className="hidden md:flex items-center gap-8 text-sm text-muted-foreground">

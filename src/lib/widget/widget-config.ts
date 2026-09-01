@@ -57,7 +57,7 @@ export const DEFAULT_WIDGET_CONFIG: WidgetConfig = {
   logoUrl: null,
   agentAvatarUrl: null,
   agentName: "Assistant",
-  brandColor: "#A4161A",
+  brandColor: "#a67c00",
   brandTextColor: "#FFFFFF",
   theme: "light",
   radius: 16,

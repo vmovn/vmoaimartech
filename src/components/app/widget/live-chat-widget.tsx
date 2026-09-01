@@ -148,7 +148,7 @@ function isValidVisitor(v: VisitorIdentity | null): boolean {
   return Boolean(v) && Object.keys(validateVisitor(v as VisitorIdentity)).length === 0;
 }
 
-export function LiveChatWidget({ chatbotId, accent = "#A4161A", compact = false }: Props) {
+export function LiveChatWidget({ chatbotId, accent = "#a67c00", compact = false }: Props) {
   const brandName = useBrandName();
   const [bot, setBot] = useState<WidgetBotMeta | null>(null);
   const [session, setSession] = useState<{ sessionId: string; visitorToken: string } | null>(() => readSession(chatbotId));

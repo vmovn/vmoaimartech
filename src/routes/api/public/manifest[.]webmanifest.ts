@@ -26,7 +26,7 @@ const DEFAULTS: Required<Omit<PwaSettings, "icon_url" | "icon_512_url" | "splash
   name: "Swiffer",
   short_name: "Swiffer",
   description: "The AI-Powered WhatsApp CRM Platform",
-  theme_color: "#A4161A",
+  theme_color: "#a67c00",
   background_color: "#ffffff",
   start_url: "/",
   scope: "/",

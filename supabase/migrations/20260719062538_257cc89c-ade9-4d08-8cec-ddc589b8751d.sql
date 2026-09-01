@@ -6,7 +6,7 @@ CREATE TABLE public.ticket_categories (
   parent_id uuid REFERENCES public.ticket_categories(id) ON DELETE SET NULL,
   name text NOT NULL,
   description text,
-  color text DEFAULT '#A4161A',
+  color text DEFAULT '#a67c00',
   icon text,
   default_priority text DEFAULT 'normal',
   default_sla_policy_id uuid REFERENCES public.sla_policies(id) ON DELETE SET NULL,

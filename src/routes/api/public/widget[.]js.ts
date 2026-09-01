@@ -29,7 +29,7 @@ const SCRIPT = `(function(){
   if (!cfg.botId) { console.warn('[Swiffer] missing botId'); return; }
 
   var host = cfg.host || (new URL(document.currentScript ? document.currentScript.src : location.href)).origin;
-  var accent = cfg.color || '#A4161A';
+  var accent = cfg.color || '#a67c00';
   var position = cfg.position === 'bl' ? 'bl' : 'br';
   var greeting = cfg.greeting || '';
 

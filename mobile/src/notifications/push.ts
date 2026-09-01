@@ -56,7 +56,7 @@ async function registerAndroidChannels() {
       name: meta.name,
       importance: meta.importance,
       vibrationPattern: [0, 250, 250, 250],
-      lightColor: '#A4161A',
+      lightColor: '#a67c00',
       sound: 'default',
       lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
     });

@@ -314,7 +314,7 @@ mark { background: #fef08a; color: #422006; padding: 0 2px; border-radius: 2px; 
 
 /* Download / call-to-action button */
 .btn{display:inline-flex;align-items:center;gap:.5rem;padding:.55rem .95rem;border-radius:.5rem;
-  background:#D81C20;color:#fff;font-weight:600;font-size:.9rem;text-decoration:none;
+  background:#ffbd24;color:#fff;font-weight:600;font-size:.9rem;text-decoration:none;
   border:1px solid #b8171b;transition:filter .15s ease}
 .btn:hover{filter:brightness(1.08);text-decoration:none}
 

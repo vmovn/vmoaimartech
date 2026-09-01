@@ -89,7 +89,7 @@ function ManageBookingPage() {
   const { token } = Route.useParams();
   const [appt, setAppt] = useState(initial.appointment);
   const [mode, setMode] = useState<"idle" | "reschedule" | "cancel">("idle");
-  const brand = initial.eventType?.color ?? "#A4161A";
+  const brand = initial.eventType?.color ?? "#a67c00";
 
   if (appt.status === "cancelled") {
     return (

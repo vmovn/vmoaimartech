@@ -81,7 +81,7 @@ function WidgetSdkPage() {
   });
 
   const [botId, setBotId] = useState<string>("");
-  const [color, setColor] = useState<string>("#A4161A");
+  const [color, setColor] = useState<string>("#a67c00");
   const [position, setPosition] = useState<"br" | "bl">("br");
   const [greeting, setGreeting] = useState<string>("Hi 👋 how can we help?");
 
@@ -239,7 +239,7 @@ window.SwifferChat.on("ready" | "message" | "open" | "close", handler)`;
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
-              <Wand2 className="h-4 w-4 text-[#A4161A]" /> Installation Wizard
+              <Wand2 className="h-4 w-4 text-[#a67c00]" /> Installation Wizard
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -291,7 +291,7 @@ window.SwifferChat.on("ready" | "message" | "open" | "close", handler)`;
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
-              <Code2 className="h-4 w-4 text-[#A4161A]" /> Installation snippets
+              <Code2 className="h-4 w-4 text-[#a67c00]" /> Installation snippets
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -335,7 +335,7 @@ window.SwifferChat.on("ready" | "message" | "open" | "close", handler)`;
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
-              <BookOpen className="h-4 w-4 text-[#A4161A]" /> API & Runtime reference
+              <BookOpen className="h-4 w-4 text-[#a67c00]" /> API & Runtime reference
             </CardTitle>
           </CardHeader>
           <CardContent>

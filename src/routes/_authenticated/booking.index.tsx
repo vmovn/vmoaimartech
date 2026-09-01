@@ -217,7 +217,7 @@ function EventTypesTab() {
                 <CardContent className="p-4 space-y-3">
                   <div className="flex justify-between items-start">
                     <div className="flex items-center gap-3">
-                      <span className="h-3 w-3 rounded-full" style={{ background: r.color ?? "#A4161A" }} />
+                      <span className="h-3 w-3 rounded-full" style={{ background: r.color ?? "#a67c00" }} />
                       <div>
                         <div className="font-semibold">{r.name}</div>
                         <div className="text-xs text-muted-foreground">{r.duration_minutes} min · {r.location_kind.replace("_", " ")}</div>
@@ -292,7 +292,7 @@ function EventTypesTab() {
                 </div>
                 <div>
                   <Label>Color</Label>
-                  <Input type="color" value={editing.color ?? "#A4161A"} onChange={(e) => setEditing({ ...editing, color: e.target.value })} />
+                  <Input type="color" value={editing.color ?? "#a67c00"} onChange={(e) => setEditing({ ...editing, color: e.target.value })} />
                 </div>
               </div>
               <div className="flex items-center gap-3">

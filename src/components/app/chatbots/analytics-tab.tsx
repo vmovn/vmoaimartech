@@ -18,7 +18,7 @@ const RANGE_OPTIONS = [
   { value: 90, label: "Last 90 days" },
 ];
 
-const PIE_COLORS = ["hsl(var(--primary))", "#e5383b", "#ba181b", "#660708", "#b1a7a6", "#d3d3d3"];
+const PIE_COLORS = ["hsl(var(--primary))", "#ffc933", "#c99400", "#4d3800", "#b1a7a6", "#d3d3d3"];
 
 export function ChatbotAnalyticsTab({ bot }: { bot: Chatbot }) {
   const [days, setDays] = useState(14);
@@ -164,7 +164,7 @@ export function ChatbotAnalyticsTab({ bot }: { bot: Chatbot }) {
               <Tooltip contentStyle={tooltipStyle} />
               <Legend wrapperStyle={{ fontSize: 12 }} />
               <Line type="monotone" dataKey="messages" name="Messages" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
-              <Line type="monotone" dataKey="handoffs" name="Handoffs" stroke="#e5383b" strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="handoffs" name="Handoffs" stroke="#ffc933" strokeWidth={2} dot={false} />
               <Line type="monotone" dataKey="resolved" name="Resolved" stroke="#0f766e" strokeWidth={2} dot={false} />
             </LineChart>
           </ResponsiveContainer>
@@ -229,7 +229,7 @@ export function ChatbotAnalyticsTab({ bot }: { bot: Chatbot }) {
                 <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={11} allowDecimals={false} />
                 <YAxis type="category" dataKey="reason" stroke="hsl(var(--muted-foreground))" fontSize={11} width={110} />
                 <Tooltip contentStyle={tooltipStyle} />
-                <Bar dataKey="count" fill="#e5383b" radius={[0, 6, 6, 0]} />
+                <Bar dataKey="count" fill="#ffc933" radius={[0, 6, 6, 0]} />
               </BarChart>
             </ResponsiveContainer>
           )}
@@ -245,7 +245,7 @@ function Kpi({ icon, label, value, sub, tone }: { icon?: React.ReactNode; label:
       <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-muted-foreground">
         {icon}<span>{label}</span>
       </div>
-      <div className={`mt-1 text-2xl font-semibold tabular-nums ${tone === "warn" ? "text-[#e5383b]" : ""}`}>{value}</div>
+      <div className={`mt-1 text-2xl font-semibold tabular-nums ${tone === "warn" ? "text-[#ffc933]" : ""}`}>{value}</div>
       {sub && <div className="text-xs text-muted-foreground mt-1">{sub}</div>}
     </div>
   );

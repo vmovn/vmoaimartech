@@ -496,7 +496,7 @@ function ReportsTab() {
               <RTooltip />
               <Line type="monotone" dataKey="warning" stroke="#f59e0b" strokeWidth={2} />
               <Line type="monotone" dataKey="breach" stroke="#dc2626" strokeWidth={2} />
-              <Line type="monotone" dataKey="escalated" stroke="#A4161A" strokeWidth={2} />
+              <Line type="monotone" dataKey="escalated" stroke="#a67c00" strokeWidth={2} />
             </LineChart>
           </ResponsiveContainer>
         </div>

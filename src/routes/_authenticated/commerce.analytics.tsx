@@ -29,7 +29,7 @@ export const Route = createFileRoute('/_authenticated/commerce/analytics')({
   head: () => ({ meta: [{ title: 'Commerce Analytics' }] }),
 });
 
-const COLORS = ['#A4161A', '#F59E0B', '#10B981', '#3B82F6', '#8B5CF6', '#EC4899', '#14B8A6', '#F97316'];
+const COLORS = ['#a67c00', '#F59E0B', '#10B981', '#3B82F6', '#8B5CF6', '#EC4899', '#14B8A6', '#F97316'];
 const CHANNELS = ['all', 'direct', 'whatsapp', 'instagram', 'messenger', 'web', 'email'];
 
 function money(n: number, cur = 'USD') {
@@ -239,8 +239,8 @@ function Analytics() {
               <AreaChart data={c.daily}>
                 <defs>
                   <linearGradient id="rev" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#A4161A" stopOpacity={0.4} />
-                    <stop offset="95%" stopColor="#A4161A" stopOpacity={0} />
+                    <stop offset="5%" stopColor="#a67c00" stopOpacity={0.4} />
+                    <stop offset="95%" stopColor="#a67c00" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
@@ -248,7 +248,7 @@ function Analytics() {
                 <YAxis fontSize={11} />
                 <Tooltip />
                 <Legend />
-                <Area type="monotone" dataKey="revenue" stroke="#A4161A" fill="url(#rev)" name="Revenue" />
+                <Area type="monotone" dataKey="revenue" stroke="#a67c00" fill="url(#rev)" name="Revenue" />
                 <Line type="monotone" dataKey="orders" stroke="#3B82F6" strokeWidth={2} name="Orders" />
                 <Line type="monotone" dataKey="refunds" stroke="#F59E0B" strokeWidth={2} name="Refunds" />
               </AreaChart>
@@ -271,7 +271,7 @@ function Analytics() {
                 <XAxis type="number" fontSize={11} />
                 <YAxis type="category" dataKey="name" width={140} fontSize={11} />
                 <Tooltip />
-                <Bar dataKey="revenue" fill="#A4161A" />
+                <Bar dataKey="revenue" fill="#a67c00" />
               </BarChart>
             </ResponsiveContainer>
           </Card>

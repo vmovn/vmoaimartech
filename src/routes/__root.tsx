@@ -240,7 +240,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "— The AI-Powered WhatsApp CRM" },
       { name: "twitter:description", content: "Modern WhatsApp CRM for sales, support, marketing, and AI automation." },
-      { name: "theme-color", content: "#A4161A" },
+      { name: "theme-color", content: "#a67c00" },
       { name: "application-name", content: `${BRAND_NAME}` },
       { name: "apple-mobile-web-app-title", content: `${BRAND_NAME}` },
     ],

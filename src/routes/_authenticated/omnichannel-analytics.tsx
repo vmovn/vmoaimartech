@@ -22,7 +22,7 @@ export const Route = createFileRoute("/_authenticated/omnichannel-analytics")({
 const CHANNELS = ["WhatsApp", "Instagram", "Messenger", "Telegram", "Email", "SMS", "Live Chat"] as const;
 const CHANNEL_COLORS: Record<string, string> = {
   WhatsApp: "#25D366", Instagram: "#E4405F", Messenger: "#0084FF", Telegram: "#26A5E4",
-  Email: "#A4161A", SMS: "#F59E0B", "Live Chat": "#6366F1",
+  Email: "#a67c00", SMS: "#F59E0B", "Live Chat": "#6366F1",
 };
 
 function seedSeries(days = 30) {
@@ -57,10 +57,10 @@ const AGENTS = [
 
 const FUNNEL = [
   { name: "Visitors", value: 24_500, fill: "#0B090A" },
-  { name: "Engaged", value: 12_300, fill: "#660708" },
-  { name: "Qualified", value: 6_400, fill: "#A4161A" },
-  { name: "Opportunity", value: 2_800, fill: "#BA181B" },
-  { name: "Customer", value: 940, fill: "#E5383B" },
+  { name: "Engaged", value: 12_300, fill: "#4d3800" },
+  { name: "Qualified", value: 6_400, fill: "#a67c00" },
+  { name: "Opportunity", value: 2_800, fill: "#c99400" },
+  { name: "Customer", value: 940, fill: "#ffc933" },
 ];
 
 const RETENTION = [
@@ -341,7 +341,7 @@ function OmnichannelAnalyticsPage() {
                     <XAxis dataKey="day" fontSize={11} stroke="var(--color-muted-foreground)" />
                     <YAxis fontSize={11} stroke="var(--color-muted-foreground)" />
                     <Tooltip {...CHART_TOOLTIP} />
-                    <Line type="monotone" dataKey="responseSec" stroke="#A4161A" strokeWidth={2} dot={false} />
+                    <Line type="monotone" dataKey="responseSec" stroke="#a67c00" strokeWidth={2} dot={false} />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
@@ -354,7 +354,7 @@ function OmnichannelAnalyticsPage() {
                     <XAxis dataKey="day" fontSize={11} stroke="var(--color-muted-foreground)" />
                     <YAxis fontSize={11} stroke="var(--color-muted-foreground)" />
                     <Tooltip {...CHART_TOOLTIP} />
-                    <Line type="monotone" dataKey="resolutionMin" stroke="#E5383B" strokeWidth={2} dot={false} />
+                    <Line type="monotone" dataKey="resolutionMin" stroke="#ffc933" strokeWidth={2} dot={false} />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
@@ -436,15 +436,15 @@ function OmnichannelAnalyticsPage() {
                   <AreaChart data={series}>
                     <defs>
                       <linearGradient id="gr" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#A4161A" stopOpacity={0.4} />
-                        <stop offset="100%" stopColor="#A4161A" stopOpacity={0} />
+                        <stop offset="0%" stopColor="#a67c00" stopOpacity={0.4} />
+                        <stop offset="100%" stopColor="#a67c00" stopOpacity={0} />
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
                     <XAxis dataKey="day" fontSize={11} stroke="var(--color-muted-foreground)" />
                     <YAxis fontSize={11} stroke="var(--color-muted-foreground)" />
                     <Tooltip {...CHART_TOOLTIP} />
-                    <Area type="monotone" dataKey="revenue" stroke="#A4161A" strokeWidth={2} fill="url(#gr)" />
+                    <Area type="monotone" dataKey="revenue" stroke="#a67c00" strokeWidth={2} fill="url(#gr)" />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
@@ -468,7 +468,7 @@ function OmnichannelAnalyticsPage() {
                     <XAxis type="number" fontSize={11} stroke="var(--color-muted-foreground)" />
                     <YAxis type="category" dataKey="step" fontSize={11} width={180} stroke="var(--color-muted-foreground)" />
                     <Tooltip {...CHART_TOOLTIP} />
-                    <Bar dataKey="customers" fill="#A4161A" />
+                    <Bar dataKey="customers" fill="#a67c00" />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -501,7 +501,7 @@ function OmnichannelAnalyticsPage() {
                     <XAxis dataKey="cohort" fontSize={11} stroke="var(--color-muted-foreground)" />
                     <YAxis domain={[0, 100]} unit="%" fontSize={11} stroke="var(--color-muted-foreground)" />
                     <Tooltip {...CHART_TOOLTIP} />
-                    <Line type="monotone" dataKey="retained" stroke="#A4161A" strokeWidth={2} />
+                    <Line type="monotone" dataKey="retained" stroke="#a67c00" strokeWidth={2} />
                   </LineChart>
                 </ResponsiveContainer>
               </div>

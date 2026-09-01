@@ -163,7 +163,7 @@ function LivechatOverviewPage() {
         {/* Health checks */}
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2"><Shield className="h-4 w-4 text-[#A4161A]" /> Readiness checks</CardTitle>
+            <CardTitle className="text-base flex items-center gap-2"><Shield className="h-4 w-4 text-[#a67c00]" /> Readiness checks</CardTitle>
           </CardHeader>
           <CardContent className="divide-y">
             {checks.map((c) => (
@@ -191,7 +191,7 @@ function LivechatOverviewPage() {
         {/* Operational guarantees */}
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2"><Gauge className="h-4 w-4 text-[#A4161A]" /> Operational guarantees</CardTitle>
+            <CardTitle className="text-base flex items-center gap-2"><Gauge className="h-4 w-4 text-[#a67c00]" /> Operational guarantees</CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 text-sm">
             <Bullet>Widget loader served with edge cache (5-min TTL) and gzipped — under 6 KB after compression.</Bullet>
@@ -223,11 +223,11 @@ function StatCard({ icon: Icon, label, value, live }: { icon: typeof Users; labe
       <CardContent className="p-4">
         <div className="flex items-center justify-between">
           <span className="text-xs uppercase tracking-wide text-muted-foreground">{label}</span>
-          <Icon className={`h-4 w-4 ${live ? "text-[#A4161A]" : "text-muted-foreground"}`} />
+          <Icon className={`h-4 w-4 ${live ? "text-[#a67c00]" : "text-muted-foreground"}`} />
         </div>
         <div className="mt-2 flex items-baseline gap-2">
           <span className="text-2xl font-semibold tabular-nums">{value}</span>
-          {live && <span className="h-2 w-2 rounded-full bg-[#A4161A] animate-pulse" />}
+          {live && <span className="h-2 w-2 rounded-full bg-[#a67c00] animate-pulse" />}
         </div>
       </CardContent>
     </Card>
@@ -240,7 +240,7 @@ function SurfaceCard({ icon: Icon, title, desc, to }: { icon: typeof Users; titl
       <Card className="h-full transition-colors group-hover:border-primary">
         <CardContent className="p-4">
           <div className="flex items-center gap-2 mb-2">
-            <Icon className="h-4 w-4 text-[#A4161A]" />
+            <Icon className="h-4 w-4 text-[#a67c00]" />
             <span className="text-sm font-medium">{title}</span>
           </div>
           <p className="text-xs text-muted-foreground leading-relaxed">{desc}</p>
@@ -253,7 +253,7 @@ function SurfaceCard({ icon: Icon, title, desc, to }: { icon: typeof Users; titl
 function Bullet({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex items-start gap-2">
-      <Zap className="h-3.5 w-3.5 mt-0.5 text-[#A4161A] shrink-0" />
+      <Zap className="h-3.5 w-3.5 mt-0.5 text-[#a67c00] shrink-0" />
       <span className="text-muted-foreground">{children}</span>
     </div>
   );

@@ -130,7 +130,7 @@ function QueueCard({ queue }: { queue: any }) {
     <Card>
       <CardHeader className="flex-row items-start justify-between space-y-0">
         <div className="flex items-start gap-3">
-          <div className="h-9 w-9 rounded-md flex items-center justify-center" style={{ background: queue.color ?? "#A4161A", color: "white" }}>
+          <div className="h-9 w-9 rounded-md flex items-center justify-center" style={{ background: queue.color ?? "#a67c00", color: "white" }}>
             {Strategy?.icon ? <Strategy.icon className="h-4 w-4" /> : <InboxIcon className="h-4 w-4" />}
           </div>
           <div>
@@ -180,7 +180,7 @@ function QueueDialog({ queue }: { queue?: any }) {
     queue ?? {
       name: "",
       description: "",
-      color: "#A4161A",
+      color: "#a67c00",
       strategy: "round_robin",
       required_skills: [],
       required_languages: [],
@@ -324,7 +324,7 @@ function TeamInboxTab() {
       {inboxes.map((ib: any) => (
         <Card key={ib.id}>
           <CardHeader className="flex-row items-center gap-3 space-y-0">
-            <div className="h-9 w-9 rounded-md grid place-items-center" style={{ background: ib.color ?? "#A4161A", color: "white" }}>
+            <div className="h-9 w-9 rounded-md grid place-items-center" style={{ background: ib.color ?? "#a67c00", color: "white" }}>
               <InboxIcon className="h-4 w-4" />
             </div>
             <div>

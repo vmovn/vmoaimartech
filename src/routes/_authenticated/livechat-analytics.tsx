@@ -34,7 +34,7 @@ export const Route = createFileRoute("/_authenticated/livechat-analytics")({
   component: LivechatAnalyticsPage,
 });
 
-const PALETTE = ["#A4161A", "#660708", "#E5383B", "#161A1D", "#B1A7A6", "#D3D3D3", "#F59E0B", "#6366F1", "#0EA5E9", "#10B981"];
+const PALETTE = ["#a67c00", "#4d3800", "#ffc933", "#161A1D", "#B1A7A6", "#D3D3D3", "#F59E0B", "#6366F1", "#0EA5E9", "#10B981"];
 
 function fmtSec(sec: number): string {
   if (!sec || sec < 1) return "—";
@@ -54,11 +54,11 @@ function KpiCard({ icon: Icon, label, value, hint, tone }: {
       <CardContent className="p-4">
         <div className="flex items-center justify-between">
           <span className="text-xs uppercase tracking-wide text-muted-foreground">{label}</span>
-          <Icon className={`h-4 w-4 ${tone === "live" ? "text-[#A4161A]" : "text-muted-foreground"}`} />
+          <Icon className={`h-4 w-4 ${tone === "live" ? "text-[#a67c00]" : "text-muted-foreground"}`} />
         </div>
         <div className="mt-2 flex items-baseline gap-2">
           <span className="text-2xl font-semibold tabular-nums">{value}</span>
-          {tone === "live" && <span className="inline-flex h-2 w-2 animate-pulse rounded-full bg-[#A4161A]" />}
+          {tone === "live" && <span className="inline-flex h-2 w-2 animate-pulse rounded-full bg-[#a67c00]" />}
         </div>
         {hint && <div className="text-xs text-muted-foreground mt-1">{hint}</div>}
       </CardContent>
@@ -151,7 +151,7 @@ function LivechatAnalyticsPage() {
             <Card className="border">
               <CardContent className="p-4 flex flex-wrap items-center gap-6">
                 <div className="flex items-center gap-2">
-                  <Radio className="h-4 w-4 text-[#A4161A] animate-pulse" />
+                  <Radio className="h-4 w-4 text-[#a67c00] animate-pulse" />
                   <span className="text-sm font-medium">Realtime</span>
                 </div>
                 <div className="text-sm">
@@ -208,7 +208,7 @@ function LivechatAnalyticsPage() {
                           <YAxis fontSize={11} />
                           <Tooltip />
                           <Legend />
-                          <Area type="monotone" dataKey="visitors" stroke="#A4161A" fill="#A4161A" fillOpacity={0.2} />
+                          <Area type="monotone" dataKey="visitors" stroke="#a67c00" fill="#a67c00" fillOpacity={0.2} />
                           <Area type="monotone" dataKey="conversations" stroke="#161A1D" fill="#161A1D" fillOpacity={0.15} />
                         </AreaChart>
                       </ResponsiveContainer>
@@ -224,7 +224,7 @@ function LivechatAnalyticsPage() {
                           <XAxis dataKey="day" fontSize={11} />
                           <YAxis fontSize={11} />
                           <Tooltip />
-                          <Line type="monotone" dataKey="value" stroke="#660708" strokeWidth={2} dot={false} />
+                          <Line type="monotone" dataKey="value" stroke="#4d3800" strokeWidth={2} dot={false} />
                         </LineChart>
                       </ResponsiveContainer>
                     </CardContent>
@@ -242,7 +242,7 @@ function LivechatAnalyticsPage() {
                             ]}
                             dataKey="value" nameKey="name" innerRadius={60} outerRadius={90} label
                           >
-                            <Cell fill="#A4161A" />
+                            <Cell fill="#a67c00" />
                             <Cell fill="#161A1D" />
                           </Pie>
                           <Tooltip />
@@ -261,7 +261,7 @@ function LivechatAnalyticsPage() {
                           <XAxis dataKey="name" fontSize={11} />
                           <YAxis fontSize={11} />
                           <Tooltip />
-                          <Bar dataKey="value" fill="#A4161A" radius={[6, 6, 0, 0]} />
+                          <Bar dataKey="value" fill="#a67c00" radius={[6, 6, 0, 0]} />
                         </BarChart>
                       </ResponsiveContainer>
                     </CardContent>
@@ -295,7 +295,7 @@ function LivechatAnalyticsPage() {
                           <XAxis type="number" fontSize={11} />
                           <YAxis type="category" dataKey="name" fontSize={11} width={80} />
                           <Tooltip />
-                          <Bar dataKey="value" fill="#A4161A" radius={[0, 6, 6, 0]} />
+                          <Bar dataKey="value" fill="#a67c00" radius={[0, 6, 6, 0]} />
                         </BarChart>
                       </ResponsiveContainer>
                     </CardContent>
@@ -328,7 +328,7 @@ function LivechatAnalyticsPage() {
                           <XAxis type="number" fontSize={11} />
                           <YAxis type="category" dataKey="name" fontSize={10} width={180} />
                           <Tooltip />
-                          <Bar dataKey="value" fill="#660708" radius={[0, 6, 6, 0]} />
+                          <Bar dataKey="value" fill="#4d3800" radius={[0, 6, 6, 0]} />
                         </BarChart>
                       </ResponsiveContainer>
                     </CardContent>
@@ -377,7 +377,7 @@ function LivechatAnalyticsPage() {
                           <XAxis type="number" fontSize={11} />
                           <YAxis type="category" dataKey="name" fontSize={10} width={180} />
                           <Tooltip />
-                          <Bar dataKey="value" fill="#A4161A" radius={[0, 6, 6, 0]} />
+                          <Bar dataKey="value" fill="#a67c00" radius={[0, 6, 6, 0]} />
                         </BarChart>
                       </ResponsiveContainer>
                     </CardContent>
@@ -392,7 +392,7 @@ function LivechatAnalyticsPage() {
                           <XAxis type="number" fontSize={11} />
                           <YAxis type="category" dataKey="name" fontSize={10} width={140} />
                           <Tooltip />
-                          <Bar dataKey="value" fill="#660708" radius={[0, 6, 6, 0]} />
+                          <Bar dataKey="value" fill="#4d3800" radius={[0, 6, 6, 0]} />
                         </BarChart>
                       </ResponsiveContainer>
                     </CardContent>
@@ -407,7 +407,7 @@ function LivechatAnalyticsPage() {
                           <XAxis dataKey="name" fontSize={11} />
                           <YAxis fontSize={11} />
                           <Tooltip />
-                          <Bar dataKey="value" fill="#A4161A" radius={[6, 6, 0, 0]} />
+                          <Bar dataKey="value" fill="#a67c00" radius={[6, 6, 0, 0]} />
                         </BarChart>
                       </ResponsiveContainer>
                     </CardContent>
@@ -463,7 +463,7 @@ function LivechatAnalyticsPage() {
                         <XAxis dataKey="name" fontSize={11} interval={0} angle={-15} textAnchor="end" height={60} />
                         <YAxis fontSize={11} />
                         <Tooltip />
-                        <Bar dataKey="handled" fill="#A4161A" radius={[6, 6, 0, 0]} />
+                        <Bar dataKey="handled" fill="#a67c00" radius={[6, 6, 0, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
                   </CardContent>

@@ -53,7 +53,7 @@ export const upsertDepartment = createServerFn({ method: "POST" })
       workspace_id: data.workspaceId,
       name: data.name,
       description: data.description ?? null,
-      color: data.color ?? "#A4161A",
+      color: data.color ?? "#a67c00",
       fallback_agent_id: data.fallbackAgentId ?? null,
       is_active: data.isActive ?? true,
       created_by: context.userId,

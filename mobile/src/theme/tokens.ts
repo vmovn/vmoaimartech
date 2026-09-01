@@ -1,9 +1,9 @@
 /**
  * Design tokens — mirrors the web app's semantic tokens.
- * Primary #A4161A, Inter font, 9px control height on web → 36pt on mobile.
+ * Primary #a67c00, Inter font, 9px control height on web → 36pt on mobile.
  */
 export const palette = {
-  primary: '#A4161A',
+  primary: '#a67c00',
   primaryFg: '#FFFFFF',
   background: '#FFFFFF',
   foreground: '#0A0A0A',
@@ -17,7 +17,7 @@ export const palette = {
 } as const;
 
 export const paletteDark = {
-  primary: '#A4161A',
+  primary: '#a67c00',
   primaryFg: '#FFFFFF',
   background: '#0A0A0A',
   foreground: '#FAFAFA',

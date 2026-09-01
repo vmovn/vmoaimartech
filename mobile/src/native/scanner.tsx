@@ -72,12 +72,12 @@ export function ScannerView({ mode = 'any', onScan, onClose }: Props) {
 const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, backgroundColor: '#000' },
   msg: { color: '#fff', marginBottom: 16, textAlign: 'center' },
-  btn: { backgroundColor: '#A4161A', paddingHorizontal: 20, paddingVertical: 12, borderRadius: 10 },
+  btn: { backgroundColor: '#a67c00', paddingHorizontal: 20, paddingVertical: 12, borderRadius: 10 },
   btnText: { color: '#fff', fontWeight: '600' },
   overlay: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center' },
   frame: { width: 260, height: 260, borderColor: '#fff', borderWidth: 2, borderRadius: 16, backgroundColor: 'transparent' },
   hint: { color: '#fff', marginTop: 16, fontSize: 14, opacity: 0.9 },
   close: { position: 'absolute', top: 60, right: 20, paddingHorizontal: 14, paddingVertical: 8, backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: 20 },
   closeText: { color: '#fff', fontWeight: '600' },
-  rescan: { position: 'absolute', bottom: 80, backgroundColor: '#A4161A', paddingHorizontal: 20, paddingVertical: 12, borderRadius: 10 },
+  rescan: { position: 'absolute', bottom: 80, backgroundColor: '#a67c00', paddingHorizontal: 20, paddingVertical: 12, borderRadius: 10 },
 });
