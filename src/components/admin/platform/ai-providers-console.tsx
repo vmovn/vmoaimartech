@@ -232,7 +232,7 @@ export function AiProvidersConsole() {
         )}
 
         {providers.map((p) => {
-          const needsKey = !p.has_api_key && p.kind !== "lovable" && p.kind !== "ollama";
+          const needsKey = !p.has_api_key && p.kind !== "ollama" && p.kind !== "lmstudio";
           return (
             <Card key={p.id} className={p.enabled ? "" : "opacity-70"}>
               <CardContent className="p-4">

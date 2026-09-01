@@ -39,14 +39,14 @@ export type ProviderDraft = {
 };
 
 export const emptyDraft: ProviderDraft = {
-  kind: "lovable",
-  name: "Lovable AI Gateway",
+  kind: "",
+  name: "",
   baseUrl: "",
-  apiKeySecretName: "LOVABLE_API_KEY",
+  apiKeySecretName: "",
   organizationId: "",
   enabled: true,
-  isDefault: true,
-  priority: 10,
+  isDefault: false,
+  priority: 100,
 };
 
 export function ProviderEditorDialog({
@@ -120,7 +120,9 @@ export function ProviderEditorDialog({
   }
 
   const canSave =
-    form.name.trim().length > 0 && (isEdit || allWorkspaces || Boolean(form.workspaceId));
+    Boolean(form.kind) &&
+    form.name.trim().length > 0 &&
+    (isEdit || allWorkspaces || Boolean(form.workspaceId));
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -165,9 +167,9 @@ export function ProviderEditorDialog({
 
           <div className="space-y-2">
             <Label>Provider kind</Label>
-            <Select value={form.kind} onValueChange={pickKind}>
+            <Select value={form.kind || undefined} onValueChange={pickKind}>
               <SelectTrigger>
-                <SelectValue />
+                <SelectValue placeholder="Select a provider kind…" />
               </SelectTrigger>
               <SelectContent>
                 {kinds.map((k) => (

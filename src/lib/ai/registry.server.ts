@@ -9,6 +9,14 @@ import { anthropicProvider } from "./providers/anthropic.server";
 import { geminiProvider } from "./providers/gemini.server";
 import { AIError } from "./errors";
 
+const lovable = createOpenAICompatProvider({
+  kind: "lovable",
+  defaultBaseUrl: "https://ai.gateway.lovable.dev/v1",
+  authHeader: (key) => ({
+    "Lovable-API-Key": key,
+    "X-Lovable-AIG-SDK": "swiffer",
+  }),
+});
 const openai = createOpenAICompatProvider({
   kind: "openai", defaultBaseUrl: "https://api.openai.com/v1", supportsEmbeddings: true,
 });
@@ -32,6 +40,7 @@ const customOpenai = createOpenAICompatProvider({
 });
 
 const REGISTRY: Partial<Record<AIProviderKind, AIProvider>> = {
+  lovable,
   openai,
   gemini: geminiProvider,
   anthropic: anthropicProvider,

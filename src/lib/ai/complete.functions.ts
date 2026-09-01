@@ -33,7 +33,6 @@ async function loadDefaultProvider(workspaceId: string): Promise<AIProviderRecor
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data } = await supabaseAdmin.from("ai_providers" as never)
     .select("*").eq("workspace_id", workspaceId).eq("enabled", true)
-    .neq("kind", "lovable")
     .order("is_default", { ascending: false }).order("priority", { ascending: true })
     .limit(1).maybeSingle();
   return data ? mapProvider(data as never) : null;
@@ -139,14 +138,6 @@ export async function runChat(opts: RunOpts): Promise<ChatResponse & { providerI
   for (const providerId of chain) {
     const provider = await loadProvider(providerId);
     if (!provider || !provider.enabled) continue;
-    if (provider.kind === "lovable") {
-      lastError = new AIError(
-        "not_found",
-        "Lovable AI is no longer available. Configure an independent AI provider for this workspace.",
-        { providerKind: "lovable" },
-      );
-      continue;
-    }
 
     await enforceAIRateLimit({
       workspaceId: opts.workspaceId, userId: opts.userId ?? null,
@@ -230,7 +221,6 @@ export async function runEmbed(opts: RunEmbedOpts): Promise<EmbedResponse & {
 
   let lastError: Error | null = null;
   for (const provider of providers) {
-    if (provider.kind === "lovable") continue;
     const impl = getAIProvider(provider.kind);
     if (!impl.embed || !impl.capabilities().embed) {
       lastError = new AIError("validation", `Provider "${provider.name}" does not support embeddings`, {

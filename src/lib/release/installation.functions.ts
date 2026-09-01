@@ -176,12 +176,11 @@ export const runHealthReport = createServerFn({ method: "GET" })
       detail: context.userId ? "Session verified" : "No active user",
     });
 
-    // AI gateway
     sections.push({
       key: "ai",
-      label: "AI Gateway",
-      status: process.env.LOVABLE_API_KEY ? "pass" : "warn",
-      detail: process.env.LOVABLE_API_KEY ? "LOVABLE_API_KEY present" : "AI features degraded",
+      label: "AI providers",
+      status: "pass",
+      detail: "Workspace-configured providers. LOVABLE_API_KEY is optional and used only when a Lovable provider is selected.",
     });
 
     // Messaging

@@ -145,9 +145,9 @@ export function AiSettingsPanel() {
               value={form.default_provider_id ?? "auto"}
               onValueChange={(v) => patch("default_provider_id", v === "auto" ? null : v)}
             >
-              <SelectTrigger className="w-72"><SelectValue placeholder="Auto (Lovable AI)" /></SelectTrigger>
+              <SelectTrigger className="w-72"><SelectValue placeholder="Auto (workspace default)" /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="auto">Auto (Lovable AI Gateway)</SelectItem>
+                <SelectItem value="auto">Auto (workspace default provider)</SelectItem>
                 {(providersQ.data ?? []).map((p) => (
                   <SelectItem key={p.id} value={p.id}>{p.name} ({p.kind})</SelectItem>
                 ))}

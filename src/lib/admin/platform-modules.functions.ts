@@ -532,7 +532,7 @@ export const getAiProviderRegistry = createServerFn({ method: "GET" })
         total: providers.length,
         enabled: providers.filter((p) => p.enabled).length,
         unhealthy: providers.filter((p) => p.health && p.health.status !== "healthy" && p.health.status !== "ok").length,
-        missingKey: providers.filter((p) => !p.has_api_key && p.kind !== "lovable" && p.kind !== "ollama").length,
+        missingKey: providers.filter((p) => !p.has_api_key && p.kind !== "ollama" && p.kind !== "lmstudio").length,
         models: providers.reduce((n, p) => n + p.models.length, 0),
         usage30d: totals,
         kinds: [...byKind.entries()].map(([kind, count]) => ({ kind, count })).sort((a, b) => b.count - a.count),
