@@ -7,6 +7,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 import { sanitizeSearchTerm } from "@/lib/api/postgrest-filters";
+import { runChat } from "@/lib/ai/complete.functions";
 
 // ==================== Types ====================
 
@@ -97,29 +98,31 @@ export interface SearchInsightsResult {
 // ==================== Helpers ====================
 
 const HIT_LIMIT = 8;
-const AI_MODEL = "google/gemini-3-flash-preview";
-
 function esc(v: string): string {
   return v.replace(/[%_,]/g, (m) => `\\${m}`);
 }
 
-/** Expand a natural-language query into keyword terms + intent using Lovable AI. */
-async function expandQuery(q: string): Promise<{ terms: string[]; intent: string | null; suggestions: string[] }> {
-  const apiKey = process.env.LOVABLE_API_KEY;
+/** Expand a natural-language query through the configured workspace provider. */
+async function expandQuery(
+  workspaceId: string,
+  userId: string,
+  q: string,
+): Promise<{ terms: string[]; intent: string | null; suggestions: string[] }> {
   const fallback = {
     terms: q.split(/\s+/).filter((t) => t.length >= 2).slice(0, 6),
     intent: null as string | null,
     suggestions: [] as string[],
   };
-  if (!apiKey || q.length < 3) return fallback;
+  if (q.length < 3) return fallback;
   try {
-    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "Lovable-API-Key": apiKey },
-      body: JSON.stringify({
-        model: AI_MODEL,
+    const res = await runChat({
+      workspaceId,
+      userId,
+      feature: "search_query_expansion",
+      request: {
+        model: "",
         temperature: 0.2,
-        response_format: { type: "json_object" },
+        response_format: "json_object",
         messages: [
           {
             role: "system",
@@ -131,11 +134,9 @@ async function expandQuery(q: string): Promise<{ terms: string[]; intent: string
           },
           { role: "user", content: q },
         ],
-      }),
+      },
     });
-    if (!res.ok) return fallback;
-    const j = (await res.json()) as { choices?: { message?: { content?: string } }[] };
-    const raw = j.choices?.[0]?.message?.content ?? "";
+    const raw = res.content ?? "";
     const parsed = JSON.parse(raw) as { terms?: unknown; intent?: unknown; suggestions?: unknown };
     const terms = Array.isArray(parsed.terms)
       ? (parsed.terms as unknown[]).filter((t): t is string => typeof t === "string").map((t) => t.trim().toLowerCase()).filter(Boolean).slice(0, 6)
@@ -201,7 +202,7 @@ export const globalSearch = createServerFn({ method: "POST" })
     const includes = (s: SearchScope) => data.scope === "all" || data.scope === s;
 
     // AI query expansion (parallel with entity searches)
-    const expandP = data.useAi ? expandQuery(q) : Promise.resolve({ terms: [q.toLowerCase()], intent: null, suggestions: [] });
+    const expandP = data.useAi ? expandQuery(ws, userId, q) : Promise.resolve({ terms: [q.toLowerCase()], intent: null, suggestions: [] });
 
     // Parallel entity searches
     const ws = data.workspaceId;
@@ -445,25 +446,23 @@ export const globalSearch = createServerFn({ method: "POST" })
 
     // Optional AI summary of the top hits
     let aiSummary: string | null = null;
-    if (data.useAi && totalHits > 0 && process.env.LOVABLE_API_KEY) {
+    if (data.useAi && totalHits > 0) {
       try {
         const preview = groups.all.slice(0, 6).map((h, i) => `${i + 1}. [${h.entity}] ${h.title} — ${h.subtitle ?? ""}`).join("\n");
-        const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "Lovable-API-Key": process.env.LOVABLE_API_KEY },
-          body: JSON.stringify({
-            model: AI_MODEL,
+        const res = await runChat({
+          workspaceId: ws,
+          userId,
+          feature: "search_summary",
+          request: {
+            model: "",
             temperature: 0.3,
             messages: [
               { role: "system", content: "You summarize CRM search results in ONE sentence (max 25 words). Do not list items. Be specific and actionable." },
               { role: "user", content: `Query: "${q}"\nResults:\n${preview}` },
             ],
-          }),
+          },
         });
-        if (res.ok) {
-          const j = (await res.json()) as { choices?: { message?: { content?: string } }[] };
-          aiSummary = j.choices?.[0]?.message?.content?.trim() ?? null;
-        }
+        aiSummary = res.content?.trim() || null;
       } catch {
         // ignore
       }
@@ -736,8 +735,7 @@ export const getSearchInsights = createServerFn({ method: "POST" })
     // AI insights
     let trends: SearchInsight[] = [];
     let businessInsights: SearchInsight[] = [];
-    if (process.env.LOVABLE_API_KEY) {
-      try {
+    try {
         const context = {
           totals,
           topQueries,
@@ -745,13 +743,14 @@ export const getSearchInsights = createServerFn({ method: "POST" })
           hotLeads: hotLeadsRes.data ?? [],
           staleConversations: staleConvsRes.data ?? [],
         };
-        const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "Lovable-API-Key": process.env.LOVABLE_API_KEY },
-          body: JSON.stringify({
-            model: AI_MODEL,
+        const res = await runChat({
+          workspaceId: ws,
+          userId: context.userId,
+          feature: "search_insights",
+          request: {
+            model: "",
             temperature: 0.4,
-            response_format: { type: "json_object" },
+            response_format: "json_object",
             messages: [
               {
                 role: "system",
@@ -764,11 +763,9 @@ export const getSearchInsights = createServerFn({ method: "POST" })
               },
               { role: "user", content: JSON.stringify(context) },
             ],
-          }),
+          },
         });
-        if (res.ok) {
-          const j = (await res.json()) as { choices?: { message?: { content?: string } }[] };
-          const raw = j.choices?.[0]?.message?.content ?? "{}";
+          const raw = res.content || "{}";
           const parsed = JSON.parse(raw) as { trends?: unknown; businessInsights?: unknown };
           const norm = (arr: unknown): SearchInsight[] =>
             Array.isArray(arr)
@@ -789,11 +786,9 @@ export const getSearchInsights = createServerFn({ method: "POST" })
               : [];
           trends = norm(parsed.trends);
           businessInsights = norm(parsed.businessInsights);
-        }
       } catch {
         // ignore
       }
-    }
 
     return {
       topQueries,

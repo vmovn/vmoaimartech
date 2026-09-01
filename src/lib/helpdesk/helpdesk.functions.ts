@@ -7,6 +7,7 @@
  */
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { runChat } from "@/lib/ai/complete.functions";
 import { z } from "zod";
 import { sanitizeSearchTerm } from "@/lib/api/postgrest-filters";
 
@@ -539,24 +540,22 @@ export const aiSuggestReply = createServerFn({ method: "POST" })
       .order("created_at", { ascending: false }).limit(10);
     const transcript = ((recent ?? []) as Array<{ body: string; direction: string; sent_by: string | null }>)
       .reverse().map((m) => `${m.direction === "outbound" ? "Agent" : "Customer"}: ${m.body}`).join("\n");
-    const key = process.env.LOVABLE_API_KEY;
-    if (!key) return { suggestion: "AI Gateway not configured. Please set LOVABLE_API_KEY." };
     const c = conv as { subject: string | null; ai_summary: string | null };
     const prompt = `You are a helpdesk agent. Draft a ${data.tone} reply to the customer.\nTicket subject: ${c.subject}\nContext summary: ${c.ai_summary ?? "n/a"}\n\nRecent transcript:\n${transcript}\n\nReply:`;
     try {
-      const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Lovable-API-Key": key },
-        body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
+      const res = await runChat({
+        workspaceId,
+        userId: context.userId,
+        feature: "helpdesk_reply",
+        request: {
+          model: "",
           messages: [
             { role: "system", content: "You draft concise, actionable helpdesk replies. Do not invent facts." },
             { role: "user", content: prompt },
           ],
-        }),
+        },
       });
-      const j = await res.json() as { choices?: Array<{ message?: { content?: string } }> };
-      return { suggestion: j.choices?.[0]?.message?.content ?? "" };
+      return { suggestion: res.content ?? "" };
     } catch (e) {
       return { suggestion: "", error: (e as Error).message };
     }
@@ -570,28 +569,26 @@ export const aiTriageTicket = createServerFn({ method: "POST" })
     const { data: conv } = await context.supabase.from("conversations")
       .select("id, subject, last_message_preview, priority").eq("id", data.ticketId).eq("workspace_id", workspaceId).maybeSingle();
     if (!conv) throw new Error("Ticket not found");
-    const key = process.env.LOVABLE_API_KEY;
-    if (!key) return { priority: null, category: null, tags: [], summary: null };
     const { data: cats } = await (context.supabase.from("ticket_categories") as any)
       .select("id, name").eq("workspace_id", workspaceId).eq("is_active", true);
     const c = conv as { subject: string | null; last_message_preview: string | null; priority: string };
     const categoryList = ((cats ?? []) as Array<{ id: string; name: string }>).map((k) => `${k.id}: ${k.name}`).join("\n");
     const prompt = `Classify this support ticket. Respond with JSON only.\nSubject: ${c.subject}\nMessage: ${c.last_message_preview}\n\nAvailable categories:\n${categoryList}\n\nReturn: {"priority":"urgent|high|normal|low","category_id":"<uuid or null>","tags":["..."],"summary":"one-sentence summary","sentiment":"positive|neutral|negative"}`;
     try {
-      const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Lovable-API-Key": key },
-        body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
+      const res = await runChat({
+        workspaceId,
+        userId: context.userId,
+        feature: "helpdesk_triage",
+        request: {
+          model: "",
           messages: [
             { role: "system", content: "You are a support ticket triage classifier. Output only valid JSON." },
             { role: "user", content: prompt },
           ],
-          response_format: { type: "json_object" },
-        }),
+          response_format: "json_object",
+        },
       });
-      const j = await res.json() as { choices?: Array<{ message?: { content?: string } }> };
-      const parsed = JSON.parse(j.choices?.[0]?.message?.content ?? "{}") as {
+      const parsed = JSON.parse(res.content || "{}") as {
         priority?: string; category_id?: string | null; tags?: string[]; summary?: string; sentiment?: string;
       };
       // apply summary + priority if provided

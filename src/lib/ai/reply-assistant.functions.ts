@@ -189,7 +189,7 @@ export const aiReplyAssistant = createServerFn({ method: "POST" })
         || transcript.slice(-800);
       if (kbQuery && kbQuery.trim()) {
         const { embedOne, toVectorLiteral } = await import("../kb/embed.server");
-        const vec = await embedOne(kbQuery.slice(0, 2000));
+        const vec = await embedOne(conv.workspace_id, kbQuery.slice(0, 2000));
         const { data: kbRows } = await supabase.rpc("match_kb_chunks" as never, {
           p_workspace_id: conv.workspace_id,
           p_query_embedding: toVectorLiteral(vec),

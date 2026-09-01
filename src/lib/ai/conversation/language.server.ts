@@ -2,8 +2,7 @@
  * Lightweight language detection + LLM-backed translation.
  * Server-only. Falls back gracefully when providers are unavailable.
  */
-import { createLovableAiGatewayProvider } from "@/lib/ai-gateway.server";
-import { generateText } from "ai";
+import { runChat } from "@/lib/ai/complete.functions";
 
 /**
  * Very fast heuristic detector for the most common ISO-639-1 codes.
@@ -48,7 +47,8 @@ export function detectLanguageHeuristic(text: string): string | null {
  * or matches the detected language.
  */
 export async function translate(opts: {
-  apiKey: string;
+  workspaceId: string;
+  userId?: string | null;
   text: string;
   targetLanguage: string;
   sourceLanguage?: string | null;
@@ -59,17 +59,25 @@ export async function translate(opts: {
   if (opts.sourceLanguage && opts.sourceLanguage === target) return opts.text;
 
   try {
-    const gateway = createLovableAiGatewayProvider(opts.apiKey);
-    const model = gateway(opts.model ?? "google/gemini-3-flash-preview");
-    const { text } = await generateText({
-      model,
-      system:
-        `Translate the user's text to ${target}. ` +
-        `Preserve meaning, tone, markdown, and code blocks verbatim. ` +
-        `Return only the translation.`,
-      prompt: opts.text,
+    const response = await runChat({
+      workspaceId: opts.workspaceId,
+      userId: opts.userId,
+      feature: "translation",
+      request: {
+        model: opts.model ?? "",
+        messages: [
+          {
+            role: "system",
+            content:
+              `Translate the user's text to ${target}. ` +
+              `Preserve meaning, tone, markdown, and code blocks verbatim. ` +
+              `Return only the translation.`,
+          },
+          { role: "user", content: opts.text },
+        ],
+      },
     });
-    return text.trim() || opts.text;
+    return response.content.trim() || opts.text;
   } catch {
     return opts.text;
   }

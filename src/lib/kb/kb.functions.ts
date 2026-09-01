@@ -350,8 +350,11 @@ export const reindexKbArticle = createServerFn({ method: "POST" })
       return { chunks: 0 };
     }
 
-    const { embedTexts, EMBED_MODEL } = await import("./embed.server");
-    const vectors = await embedTexts(chunks.map((c) => c.content));
+    const { embedTexts } = await import("./embed.server");
+    const { vectors, model: embeddingModel } = await embedTexts(
+      article.workspace_id,
+      chunks.map((c) => c.content),
+    );
 
     await store.replaceArticleChunks(article.id, chunks.map((c, i) => ({
       articleId: article.id,
@@ -360,7 +363,7 @@ export const reindexKbArticle = createServerFn({ method: "POST" })
       content: c.content,
       tokens: c.tokens,
       embedding: vectors[i],
-      embeddingModel: EMBED_MODEL,
+      embeddingModel,
     })));
 
     await supabase.from("kb_articles" as never)
@@ -415,7 +418,7 @@ export const searchKb = createServerFn({ method: "POST" })
   .handler(async ({ data, context }): Promise<KbSearchHit[]> => {
     const { embedOne } = await import("./embed.server");
     const { getVectorStore } = await import("./vector-stores/factory");
-    const vec = await embedOne(data.query);
+    const vec = await embedOne(data.workspaceId, data.query);
     const store = getVectorStore(context.supabase);
     return await store.search({
       workspaceId: data.workspaceId,
@@ -439,7 +442,7 @@ export async function retrieveKbContext(params: {
 }): Promise<KbSearchHit[]> {
   try {
     const { embedOne, toVectorLiteral } = await import("./embed.server");
-    const vec = await embedOne(params.query);
+    const vec = await embedOne(params.workspaceId, params.query);
     const { data, error } = await params.supabaseRpc("match_kb_chunks", {
       p_workspace_id: params.workspaceId,
       p_query_embedding: toVectorLiteral(vec),
@@ -467,7 +470,7 @@ export const generateKbAnswer = createServerFn({ method: "POST" })
     const { runChat } = await import("../ai/complete.functions");
 
     const { embedOne, toVectorLiteral } = await import("./embed.server");
-    const vec = await embedOne(data.question);
+    const vec = await embedOne(data.workspaceId, data.question);
     const { data: rowsRaw, error } = await context.supabase.rpc("match_kb_chunks" as never, {
       p_workspace_id: data.workspaceId,
       p_query_embedding: toVectorLiteral(vec),
@@ -569,7 +572,7 @@ export const suggestKbForConversation = createServerFn({ method: "POST" })
     const query = lines.map((m) => m.body).join(" \n ").slice(0, 2000);
 
     const { embedOne, toVectorLiteral } = await import("./embed.server");
-    const vec = await embedOne(query);
+    const vec = await embedOne(workspaceId, query);
     const { data: rows, error } = await context.supabase.rpc("match_kb_chunks" as never, {
       p_workspace_id: workspaceId,
       p_query_embedding: toVectorLiteral(vec),

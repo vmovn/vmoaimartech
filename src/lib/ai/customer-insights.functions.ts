@@ -2,7 +2,7 @@
  * Customer conversation insights — summary + next best action.
  *
  * Fetches the customer's recent WhatsApp threads and their latest messages,
- * then asks Lovable AI Gateway to produce a compact JSON with:
+ * then asks the configured workspace AI provider to produce a compact JSON with:
  *  - summary       : 2-4 sentence recap
  *  - sentiment     : positive | neutral | negative
  *  - topics        : short tags
@@ -14,6 +14,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
+import { runChat } from "./complete.functions";
 
 const InputSchema = z.object({
   customerId: z.string().uuid(),
@@ -37,6 +38,7 @@ export type CustomerInsight = {
 
 type ConversationRow = {
   id: string;
+  workspace_id: string;
   channel: string | null;
   status: string | null;
   last_message_at: string | null;
@@ -55,9 +57,6 @@ export const generateCustomerInsight = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((v: unknown) => InputSchema.parse(v))
   .handler(async ({ data, context }): Promise<CustomerInsight> => {
-    const key = process.env.LOVABLE_API_KEY;
-    if (!key) throw new Error("Missing LOVABLE_API_KEY");
-
     const maxMessages = data.maxMessages ?? 40;
     const supabase = context.supabase;
 
@@ -65,7 +64,7 @@ export const generateCustomerInsight = createServerFn({ method: "POST" })
     // channel if there are no WhatsApp threads.
     const { data: waConvs } = await supabase
       .from("conversations" as never)
-      .select("id, channel, status, last_message_at")
+      .select("id, workspace_id, channel, status, last_message_at")
       .eq("contact_id", data.customerId)
       .eq("channel", "whatsapp")
       .order("last_message_at", { ascending: false, nullsFirst: false })
@@ -75,7 +74,7 @@ export const generateCustomerInsight = createServerFn({ method: "POST" })
     if (conversations.length === 0) {
       const { data: anyConvs } = await supabase
         .from("conversations" as never)
-        .select("id, channel, status, last_message_at")
+        .select("id, workspace_id, channel, status, last_message_at")
         .eq("contact_id", data.customerId)
         .order("last_message_at", { ascending: false, nullsFirst: false })
         .limit(5);
@@ -134,8 +133,8 @@ export const generateCustomerInsight = createServerFn({ method: "POST" })
       })
       .join("\n");
 
-    // Call Lovable AI Gateway with JSON mode.
-    const model = "google/gemini-3.6-flash";
+    const workspaceId = conversations[0]?.workspace_id;
+    if (!workspaceId) throw new Error("No workspace found for customer conversations");
     const systemPrompt = [
       "You are a senior CRM analyst.",
       "Given a WhatsApp transcript between an Agent and a Customer,",
@@ -148,16 +147,13 @@ export const generateCustomerInsight = createServerFn({ method: "POST" })
       "Return ONLY valid JSON. No prose, no markdown.",
     ].join(" ");
 
-    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Lovable-API-Key": key,
-        "X-Lovable-AIG-SDK": "raw-fetch",
-      },
-      body: JSON.stringify({
-        model,
-        response_format: { type: "json_object" },
+    const res = await runChat({
+      workspaceId,
+      userId: context.userId,
+      feature: "customer_insights",
+      request: {
+        model: "",
+        response_format: "json_object",
         messages: [
           { role: "system", content: systemPrompt },
           {
@@ -165,20 +161,9 @@ export const generateCustomerInsight = createServerFn({ method: "POST" })
             content: `Customer transcript (chronological, most recent last):\n\n${transcript}`,
           },
         ],
-      }),
+      },
     });
-
-    if (!res.ok) {
-      const text = await res.text().catch(() => "");
-      if (res.status === 429) throw new Error("AI rate limit reached — try again shortly.");
-      if (res.status === 402) throw new Error("AI credits exhausted for this workspace.");
-      throw new Error(`AI gateway ${res.status}: ${text.slice(0, 300)}`);
-    }
-
-    const payload = (await res.json()) as {
-      choices?: Array<{ message?: { content?: string } }>;
-    };
-    const raw = payload.choices?.[0]?.message?.content ?? "{}";
+    const raw = res.content || "{}";
 
     let parsed: Partial<CustomerInsight> = {};
     try {
@@ -213,7 +198,7 @@ export const generateCustomerInsight = createServerFn({ method: "POST" })
         messageCount: messages.length,
         conversationCount: conversations.length,
         lastMessageAt,
-        model,
+        model: res.model,
         generatedAt: new Date().toISOString(),
       },
     };

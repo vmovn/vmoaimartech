@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
+import { runChat } from "@/lib/ai/complete.functions";
 
 const InputSchema = z.object({
   entityType: z.enum(["contact", "company", "lead", "customer", "deal", "task"]),
@@ -9,15 +10,21 @@ const InputSchema = z.object({
 });
 
 /**
- * Ask Lovable AI to suggest 3-6 short tags for the given entity context.
+ * Ask the configured workspace AI provider to suggest 3-6 short tags.
  * Returns an array of tag names only (no colors/ids). Client decides what to create.
  */
 export const suggestTags = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((input: unknown) => InputSchema.parse(input))
-  .handler(async ({ data }) => {
-    const key = process.env.LOVABLE_API_KEY;
-    if (!key) throw new Error("LOVABLE_API_KEY not configured");
+  .handler(async ({ data, context }) => {
+    const { data: membership } = await context.supabase
+      .from("workspace_members")
+      .select("workspace_id")
+      .eq("user_id", context.userId)
+      .limit(1)
+      .maybeSingle();
+    const workspaceId = (membership as { workspace_id?: string } | null)?.workspace_id;
+    if (!workspaceId) throw new Error("No workspace found for current user");
 
     const prompt = `You classify CRM records with short, reusable tags.
 
@@ -31,30 +38,20 @@ Return 3-6 concise lowercase tags (1-3 words each) that describe this record.
 Prefer reusing existing tags when they fit. Avoid duplicates and PII.
 Respond with ONLY a JSON array of strings, no prose.`;
 
-    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Lovable-API-Key": key,
-      },
-      body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+    const res = await runChat({
+      workspaceId,
+      userId: context.userId,
+      feature: "tag_suggestions",
+      request: {
+        model: "",
         messages: [
           { role: "system", content: "You output only valid JSON arrays of strings." },
           { role: "user", content: prompt },
         ],
-        response_format: { type: "json_object" },
-      }),
+        response_format: "json_object",
+      },
     });
-
-    if (!res.ok) {
-      const text = await res.text();
-      throw new Error(`AI gateway ${res.status}: ${text}`);
-    }
-    const json = (await res.json()) as {
-      choices?: { message?: { content?: string } }[];
-    };
-    const raw = json.choices?.[0]?.message?.content ?? "[]";
+    const raw = res.content || "[]";
     // The model may return {tags:[...]} or [...]; normalize either.
     let tags: string[] = [];
     try {

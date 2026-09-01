@@ -1,8 +1,7 @@
 /**
  * AI marketing assistant server functions.
  *
- * Uses Lovable AI Gateway directly (mirrors the pattern in ab-testing.functions.ts)
- * so it works without any workspace-level AI provider configuration.
+ * Uses the configured workspace provider through the shared AI registry.
  *
  * Features:
  *  - generateCampaignCopy       (headlines, body, CTAs)
@@ -16,35 +15,34 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { runChat } from "@/lib/ai/complete.functions";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-const AI_GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
-const DEFAULT_MODEL = "google/gemini-3-flash-preview";
+async function getWorkspaceId(userId: string): Promise<string> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data } = await supabaseAdmin.from("workspace_members")
+    .select("workspace_id").eq("user_id", userId).limit(1).maybeSingle();
+  if (!data) throw new Error("No workspace found for current user");
+  return (data as { workspace_id: string }).workspace_id;
+}
 
-async function callAiJson<T = unknown>(system: string, user: string, fallback: T): Promise<T> {
-  const key = process.env.LOVABLE_API_KEY;
-  if (!key) throw new Error("Missing LOVABLE_API_KEY");
-  const res = await fetch(AI_GATEWAY, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
-    body: JSON.stringify({
-      model: DEFAULT_MODEL,
-      response_format: { type: "json_object" },
+async function callAiJson<T = unknown>(userId: string, system: string, user: string, fallback: T): Promise<T> {
+  const workspaceId = await getWorkspaceId(userId);
+  const res = await runChat({
+    workspaceId,
+    userId,
+    feature: "marketing_assistant",
+    request: {
+      model: "",
+      response_format: "json_object",
       messages: [
         { role: "system", content: system },
         { role: "user", content: user },
       ],
-    }),
+    },
   });
-  if (!res.ok) {
-    const txt = await res.text();
-    if (res.status === 429) throw new Error("AI rate limit — retry shortly.");
-    if (res.status === 402) throw new Error("AI credits exhausted. Add credits in workspace billing.");
-    throw new Error(`AI gateway ${res.status}: ${txt.slice(0, 200)}`);
-  }
-  const json = (await res.json()) as { choices?: { message?: { content?: string } }[] };
-  const content = (json.choices?.[0]?.message?.content ?? "")
+  const content = (res.content ?? "")
     .trim()
     .replace(/^```json\s*/i, "")
     .replace(/```$/i, "")
@@ -113,6 +111,7 @@ export const generateCampaignCopy = createServerFn({ method: "POST" })
       variants_wanted: data.count,
     });
     const out = await callAiJson<{ variants: CopyVariant[]; notes?: string }>(
+      context.userId,
       system,
       user,
       { variants: [] },
@@ -133,12 +132,13 @@ const rewriteInput = z.object({
 export const rewriteMessage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((data: unknown) => rewriteInput.parse(data))
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
     const system =
       "You are a marketing copy editor. Rewrite the given message following the instructions. " +
       "Return strict JSON: { rewritten: string, changes: string[], reasoning: string }.";
     const user = JSON.stringify(data);
     return callAiJson<{ rewritten: string; changes: string[]; reasoning: string }>(
+      context.userId,
       system,
       user,
       { rewritten: data.message, changes: [], reasoning: "" },
@@ -167,12 +167,13 @@ export type ContentScore = {
 export const scoreContent = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((data: unknown) => scoreInput.parse(data))
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
     const system =
       "You are a messaging compliance and marketing quality analyst. Score the message for a WhatsApp/SMS-class marketing channel. " +
       "Return strict JSON with keys: overall_score (0-100), clarity (0-100), persuasiveness (0-100), brand_safety (0-100), spam_risk (0-100), " +
       "spam_signals (string[]), strengths (string[]), weaknesses (string[]), suggestions (string[]). Be strict about ALL CAPS, false urgency, misleading claims, unsolicited-sounding phrasing.";
     return callAiJson<ContentScore>(
+      context.userId,
       system,
       JSON.stringify(data),
       {
@@ -237,7 +238,7 @@ export const recommendAudience = createServerFn({ method: "POST" })
       }>;
       suggested_lists: Array<{ list_id: string; reason: string }>;
       notes: string;
-    }>(system, user, { segments: [], suggested_lists: [], notes: "" });
+    }>(context.userId, system, user, { segments: [], suggested_lists: [], notes: "" });
   });
 
 /* ---------- Best send time ---------- */
@@ -280,7 +281,7 @@ export const suggestSendTime = createServerFn({ method: "POST" })
       goal: data.goal,
       heatmap_utc: heat.sort((a, b) => b.engagements - a.engagements).slice(0, 30),
     });
-    return callAiJson(system, user, {
+    return callAiJson(context.userId, system, user, {
       best_windows: [],
       next_recommended_iso: null,
       avoid_windows: [],
@@ -327,7 +328,7 @@ export const analyzeCampaignPerformance = createServerFn({ method: "POST" })
       message: (campaign.message_body ?? "").slice(0, 800),
     });
 
-    return callAiJson(system, user, {
+    return callAiJson(context.userId, system, user, {
       summary: "",
       health: "fair",
       insights: [],
@@ -359,7 +360,7 @@ export const generateFollowUp = createServerFn({ method: "POST" })
       },
       segment: data.segment,
     });
-    return callAiJson(system, user, {
+    return callAiJson(context.userId, system, user, {
       name: `${campaign.name} — follow-up`,
       goal: "re-engagement",
       segment_description: data.segment,

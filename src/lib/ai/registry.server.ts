@@ -12,9 +12,6 @@ import { AIError } from "./errors";
 const openai = createOpenAICompatProvider({
   kind: "openai", defaultBaseUrl: "https://api.openai.com/v1", supportsEmbeddings: true,
 });
-const lovable = createOpenAICompatProvider({
-  kind: "lovable", defaultBaseUrl: "https://ai.gateway.lovable.dev/v1", supportsEmbeddings: true,
-});
 const deepseek = createOpenAICompatProvider({
   kind: "deepseek", defaultBaseUrl: "https://api.deepseek.com/v1",
 });
@@ -34,8 +31,7 @@ const customOpenai = createOpenAICompatProvider({
   kind: "custom_openai", defaultBaseUrl: "", supportsEmbeddings: true,
 });
 
-const REGISTRY: Record<AIProviderKind, AIProvider> = {
-  lovable,
+const REGISTRY: Partial<Record<AIProviderKind, AIProvider>> = {
   openai,
   gemini: geminiProvider,
   anthropic: anthropicProvider,
@@ -59,10 +55,7 @@ export function listProviderKinds(): AIProviderKind[] {
 
 /** Resolve stored credentials (secret-name → env var) for a provider row. */
 export function resolveCredentials(record: AIProviderRecord): ProviderCredentials {
-  // For the built-in Lovable AI Gateway, fall back to the auto-provisioned
-  // LOVABLE_API_KEY when the workspace hasn't wired a custom secret.
-  const explicitKey = record.apiKeySecretName ? process.env[record.apiKeySecretName] : undefined;
-  const apiKey = explicitKey ?? (record.kind === "lovable" ? process.env.LOVABLE_API_KEY : undefined);
+  const apiKey = record.apiKeySecretName ? process.env[record.apiKeySecretName] : undefined;
   const requiresKey = record.kind !== "ollama" && record.kind !== "lmstudio";
   if (requiresKey && !apiKey) {
     throw new AIError("auth", `Missing API key for provider "${record.name}" (${record.kind}). Configure the secret named ${record.apiKeySecretName ?? "<none>"} in workspace settings.`);

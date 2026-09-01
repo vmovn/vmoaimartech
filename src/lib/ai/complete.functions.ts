@@ -11,6 +11,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 import type {
   AIMessage, AIProviderRecord, AIModelRecord, AIFeatureConfig, ChatRequest, ChatResponse,
+  EmbedResponse,
 } from "./types";
 import { getAIProvider, resolveCredentials } from "./registry.server";
 import { AIError } from "./errors";
@@ -32,18 +33,10 @@ async function loadDefaultProvider(workspaceId: string): Promise<AIProviderRecor
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data } = await supabaseAdmin.from("ai_providers" as never)
     .select("*").eq("workspace_id", workspaceId).eq("enabled", true)
+    .neq("kind", "lovable")
     .order("is_default", { ascending: false }).order("priority", { ascending: true })
     .limit(1).maybeSingle();
-  if (data) return mapProvider(data as never);
-  // Auto-seed the built-in Lovable AI Gateway for this workspace so calls
-  // work out of the box without manual configuration.
-  const seed = await supabaseAdmin.from("ai_providers" as never).insert({
-    workspace_id: workspaceId, kind: "lovable", name: "Lovable AI Gateway",
-    base_url: "https://ai.gateway.lovable.dev/v1",
-    api_key_secret_name: "LOVABLE_API_KEY",
-    enabled: true, is_default: true, priority: 1, config: {},
-  } as never).select("*").maybeSingle();
-  return seed.data ? mapProvider(seed.data as never) : null;
+  return data ? mapProvider(data as never) : null;
 }
 
 async function loadModel(providerId: string, modelId: string): Promise<AIModelRecord | null> {
@@ -51,6 +44,21 @@ async function loadModel(providerId: string, modelId: string): Promise<AIModelRe
   const { data } = await supabaseAdmin.from("ai_models" as never)
     .select("*").eq("provider_id", providerId).eq("model_id", modelId).maybeSingle();
   return data ? mapModel(data as never) : null;
+}
+
+async function loadDefaultModelId(providerId: string, capability?: "embed"): Promise<string | null> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  let query = supabaseAdmin.from("ai_models" as never)
+    .select("model_id")
+    .eq("provider_id", providerId)
+    .eq("enabled", true);
+  if (capability) query = query.contains("capabilities", { [capability]: true });
+  const { data } = await query
+    .order("is_default", { ascending: false })
+    .order("sort_order", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  return (data as { model_id?: string } | null)?.model_id ?? null;
 }
 
 async function loadFeatureConfig(workspaceId: string, feature: string): Promise<AIFeatureConfig | null> {
@@ -131,6 +139,14 @@ export async function runChat(opts: RunOpts): Promise<ChatResponse & { providerI
   for (const providerId of chain) {
     const provider = await loadProvider(providerId);
     if (!provider || !provider.enabled) continue;
+    if (provider.kind === "lovable") {
+      lastError = new AIError(
+        "not_found",
+        "Lovable AI is no longer available. Configure an independent AI provider for this workspace.",
+        { providerKind: "lovable" },
+      );
+      continue;
+    }
 
     await enforceAIRateLimit({
       workspaceId: opts.workspaceId, userId: opts.userId ?? null,
@@ -140,8 +156,15 @@ export async function runChat(opts: RunOpts): Promise<ChatResponse & { providerI
 
     const start = Date.now();
     try {
-      const res = await callWithProvider(provider, opts.request);
-      const model = await loadModel(provider.id, opts.request.model).catch(() => null);
+      const modelId = opts.request.model || await loadDefaultModelId(provider.id);
+      if (!modelId) {
+        throw new AIError("not_found", `No AI model configured for provider "${provider.name}"`, {
+          providerKind: provider.kind,
+        });
+      }
+      const request = { ...opts.request, model: modelId };
+      const res = await callWithProvider(provider, request);
+      const model = await loadModel(provider.id, modelId).catch(() => null);
       const usage = res.usage ?? {
         prompt_tokens: estimateMessageTokens(opts.request.messages),
         completion_tokens: Math.ceil((res.content?.length ?? 0) / 4),
@@ -151,7 +174,7 @@ export async function runChat(opts: RunOpts): Promise<ChatResponse & { providerI
       const cost = computeCost(model, usage);
       await logAIRequest({
         workspaceId: opts.workspaceId, userId: opts.userId, providerId: provider.id,
-        providerKind: provider.kind, model: opts.request.model, operation: "chat",
+        providerKind: provider.kind, model: modelId, operation: "chat",
         feature: opts.feature, status: "success", latencyMs: Date.now() - start,
         usage, costUsd: cost, requestPreview: { messages: opts.request.messages.slice(-3) },
         responsePreview: { content: res.content?.slice(0, 800) },
@@ -175,6 +198,63 @@ export async function runChat(opts: RunOpts): Promise<ChatResponse & { providerI
     }
   }
   throw lastError ?? new AIError("unknown", "All providers failed");
+}
+
+interface RunEmbedOpts {
+  workspaceId: string;
+  userId?: string | null;
+  feature?: string | null;
+  input: string | string[];
+  model?: string | null;
+  primaryProviderId?: string | null;
+  fallbackProviderIds?: string[];
+}
+
+export async function runEmbed(opts: RunEmbedOpts): Promise<EmbedResponse & {
+  providerId: string;
+  providerKind: string;
+}> {
+  const providers: AIProviderRecord[] = [];
+  for (const id of [opts.primaryProviderId, ...(opts.fallbackProviderIds ?? [])]) {
+    if (!id || providers.some((p) => p.id === id)) continue;
+    const provider = await loadProvider(id);
+    if (provider?.enabled) providers.push(provider);
+  }
+  if (providers.length === 0) {
+    const provider = await loadDefaultProvider(opts.workspaceId);
+    if (provider) providers.push(provider);
+  }
+  if (providers.length === 0) {
+    throw new AIError("not_found", "No AI provider configured for this workspace");
+  }
+
+  let lastError: Error | null = null;
+  for (const provider of providers) {
+    if (provider.kind === "lovable") continue;
+    const impl = getAIProvider(provider.kind);
+    if (!impl.embed || !impl.capabilities().embed) {
+      lastError = new AIError("validation", `Provider "${provider.name}" does not support embeddings`, {
+        providerKind: provider.kind,
+      });
+      continue;
+    }
+    const model = opts.model
+      || (typeof provider.config.embedding_model === "string" ? provider.config.embedding_model : null)
+      || await loadDefaultModelId(provider.id, "embed");
+    if (!model) {
+      lastError = new AIError("not_found", `No embedding model configured for provider "${provider.name}"`, {
+        providerKind: provider.kind,
+      });
+      continue;
+    }
+    try {
+      const response = await impl.embed({ model, input: opts.input }, resolveCredentials(provider));
+      return { ...response, providerId: provider.id, providerKind: provider.kind };
+    } catch (error) {
+      lastError = error as Error;
+    }
+  }
+  throw lastError ?? new AIError("validation", "No configured AI provider supports embeddings");
 }
 
 // ---------- Public server functions ----------
@@ -248,9 +328,9 @@ export const aiChat = createServerFn({ method: "POST" })
           .select("model_id")
           .eq("provider_id", p.id).eq("enabled", true)
           .order("is_default", { ascending: false }).limit(1).maybeSingle();
-        model = (mrow as { model_id?: string } | null)?.model_id ?? "google/gemini-3-flash-preview";
+        model = (mrow as { model_id?: string } | null)?.model_id ?? "";
       } else {
-        model = "google/gemini-3-flash-preview";
+        model = "";
       }
     }
 

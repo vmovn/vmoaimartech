@@ -5,12 +5,13 @@
  * follow-up suggestions, email/WhatsApp drafting, proposal ideas, coaching,
  * revenue prediction, deal probability, pipeline health, CRM notes.
  *
- * All calls go through the Lovable AI Gateway using LOVABLE_API_KEY (server-only).
+ * All calls go through the configured workspace provider via runChat().
  */
 
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
+import { runChat } from "./complete.functions";
 
 // ---------- Types ----------
 
@@ -94,36 +95,27 @@ export interface LeadPriorityResult {
 
 // ---------- Helpers ----------
 
-const AI_GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
-const DEFAULT_MODEL = "google/gemini-3-flash-preview";
-
-async function callGateway<T>(system: string, user: string, opts?: { model?: string; json?: boolean }): Promise<T | string> {
-  const key = process.env.LOVABLE_API_KEY;
-  if (!key) throw new Error("Missing LOVABLE_API_KEY");
-  const body = {
-    model: opts?.model ?? DEFAULT_MODEL,
-    messages: [
-      { role: "system", content: system },
-      { role: "user", content: user },
-    ],
-    ...(opts?.json ? { response_format: { type: "json_object" } } : {}),
-  };
-  const res = await fetch(AI_GATEWAY, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${key}`,
+async function callGateway<T>(
+  userId: string,
+  system: string,
+  user: string,
+  opts?: { model?: string; json?: boolean },
+): Promise<T | string> {
+  const workspaceId = await getWorkspaceId(userId);
+  const res = await runChat({
+    workspaceId,
+    userId,
+    feature: "sales_assistant",
+    request: {
+      model: opts?.model ?? "",
+      messages: [
+        { role: "system", content: system },
+        { role: "user", content: user },
+      ],
+      response_format: opts?.json ? "json_object" : undefined,
     },
-    body: JSON.stringify(body),
   });
-  if (!res.ok) {
-    const text = await res.text();
-    if (res.status === 429) throw new Error("AI rate limit exceeded — please retry shortly.");
-    if (res.status === 402) throw new Error("AI credits exhausted. Please top up your workspace.");
-    throw new Error(`AI gateway ${res.status}: ${text.slice(0, 300)}`);
-  }
-  const json = (await res.json()) as { choices?: { message?: { content?: string } }[] };
-  const content = json.choices?.[0]?.message?.content ?? "";
+  const content = res.content ?? "";
   if (opts?.json) {
     try {
       // Strip code fences if any
@@ -258,9 +250,9 @@ const dealIdInput = z.object({ dealId: z.string().uuid() });
 export const aiDealSummary = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((v: unknown) => dealIdInput.parse(v))
-  .handler(async ({ data }): Promise<DealSummaryResult> => {
+  .handler(async ({ data, context }): Promise<DealSummaryResult> => {
     const ctx = await loadDealContext(data.dealId);
-    const result = (await callGateway<DealSummaryResult>(
+    const result = (await callGateway<DealSummaryResult>(context.userId,
       "You are an elite sales analyst. Summarize CRM deals crisply and accurately based only on given data. Return strict JSON.",
       `Summarize this deal for a sales rep. Return JSON with keys: headline (1 sentence), summary (2-3 sentences), keyPoints (array of 3-5 bullet strings), stakeholders (array of names or roles).\n\n${dealContextText(ctx)}`,
       { json: true },
@@ -271,9 +263,9 @@ export const aiDealSummary = createServerFn({ method: "POST" })
 export const aiDealRisk = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((v: unknown) => dealIdInput.parse(v))
-  .handler(async ({ data }): Promise<DealRiskResult> => {
+  .handler(async ({ data, context }): Promise<DealRiskResult> => {
     const ctx = await loadDealContext(data.dealId);
-    return (await callGateway<DealRiskResult>(
+    return (await callGateway<DealRiskResult>(context.userId,
       "You detect risk in sales deals. Analyze stalling, competitor risk, budget, timing, stakeholder issues. Return strict JSON.",
       `Analyze risk. Return JSON: { score: 0-100, level: 'low'|'medium'|'high'|'critical', factors: [{title, detail, severity}], mitigations: [strings] }.\n\n${dealContextText(ctx)}`,
       { json: true },
@@ -283,9 +275,9 @@ export const aiDealRisk = createServerFn({ method: "POST" })
 export const aiNextBestAction = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((v: unknown) => dealIdInput.parse(v))
-  .handler(async ({ data }): Promise<NextBestActionResult> => {
+  .handler(async ({ data, context }): Promise<NextBestActionResult> => {
     const ctx = await loadDealContext(data.dealId);
-    return (await callGateway<NextBestActionResult>(
+    return (await callGateway<NextBestActionResult>(context.userId,
       "You are a sales operations expert. Recommend concrete next actions. Return strict JSON.",
       `Recommend up to 4 next best actions. Return JSON { actions: [{title, reason, channel, urgency}] }. channel in [email,whatsapp,call,meeting,internal]. urgency in [now,today,this_week,later].\n\n${dealContextText(ctx)}`,
       { json: true },
@@ -295,9 +287,9 @@ export const aiNextBestAction = createServerFn({ method: "POST" })
 export const aiFollowUpSuggestions = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((v: unknown) => dealIdInput.parse(v))
-  .handler(async ({ data }): Promise<FollowUpResult> => {
+  .handler(async ({ data, context }): Promise<FollowUpResult> => {
     const ctx = await loadDealContext(data.dealId);
-    return (await callGateway<FollowUpResult>(
+    return (await callGateway<FollowUpResult>(context.userId,
       "You suggest sales follow-ups tailored to deal context. Return strict JSON.",
       `Suggest 3 follow-ups. Return JSON { suggestions: [{subject, preview, whenLabel}] }. whenLabel like 'Tomorrow morning'.\n\n${dealContextText(ctx)}`,
       { json: true },
@@ -314,13 +306,13 @@ const draftInput = z.object({
 export const aiDraftMessage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((v: unknown) => draftInput.parse(v))
-  .handler(async ({ data }): Promise<DraftMessageResult> => {
+  .handler(async ({ data, context }): Promise<DraftMessageResult> => {
     const ctx = await loadDealContext(data.dealId);
     const constraints =
       data.channel === "whatsapp"
         ? "WhatsApp: max 3 short paragraphs, warm, mobile-friendly, no subject line."
         : "Email: include subject line. Professional, well-structured, 120-220 words.";
-    const result = (await callGateway<{ subject?: string; body: string }>(
+    const result = (await callGateway<{ subject?: string; body: string }>(context.userId,
       `You draft ${data.channel} messages for a sales rep. ${constraints} Return strict JSON.`,
       `Write a ${data.channel} message for this deal. Tone: ${data.tone}. Intent: "${data.intent}".\nReturn JSON { subject?, body }.\n\n${dealContextText(ctx)}`,
       { json: true },
@@ -331,9 +323,9 @@ export const aiDraftMessage = createServerFn({ method: "POST" })
 export const aiProposalSuggestions = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((v: unknown) => dealIdInput.parse(v))
-  .handler(async ({ data }): Promise<ProposalSuggestionResult> => {
+  .handler(async ({ data, context }): Promise<ProposalSuggestionResult> => {
     const ctx = await loadDealContext(data.dealId);
-    return (await callGateway<ProposalSuggestionResult>(
+    return (await callGateway<ProposalSuggestionResult>(context.userId,
       "You craft proposal strategies for B2B deals. Return strict JSON.",
       `Suggest a proposal strategy. Return JSON { angle, valueProps: [strings], pricingApproach, objectionsToPrepareFor: [strings], bundleIdeas: [strings] }.\n\n${dealContextText(ctx)}`,
       { json: true },
@@ -343,9 +335,9 @@ export const aiProposalSuggestions = createServerFn({ method: "POST" })
 export const aiCoaching = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((v: unknown) => dealIdInput.parse(v))
-  .handler(async ({ data }): Promise<CoachingResult> => {
+  .handler(async ({ data, context }): Promise<CoachingResult> => {
     const ctx = await loadDealContext(data.dealId);
-    return (await callGateway<CoachingResult>(
+    return (await callGateway<CoachingResult>(context.userId,
       "You are a senior sales coach. Give constructive, specific coaching. Return strict JSON.",
       `Coach the rep working this deal. Return JSON { strengths: [strings], improvements: [strings], scriptTip, metricsToWatch: [strings] }.\n\n${dealContextText(ctx)}`,
       { json: true },
@@ -355,9 +347,9 @@ export const aiCoaching = createServerFn({ method: "POST" })
 export const aiDealProbability = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((v: unknown) => dealIdInput.parse(v))
-  .handler(async ({ data }): Promise<DealProbabilityResult> => {
+  .handler(async ({ data, context }): Promise<DealProbabilityResult> => {
     const ctx = await loadDealContext(data.dealId);
-    return (await callGateway<DealProbabilityResult>(
+    return (await callGateway<DealProbabilityResult>(context.userId,
       "You estimate deal win probability using explicit signals. Return strict JSON.",
       `Estimate win probability (0-100), confidence, key drivers with impact, and a predicted close date (ISO date or null).\nReturn JSON { probability, confidence, drivers: [{label, impact, weight}], predictedCloseDate }.\n\n${dealContextText(ctx)}`,
       { json: true },
@@ -386,7 +378,7 @@ export const aiRevenuePrediction = createServerFn({ method: "POST" })
       })
       .join("\n");
     const currency = ((deals?.[0] as { currency?: string } | undefined)?.currency) ?? "USD";
-    return (await callGateway<RevenuePredictionResult>(
+    return (await callGateway<RevenuePredictionResult>(context.userId,
       "You forecast sales revenue by combining probability, stage, timing, and momentum. Return strict JSON.",
       `Forecast revenue for the current ${data.period}. Return JSON { periodLabel, bestCase, commit, worstCase, currency, narrative }. Use currency ${currency}.\n\nOpen pipeline:\n${summary || "(no open deals)"}`,
       { json: true },
@@ -412,7 +404,7 @@ export const aiPipelineHealth = createServerFn({ method: "POST" })
         return `- ${r.title} | ${r.amount} ${r.currency} | ${r.status} | ${r.probability}% | stage=${stage} | stale=${staleDays}d`;
       })
       .join("\n");
-    return (await callGateway<PipelineHealthResult>(
+    return (await callGateway<PipelineHealthResult>(context.userId,
       "You evaluate sales pipeline health. Consider velocity, stalled deals, stage distribution, deal size mix. Return strict JSON.",
       `Return JSON { score: 0-100, status: 'healthy'|'watch'|'at_risk', highlights: [strings], concerns: [strings], recommendations: [strings] }.\n\nPipeline:\n${summary || "(empty)"}`,
       { json: true },
@@ -437,7 +429,7 @@ export const aiLeadPriority = createServerFn({ method: "POST" })
         return `- id=${r.id} | ${r.title} | ${r.amount} ${r.currency} | ${r.probability}% | priority=${r.priority} | close ${r.expected_close_date ?? "?"}`;
       })
       .join("\n");
-    return (await callGateway<LeadPriorityResult>(
+    return (await callGateway<LeadPriorityResult>(context.userId,
       "You prioritize sales leads based on value, probability, timing, and momentum. Return strict JSON.",
       `Rank the top opportunities. Return JSON { ranking: [{dealId, title, priority: 'low'|'medium'|'high'|'urgent', reason}] }. Limit 12.\n\nDeals:\n${summary || "(none)"}`,
       { json: true },
@@ -449,9 +441,9 @@ const noteInput = z.object({ dealId: z.string().uuid(), event: z.string().min(1)
 export const aiGenerateCrmNote = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((v: unknown) => noteInput.parse(v))
-  .handler(async ({ data }): Promise<{ note: string }> => {
+  .handler(async ({ data, context }): Promise<{ note: string }> => {
     const ctx = await loadDealContext(data.dealId);
-    const note = (await callGateway<string>(
+    const note = (await callGateway<string>(context.userId,
       "You write concise, professional CRM notes. Return plain text (no JSON, no markdown fences).",
       `Write a CRM note capturing this event in 2-4 sentences. Event: "${data.event}". Use deal context to make the note specific.\n\n${dealContextText(ctx)}`,
     )) as string;
@@ -461,9 +453,9 @@ export const aiGenerateCrmNote = createServerFn({ method: "POST" })
 export const aiSalesRecommendations = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((v: unknown) => dealIdInput.parse(v))
-  .handler(async ({ data }): Promise<{ recommendations: { title: string; detail: string; impact: "low" | "medium" | "high" }[] }> => {
+  .handler(async ({ data, context }): Promise<{ recommendations: { title: string; detail: string; impact: "low" | "medium" | "high" }[] }> => {
     const ctx = await loadDealContext(data.dealId);
-    return (await callGateway<{ recommendations: { title: string; detail: string; impact: "low" | "medium" | "high" }[] }>(
+    return (await callGateway<{ recommendations: { title: string; detail: string; impact: "low" | "medium" | "high" }[] }>(context.userId,
       "You give sharp, actionable sales recommendations. Return strict JSON.",
       `Give 4-6 recommendations to advance this deal. Return JSON { recommendations: [{title, detail, impact}] }.\n\n${dealContextText(ctx)}`,
       { json: true },

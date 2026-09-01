@@ -8,6 +8,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
+import { runChat } from "@/lib/ai/complete.functions";
 
 async function getWorkspaceId(userId: string): Promise<string> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -420,24 +421,22 @@ export const suggestNextActions = createServerFn({ method: "POST" })
     const { data: conv } = await context.supabase.from("conversations")
       .select("subject, priority, status, ai_summary").eq("id", data.ticketId).eq("workspace_id", workspaceId).maybeSingle();
     if (!conv) throw new Error("Ticket not found");
-    const key = process.env.LOVABLE_API_KEY;
-    if (!key) return { actions: [] as Array<{ label: string; kind: string }> };
     const c = conv as { subject: string | null; priority: string; status: string; ai_summary: string | null };
     const prompt = `Given this helpdesk ticket, propose 3 concise next best actions for the agent as a JSON array of {label, kind} where kind is one of: reply, escalate, create_task, resolve, request_info, link_kb, assign.\nSubject: ${c.subject}\nPriority: ${c.priority}\nStatus: ${c.status}\nSummary: ${c.ai_summary ?? "n/a"}\nReturn ONLY JSON.`;
     try {
-      const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Lovable-API-Key": key },
-        body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
+      const res = await runChat({
+        workspaceId,
+        userId: context.userId,
+        feature: "helpdesk_next_actions",
+        request: {
+          model: "",
           messages: [
             { role: "system", content: "Return only valid JSON. No prose." },
             { role: "user", content: prompt },
           ],
-        }),
+        },
       });
-      const j = await res.json() as { choices?: Array<{ message?: { content?: string } }> };
-      const raw = j.choices?.[0]?.message?.content ?? "[]";
+      const raw = res.content || "[]";
       const cleaned = raw.replace(/^```(?:json)?/, "").replace(/```$/, "").trim();
       const actions = JSON.parse(cleaned) as Array<{ label: string; kind: string }>;
       return { actions };

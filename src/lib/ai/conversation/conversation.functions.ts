@@ -15,6 +15,8 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { requireTenantAccess } from "@/lib/auth/tenant-auth";
 import { z } from "zod";
+import { runChat } from "@/lib/ai/complete.functions";
+import { AIError } from "@/lib/ai/errors";
 import type {
   Conversation, ConversationConfig, ConversationStatus,
   PromptSettings, UiMessage, Tone, Length,
@@ -231,9 +233,6 @@ export const sendMessage = createServerFn({ method: "POST" })
     conversation: Conversation;
   }> => {
     const started = Date.now();
-    const apiKey = process.env.LOVABLE_API_KEY;
-    if (!apiKey) throw new Error("Missing LOVABLE_API_KEY");
-
     // 1. Load conversation + effective config + prompt settings
     const { data: convRow, error: cErr } = await context.supabase
       .from("ai_conversations" as never).select("*").eq("id", data.conversationId).single();
@@ -278,16 +277,9 @@ export const sendMessage = createServerFn({ method: "POST" })
       content: r.content,
     })).filter((m) => m.role === "user" || m.role === "assistant");
 
-    // 6. Call the model via AI SDK
-    const model = config.model ?? settings?.default_model ?? "google/gemini-3-flash-preview";
-    const {
-      generateText, Output, NoObjectGeneratedError, stepCountIs,
-    } = await import("ai");
-    const { createLovableAiGatewayProvider } = await import("@/lib/ai-gateway.server");
-    const gateway = createLovableAiGatewayProvider(apiKey, undefined, {
-      structuredOutputs: model.startsWith("openai/") && !!config.json,
-    });
-    const languageModel = gateway(model);
+    // 6. Call the model through the configured workspace provider.
+    const requestedModel = config.model ?? settings?.default_model ?? "";
+    let model = requestedModel;
 
     let assistantText = "";
     let toolCalls: Array<{ name: string; args: unknown; result?: unknown }> = [];
@@ -295,59 +287,36 @@ export const sendMessage = createServerFn({ method: "POST" })
     let usage: { promptTokens?: number; completionTokens?: number } = {};
 
     try {
-      if (config.json) {
-        // JSON mode — schema-free (accept any JSON object). Model instructed by prompt.
-        try {
-          const { output, usage: u } = await generateText({
-            model: languageModel,
-            system: systemPrompt,
-            messages: [...history, { role: "user", content: data.message }],
-            output: Output.object({ schema: z.record(z.unknown()) }),
-            temperature: config.temperature ?? 0.2,
-          });
-          assistantText = JSON.stringify(output);
-          usage = { promptTokens: u?.inputTokens, completionTokens: u?.outputTokens };
-        } catch (err) {
-          if (NoObjectGeneratedError.isInstance(err)) {
-            assistantText = err.text ?? "";
-            status = assistantText ? "ok" : "failed";
-          } else throw err;
-        }
-      } else if (config.toolsEnabled) {
-        const { buildConversationTools } = await import("./tools.server");
-        const tools = buildConversationTools({
-          supabase: context.supabase, workspaceId: conv.workspace_id,
-          userId: context.userId, conversationId: conv.id,
-        }, config.tools);
-        const { text, toolCalls: calls, toolResults, usage: u } = await generateText({
-          model: languageModel,
-          system: systemPrompt,
-          messages: [...history, { role: "user", content: data.message }],
-          tools,
-          stopWhen: stepCountIs(50),
-          temperature: config.temperature ?? 0.4,
-        });
-        assistantText = text;
-        toolCalls = (calls ?? []).map((c, i) => ({
-          name: c.toolName,
-          args: c.input,
-          result: toolResults?.[i]?.output,
-        }));
-        usage = { promptTokens: u?.inputTokens, completionTokens: u?.outputTokens };
-      } else {
-        const { text, usage: u } = await generateText({
-          model: languageModel,
-          system: systemPrompt,
-          messages: [...history, { role: "user", content: data.message }],
-          temperature: config.temperature ?? 0.4,
-        });
-        assistantText = text;
-        usage = { promptTokens: u?.inputTokens, completionTokens: u?.outputTokens };
-      }
+      const response = await runChat({
+        workspaceId: conv.workspace_id,
+        userId: context.userId,
+        feature: "ai_conversation",
+        request: {
+          model: requestedModel,
+          messages: [
+            { role: "system", content: systemPrompt },
+            ...history,
+            { role: "user", content: data.message },
+          ],
+          response_format: config.json ? "json_object" : undefined,
+          temperature: config.temperature ?? (config.json ? 0.2 : 0.4),
+        },
+      });
+      assistantText = response.content;
+      model = response.model;
+      toolCalls = (response.tool_calls ?? []).map((call) => ({
+        name: call.name,
+        args: call.arguments,
+      }));
+      usage = {
+        promptTokens: response.usage?.prompt_tokens,
+        completionTokens: response.usage?.completion_tokens,
+      };
     } catch (e) {
       status = "failed";
-      assistantText = settings?.fallback_message
-        ?? "I ran into a problem answering that. Please try again.";
+      assistantText = e instanceof AIError && e.type === "not_found"
+        ? e.message
+        : settings?.fallback_message ?? "I ran into a problem answering that. Please try again.";
       // Non-fatal — still persist the fallback so the UI has something to show.
       console.error("[ai-conversation] model call failed", e);
     }
@@ -355,7 +324,8 @@ export const sendMessage = createServerFn({ method: "POST" })
     // 7. Optional translation
     if (config.translateTo && status === "ok" && !config.json) {
       assistantText = await translate({
-        apiKey,
+        workspaceId: conv.workspace_id,
+        userId: context.userId,
         text: assistantText,
         targetLanguage: config.translateTo,
         sourceLanguage: detected,
@@ -423,12 +393,19 @@ export const translateText = createServerFn({ method: "POST" })
     sourceLanguage: z.string().nullable().optional(),
     model: z.string().optional(),
   }).parse(v))
-  .handler(async ({ data }): Promise<{ text: string }> => {
-    const apiKey = process.env.LOVABLE_API_KEY;
-    if (!apiKey) throw new Error("Missing LOVABLE_API_KEY");
+  .handler(async ({ data, context }): Promise<{ text: string }> => {
+    const { data: membership } = await context.supabase
+      .from("workspace_members")
+      .select("workspace_id")
+      .eq("user_id", context.userId)
+      .limit(1)
+      .maybeSingle();
+    const workspaceId = (membership as { workspace_id?: string } | null)?.workspace_id;
+    if (!workspaceId) throw new Error("No workspace found for current user");
     const { translate } = await import("./language.server");
     const text = await translate({
-      apiKey,
+      workspaceId,
+      userId: context.userId,
       text: data.text,
       targetLanguage: data.targetLanguage,
       sourceLanguage: data.sourceLanguage ?? null,

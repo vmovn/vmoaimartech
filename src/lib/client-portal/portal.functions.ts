@@ -8,6 +8,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 import { sanitizeSearchTerm } from "@/lib/api/postgrest-filters";
+import { runChat } from "@/lib/ai/complete.functions";
 
 type ContactCtx = {
   contactId: string;
@@ -762,30 +763,22 @@ export const portalAiChat = createServerFn({ method: "POST" })
   }).parse(v))
   .handler(async ({ data, context }) => {
     const c = await requireContact(context);
-    const key = process.env.LOVABLE_API_KEY;
-    if (!key) throw new Error("AI assistant is not configured");
-
     const system = `You are a helpful support assistant for ${c.name ?? "the customer"}. ` +
       `Answer questions about their account, orders, invoices, and appointments concisely. ` +
       `If you don't know, suggest they open a support ticket. Never invent order or invoice details.`;
 
-    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+    const res = await runChat({
+      workspaceId: c.workspaceId,
+      userId: context.userId,
+      feature: "client_portal_chat",
+      request: {
+        model: "",
         messages: [{ role: "system", content: system }, ...data.messages],
         temperature: 0.4,
         max_tokens: 600,
-      }),
+      },
     });
-    if (!res.ok) {
-      const body = await res.text().catch(() => "");
-      throw new Error(`AI request failed (${res.status}): ${body.slice(0, 200)}`);
-    }
-    const json = (await res.json()) as { choices?: Array<{ message?: { content?: string } }> };
-    const reply = json.choices?.[0]?.message?.content ?? "";
-    return { reply };
+    return { reply: res.content ?? "" };
   });
 
 /* ---------------- Tasks ---------------- */
@@ -1789,8 +1782,6 @@ export const aiSuggestSelfHelp = createServerFn({ method: "POST" })
   }).parse(v))
   .handler(async ({ data, context }) => {
     const c = await requireContact(context);
-    const key = process.env.LOVABLE_API_KEY;
-    if (!key) return { summary: null, steps: [], articles: [] as Array<{ id: string; slug: string; title: string; summary: string | null }> };
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     // Pull top KB titles for grounding
@@ -1814,23 +1805,27 @@ Respond as strict JSON with this shape:
 {"summary": string, "steps": string[], "article_slugs": string[]}
 Keep summary under 240 chars. Provide 2-4 concrete self-help steps. Only include slugs from the list above (max 3).`;
 
-    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+    let raw = "{}";
+    try {
+      const res = await runChat({
+        workspaceId: c.workspaceId,
+        userId: context.userId,
+        feature: "client_portal_self_help",
+        request: {
+          model: "",
         messages: [
           { role: "system", content: "You are a customer support triage assistant. Prefer self-service. Respond in strict JSON only." },
           { role: "user", content: prompt },
         ],
         temperature: 0.3,
         max_tokens: 500,
-        response_format: { type: "json_object" },
-      }),
-    });
-    if (!res.ok) return { summary: null, steps: [], articles: [] as Array<{ id: string; slug: string; title: string; summary: string | null }> };
-    const json = (await res.json()) as { choices?: Array<{ message?: { content?: string } }> };
-    const raw = json.choices?.[0]?.message?.content ?? "{}";
+          response_format: "json_object",
+        },
+      });
+      raw = res.content || "{}";
+    } catch {
+      return { summary: null, steps: [], articles: [] as Array<{ id: string; slug: string; title: string; summary: string | null }> };
+    }
     let parsed: { summary?: string; steps?: string[]; article_slugs?: string[] } = {};
     try { parsed = JSON.parse(raw); } catch { parsed = {}; }
     const slugs = new Set((parsed.article_slugs ?? []).slice(0, 3));

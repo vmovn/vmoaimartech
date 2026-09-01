@@ -1,51 +1,46 @@
 /**
- * Server-only helper that calls the Lovable AI Gateway embeddings endpoint.
- * We use openai/text-embedding-3-small (1536 dims) so we can index directly
- * with pgvector's HNSW cosine ops.
+ * Server-only helper that uses the configured workspace provider through the
+ * shared AI registry. The existing pgvector schema requires 1536 dimensions.
  */
 
-const EMBED_URL = "https://ai.gateway.lovable.dev/v1/embeddings";
-export const EMBED_MODEL = "openai/text-embedding-3-small";
+import { runEmbed } from "@/lib/ai/complete.functions";
+
 export const EMBED_DIMS = 1536;
 
 // OpenAI text-embedding-3-* supports up to 2048 inputs and 300k tokens per request.
 const BATCH_SIZE = 96;
 
-export async function embedTexts(inputs: string[]): Promise<number[][]> {
-  if (!inputs.length) return [];
-  const key = process.env.LOVABLE_API_KEY;
-  if (!key) throw new Error("Missing LOVABLE_API_KEY");
+export async function embedTexts(
+  workspaceId: string,
+  inputs: string[],
+): Promise<{ vectors: number[][]; model: string }> {
+  if (!inputs.length) return { vectors: [], model: "" };
 
   const out: number[][] = new Array(inputs.length);
+  let model = "";
   for (let i = 0; i < inputs.length; i += BATCH_SIZE) {
     const batch = inputs.slice(i, i + BATCH_SIZE);
-    const res = await fetch(EMBED_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${key}`,
-      },
-      body: JSON.stringify({
-        model: EMBED_MODEL,
-        input: batch,
-      }),
+    const response = await runEmbed({
+      workspaceId,
+      feature: "knowledge_base_embedding",
+      input: batch,
     });
-    if (!res.ok) {
-      const body = await res.text().catch(() => "");
-      throw new Error(`Embedding request failed (${res.status}): ${body || res.statusText}`);
-    }
-    const json: {
-      data: Array<{ index: number; embedding: number[] }>;
-    } = await res.json();
-    for (const row of json.data) {
-      out[i + row.index] = row.embedding;
+    model = response.model;
+    for (let index = 0; index < response.embeddings.length; index += 1) {
+      const vector = response.embeddings[index];
+      if (vector.length !== EMBED_DIMS) {
+        throw new Error(
+          `Configured embedding model "${model}" returned ${vector.length} dimensions; ${EMBED_DIMS} are required`,
+        );
+      }
+      out[i + index] = vector;
     }
   }
-  return out;
+  return { vectors: out, model };
 }
 
-export async function embedOne(input: string): Promise<number[]> {
-  const [v] = await embedTexts([input]);
+export async function embedOne(workspaceId: string, input: string): Promise<number[]> {
+  const { vectors: [v] } = await embedTexts(workspaceId, [input]);
   return v;
 }
 

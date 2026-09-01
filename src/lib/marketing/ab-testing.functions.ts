@@ -5,11 +5,9 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { runChat } from "@/lib/ai/complete.functions";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-
-const AI_GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
-const DEFAULT_MODEL = "google/gemini-3-flash-preview";
 
 type VariantRow = {
   id: string;
@@ -189,9 +187,6 @@ export const abTestSuggestions = createServerFn({ method: "POST" })
     if (!campaign) throw new Error("Campaign not found");
     const rows = (variants ?? []) as VariantRow[];
 
-    const key = process.env.LOVABLE_API_KEY;
-    if (!key) throw new Error("Missing LOVABLE_API_KEY");
-
     const summary = rows.map((v) => ({
       name: v.name,
       weight: Number(v.weight),
@@ -217,26 +212,20 @@ export const abTestSuggestions = createServerFn({ method: "POST" })
       variants: summary,
     });
 
-    const res = await fetch(AI_GATEWAY, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
-      body: JSON.stringify({
-        model: DEFAULT_MODEL,
-        response_format: { type: "json_object" },
+    const res = await runChat({
+      workspaceId: (campaign as { workspace_id: string }).workspace_id,
+      userId: context.userId,
+      feature: "campaign_ab_suggestions",
+      request: {
+        model: "",
+        response_format: "json_object",
         messages: [
           { role: "system", content: system },
           { role: "user", content: user },
         ],
-      }),
+      },
     });
-    if (!res.ok) {
-      const txt = await res.text();
-      if (res.status === 429) throw new Error("AI rate limit — retry shortly.");
-      if (res.status === 402) throw new Error("AI credits exhausted.");
-      throw new Error(`AI gateway ${res.status}: ${txt.slice(0, 200)}`);
-    }
-    const json = (await res.json()) as { choices?: { message?: { content?: string } }[] };
-    const content = (json.choices?.[0]?.message?.content ?? "").trim()
+    const content = (res.content ?? "").trim()
       .replace(/^```json\s*/i, "").replace(/```$/i, "").trim();
     try {
       return JSON.parse(content);

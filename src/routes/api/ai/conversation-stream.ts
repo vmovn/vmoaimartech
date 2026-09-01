@@ -11,15 +11,11 @@
  */
 import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
-import { streamText, stepCountIs, convertToModelMessages, type UIMessage } from "ai";
+import { createUIMessageStream, createUIMessageStreamResponse, type UIMessage } from "ai";
 import { z } from "zod";
-import {
-  createLovableAiGatewayProvider,
-  getLovableAiGatewayResponseHeaders,
-} from "@/lib/ai-gateway.server";
+import { runChat } from "@/lib/ai/complete.functions";
 import { buildSystemPrompt } from "@/lib/ai/conversation/prompts.server";
 import { detectLanguageHeuristic } from "@/lib/ai/conversation/language.server";
-import { buildConversationTools } from "@/lib/ai/conversation/tools.server";
 import type {
   Conversation, ConversationConfig, PromptSettings,
 } from "@/lib/ai/conversation/types";
@@ -44,8 +40,7 @@ export const Route = createFileRoute("/api/ai/conversation-stream")({
 
         const supabaseUrl = process.env.SUPABASE_URL;
         const supabaseKey = process.env.SUPABASE_PUBLISHABLE_KEY;
-        const apiKey = process.env.LOVABLE_API_KEY;
-        if (!supabaseUrl || !supabaseKey || !apiKey) {
+        if (!supabaseUrl || !supabaseKey) {
           return new Response("Server misconfigured", { status: 500 });
         }
 
@@ -122,68 +117,75 @@ export const Route = createFileRoute("/api/ai/conversation-stream")({
           } as never).select("id").single();
 
         // --- 6. Model call ---
-        const model = config.model ?? settings?.default_model ?? "google/gemini-3-flash-preview";
-        const gateway = createLovableAiGatewayProvider(apiKey);
-        const languageModel = gateway(model);
+        const requestedModel = config.model ?? settings?.default_model ?? "";
         const systemPrompt = buildSystemPrompt(settings, config);
-
-        const tools = config.toolsEnabled
-          ? buildConversationTools({
-              supabase, workspaceId: conv.workspace_id, userId,
-              conversationId: conv.id,
-            }, config.tools)
-          : undefined;
-
         const started = Date.now();
-        const result = streamText({
-          model: languageModel,
-          system: systemPrompt,
-          messages: [...history, { role: "user", content: body.message }],
-          tools,
-          stopWhen: tools ? stepCountIs(50) : undefined,
-          temperature: config.temperature ?? 0.4,
-          onFinish: async ({ text, toolCalls, usage }) => {
-            const latencyMs = Date.now() - started;
-            try {
-              await supabase.from("ai_conversation_messages" as never).insert({
-                conversation_id: conv.id,
-                workspace_id: conv.workspace_id,
-                role: "assistant",
-                content: text ?? "",
-                tool_calls: toolCalls?.length
-                  ? toolCalls.map((c) => ({ name: c.toolName, args: c.input }))
-                  : null,
-                model,
-                tokens_in: usage?.inputTokens ?? null,
-                tokens_out: usage?.outputTokens ?? null,
-                latency_ms: latencyMs,
-                detected_language: detected,
-                status: "ok",
-              } as never);
-              await supabase.from("ai_conversations" as never).update({
-                message_count: (conv.message_count ?? 0) + 2,
-                last_message_at: new Date().toISOString(),
-              } as never).eq("id", conv.id);
-            } catch (e) {
-              console.error("[ai-conversation stream] persist failed", e);
-            }
-          },
-        });
+        let result;
+        try {
+          result = await runChat({
+            workspaceId: conv.workspace_id,
+            userId,
+            feature: "ai_conversation_stream",
+            request: {
+              model: requestedModel,
+              messages: [
+                { role: "system", content: systemPrompt },
+                ...history,
+                { role: "user", content: body.message },
+              ],
+              temperature: config.temperature ?? 0.4,
+            },
+          });
+        } catch (error) {
+          const message = error instanceof Error ? error.message : "AI provider unavailable";
+          return Response.json({ error: message }, { status: 503 });
+        }
 
-        return result.toUIMessageStreamResponse({
-          originalMessages: history.map((h, i) => ({
+        try {
+          await supabase.from("ai_conversation_messages" as never).insert({
+            conversation_id: conv.id,
+            workspace_id: conv.workspace_id,
+            role: "assistant",
+            content: result.content,
+            tool_calls: result.tool_calls?.length
+              ? result.tool_calls.map((call) => ({ name: call.name, args: call.arguments }))
+              : null,
+            model: result.model,
+            tokens_in: result.usage?.prompt_tokens ?? null,
+            tokens_out: result.usage?.completion_tokens ?? null,
+            latency_ms: Date.now() - started,
+            detected_language: detected,
+            status: "ok",
+          } as never);
+          await supabase.from("ai_conversations" as never).update({
+            message_count: (conv.message_count ?? 0) + 2,
+            last_message_at: new Date().toISOString(),
+          } as never).eq("id", conv.id);
+        } catch (error) {
+          console.error("[ai-conversation stream] persist failed", error);
+        }
+
+        const originalMessages = history.map((h, i) => ({
             id: `hist-${i}`,
             role: h.role,
             parts: [{ type: "text", text: h.content }],
-          })) as UIMessage[],
-          headers: getLovableAiGatewayResponseHeaders(undefined, {
+          })) as UIMessage[];
+        const stream = createUIMessageStream({
+          originalMessages,
+          execute({ writer }) {
+            const id = crypto.randomUUID();
+            writer.write({ type: "text-start", id });
+            writer.write({ type: "text-delta", id, delta: result.content });
+            writer.write({ type: "text-end", id });
+          },
+        });
+        return createUIMessageStreamResponse({
+          stream,
+          headers: {
             "X-Swiffer-User-Message-Id": (userRow as { id?: string } | null)?.id ?? "",
-          }),
+          },
         });
       },
     },
   },
 });
-
-// Silence unused-import warning when convertToModelMessages isn't referenced.
-void convertToModelMessages;

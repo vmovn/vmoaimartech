@@ -11,7 +11,7 @@
  * - Revenue Prediction
  * - Abandoned Cart Recovery (message drafts for WhatsApp/Email/SMS)
  *
- * All calls go through the Lovable AI Gateway using LOVABLE_API_KEY (server-only).
+ * All calls go through the configured workspace provider via runChat().
  * These functions are consumed by the Commerce dashboard AND by the Omnichannel
  * Inbox via `AiCommercePanel` so agents can recommend products in-chat.
  */
@@ -19,35 +19,29 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
+import { runChat } from "@/lib/ai/complete.functions";
 
 // ---------- Gateway ----------
 
-const AI_GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
-const DEFAULT_MODEL = "google/gemini-3-flash-preview";
-
-async function callGateway<T>(system: string, user: string, opts?: { json?: boolean; model?: string }): Promise<T | string> {
-  const key = process.env.LOVABLE_API_KEY;
-  if (!key) throw new Error("Missing LOVABLE_API_KEY");
-  const res = await fetch(AI_GATEWAY, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
-    body: JSON.stringify({
-      model: opts?.model ?? DEFAULT_MODEL,
+async function callGateway<T>(
+  workspaceId: string,
+  system: string,
+  user: string,
+  opts?: { json?: boolean; model?: string },
+): Promise<T | string> {
+  const res = await runChat({
+    workspaceId,
+    feature: "commerce_ai",
+    request: {
+      model: opts?.model ?? "",
       messages: [
         { role: "system", content: system },
         { role: "user", content: user },
       ],
-      ...(opts?.json ? { response_format: { type: "json_object" } } : {}),
-    }),
+      response_format: opts?.json ? "json_object" : undefined,
+    },
   });
-  if (!res.ok) {
-    const text = await res.text();
-    if (res.status === 429) throw new Error("AI rate limit exceeded — please retry shortly.");
-    if (res.status === 402) throw new Error("AI credits exhausted. Please top up your workspace.");
-    throw new Error(`AI gateway ${res.status}: ${text.slice(0, 300)}`);
-  }
-  const json = (await res.json()) as { choices?: { message?: { content?: string } }[] };
-  const content = json.choices?.[0]?.message?.content ?? "";
+  const content = res.content ?? "";
   if (opts?.json) {
     try {
       const clean = content.trim().replace(/^```json\s*/i, "").replace(/```\s*$/i, "").trim();
@@ -247,7 +241,7 @@ Only include productId values that exist in the provided catalog. Score is 0-100
       ),
     });
 
-    return (await callGateway<RecommendationBundle>(system, user, { json: true })) as RecommendationBundle;
+    return (await callGateway<RecommendationBundle>(data.workspaceId, system, user, { json: true })) as RecommendationBundle;
   });
 
 // ---------- Shopping Assistant ----------
@@ -274,7 +268,7 @@ Keep the reply concise, warm, and end with a question that moves the customer fo
 
     const historyLines = data.history.map((h) => `${h.role.toUpperCase()}: ${h.content}`).join("\n");
     const user = `CATALOG:\n${JSON.stringify(catalog)}\n\nCUSTOMER:\n${JSON.stringify(contactCtx?.contact ?? null)}\n\nHISTORY:\n${historyLines}\n\nNEW MESSAGE:\n${data.message}`;
-    return (await callGateway<ShoppingAssistantResult>(system, user, { json: true })) as ShoppingAssistantResult;
+    return (await callGateway<ShoppingAssistantResult>(data.workspaceId, system, user, { json: true })) as ShoppingAssistantResult;
   });
 
 // ---------- Order Summary ----------
@@ -294,7 +288,7 @@ export const summarizeOrder = createServerFn({ method: "POST" })
       .maybeSingle();
     if (!order) throw new Error("Order not found");
     const system = `Summarize a commerce order for the internal team. Return JSON: {"headline":"","summary":"","highlights":[""],"followUps":[""]}.`;
-    return (await callGateway<OrderSummaryResult>(system, JSON.stringify(order), { json: true })) as OrderSummaryResult;
+    return (await callGateway<OrderSummaryResult>(data.workspaceId, system, JSON.stringify(order), { json: true })) as OrderSummaryResult;
   });
 
 // ---------- Natural Language Product Search ----------
@@ -315,7 +309,7 @@ export const naturalLanguageSearch = createServerFn({ method: "POST" })
 JSON shape:
 {"interpretedQuery":"","filters":{"categories":[],"brands":[],"tags":[],"priceMin":null,"priceMax":null,"keywords":[]},"productIds":["<id>", ...],"explanation":""}
 Return at most ${data.limit} productIds, ordered best-first. Only IDs from the catalog.`;
-    return (await callGateway<NLSearchResult>(system, `QUERY: ${data.query}\n\nCATALOG:\n${JSON.stringify(catalog)}`, { json: true })) as NLSearchResult;
+    return (await callGateway<NLSearchResult>(data.workspaceId, system, `QUERY: ${data.query}\n\nCATALOG:\n${JSON.stringify(catalog)}`, { json: true })) as NLSearchResult;
   });
 
 // ---------- Customer Preferences ----------
@@ -330,7 +324,7 @@ export const analyzeCustomerPreferences = createServerFn({ method: "POST" })
     if (!ctx.contact) throw new Error("Contact not found");
     const system = `Analyze this customer's shopping preferences from their profile and order history. Return JSON:
 {"favoriteCategories":[],"favoriteBrands":[],"averageOrderValue":0,"buyingCadenceDays":null,"preferredChannel":null,"personaSummary":"","interests":[]}`;
-    return (await callGateway<CustomerPreferencesResult>(system, JSON.stringify(ctx), { json: true })) as CustomerPreferencesResult;
+    return (await callGateway<CustomerPreferencesResult>(data.workspaceId, system, JSON.stringify(ctx), { json: true })) as CustomerPreferencesResult;
   });
 
 // ---------- Purchase Prediction ----------
@@ -345,7 +339,7 @@ export const predictPurchase = createServerFn({ method: "POST" })
 {"probability":0,"timeframe":"7d","confidence":"low","drivers":[{"label":"","impact":"positive"}],"suggestedProductIds":[],"narrative":""}
 probability is 0-100. timeframe one of 24h|7d|30d|90d. Only use productIds from catalog.`;
     const payload = { customer: ctx, catalog: summarizeProducts(ws.products, 60) };
-    return (await callGateway<PurchasePredictionResult>(system, JSON.stringify(payload), { json: true })) as PurchasePredictionResult;
+    return (await callGateway<PurchasePredictionResult>(data.workspaceId, system, JSON.stringify(payload), { json: true })) as PurchasePredictionResult;
   });
 
 // ---------- Revenue Prediction ----------
@@ -372,7 +366,7 @@ export const predictRevenue = createServerFn({ method: "POST" })
     const system = `Forecast next-period commerce revenue based on historical order data. Return JSON:
 {"periodLabel":"","currency":"${currency}","worstCase":0,"commit":0,"bestCase":0,"growthPercent":0,"drivers":[],"narrative":""}`;
     const payload = { periodDays: data.periodDays, orders: orders ?? [] };
-    return (await callGateway<RevenuePredictionResult>(system, JSON.stringify(payload), { json: true })) as RevenuePredictionResult;
+    return (await callGateway<RevenuePredictionResult>(data.workspaceId, system, JSON.stringify(payload), { json: true })) as RevenuePredictionResult;
   });
 
 // ---------- Abandoned Cart Recovery ----------
@@ -420,7 +414,7 @@ export const draftAbandonedCartRecovery = createServerFn({ method: "POST" })
 {"channel":"${data.channel}","subject":"(email only, else null)","body":"","tone":"${data.tone}","incentiveIdea":"${data.offerIncentive ? "an idea" : ""}"}
 Match the channel's tone: WhatsApp is short with an emoji or two, SMS <=160 chars, Email has a subject + 2-3 short paragraphs.
 Reference the actual cart items and total. ${data.offerIncentive ? "Include a small incentive idea." : "Do not offer a discount."}`;
-    return (await callGateway<AbandonedCartDraftResult>(system, JSON.stringify({ cart, contact, channel: data.channel }), { json: true })) as AbandonedCartDraftResult;
+    return (await callGateway<AbandonedCartDraftResult>(data.workspaceId, system, JSON.stringify({ cart, contact, channel: data.channel }), { json: true })) as AbandonedCartDraftResult;
   });
 
 // ---------- Abandoned cart listing (used by dashboard) ----------
