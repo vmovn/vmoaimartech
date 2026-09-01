@@ -1,9 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import type {} from "@tanstack/react-start";
 
-
-const BASE_URL = "https://swiffer.wrapcoders.com";
-
 type SitemapEntry = {
   path: string;
   changefreq?: "always" | "hourly" | "daily" | "weekly" | "monthly" | "yearly" | "never";
@@ -21,7 +18,8 @@ function toW3CDate(date: string | null | undefined): string | undefined {
 export const Route = createFileRoute("/sitemap.xml")({
   server: {
     handlers: {
-      GET: async () => {
+      GET: async ({ request }) => {
+        const baseUrl = new URL(request.url).origin;
         const entries: SitemapEntry[] = [
           { path: "/", changefreq: "weekly", priority: "1.0" },
           { path: "/about", changefreq: "monthly", priority: "0.8" },
@@ -95,7 +93,7 @@ export const Route = createFileRoute("/sitemap.xml")({
         }
 
         const urls = entries.map((e) => {
-          const lines = [`  <url>`, `    <loc>${BASE_URL}${e.path}</loc>`];
+          const lines = [`  <url>`, `    <loc>${baseUrl}${e.path}</loc>`];
           if (e.lastmod) lines.push(`    <lastmod>${e.lastmod}</lastmod>`);
           if (e.changefreq) lines.push(`    <changefreq>${e.changefreq}</changefreq>`);
           if (e.priority) lines.push(`    <priority>${e.priority}</priority>`);

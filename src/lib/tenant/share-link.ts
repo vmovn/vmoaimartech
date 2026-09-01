@@ -16,10 +16,17 @@
 import { isUuid } from "@/lib/tenant/active-tenant";
 import { supabase } from "@/integrations/supabase/client";
 
-const ORIGIN_FALLBACK = "https://swiffer.lovable.app";
-
 function origin(): string {
-  return typeof window === "undefined" ? ORIGIN_FALLBACK : window.location.origin;
+  if (typeof window !== "undefined") return window.location.origin;
+  const configured = process.env.APP_ORIGIN?.trim();
+  if (!configured) {
+    throw new Error("Cannot build a server-side share link: APP_ORIGIN is not configured.");
+  }
+  try {
+    return new URL(configured).origin;
+  } catch {
+    throw new Error("Cannot build a server-side share link: APP_ORIGIN is invalid.");
+  }
 }
 
 /**

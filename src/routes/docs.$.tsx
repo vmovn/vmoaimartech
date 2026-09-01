@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import type {} from "@tanstack/react-start";
-import { docsUrl, type DocsPage } from "@/lib/docs/links";
+import { DOCS_BASE_URL, docsUrl, type DocsPage } from "@/lib/docs/links";
 
 /**
  * Legacy in-app doc pages (/docs/$slug) now map onto the static docs site.
@@ -28,14 +28,21 @@ function targetFor(rest: string): string {
 export const Route = createFileRoute("/docs/$")({
   server: {
     handlers: {
-      GET: async ({ params }) =>
-        new Response(null, {
+      GET: async ({ params }) => {
+        if (!DOCS_BASE_URL) {
+          return new Response("Documentation is not configured for this deployment.", {
+            status: 503,
+            headers: { "Content-Type": "text/plain; charset=utf-8" },
+          });
+        }
+        return new Response(null, {
           status: 301,
           headers: {
             Location: targetFor(String((params as { _splat?: string })._splat ?? "")),
             "Cache-Control": "public, max-age=3600",
           },
-        }),
+        });
+      },
     },
   },
 });

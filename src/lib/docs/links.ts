@@ -1,15 +1,15 @@
 /**
  * Canonical documentation links.
  *
- * The static docs site (docs/*.html) is published alongside the app on the
- * public site, not bundled into the SPA — so in-app links must use the
- * absolute docs base URL, otherwise /docs/*.html 404s.
+ * The static docs site is optional and may be hosted separately. Its public
+ * base URL is supplied by the current operator at build time. Without it,
+ * links remain on this deployment and the docs routes return a clear 503.
  *
  * Every docs link in the app MUST be built with `docsUrl()` (or the
  * `DOCS_LINKS` shortcuts derived from it) so there is exactly one place that
  * knows the docs host, filenames, and hash format.
  */
-export const DOCS_BASE_URL = "https://swiffer.wrapcoders.com/docs";
+export const DOCS_BASE_URL = import.meta.env.VITE_DOCS_BASE_URL?.trim().replace(/\/+$/, "") ?? "";
 
 /** Pages that exist in the static docs site. */
 export type DocsPage = "index" | "changelog" | "status" | "support";
@@ -21,7 +21,7 @@ export type DocsPage = "index" | "changelog" | "status" | "support";
  * @param hash  Optional topic anchor within that page (with or without "#").
  */
 export function docsUrl(page: DocsPage = "index", hash?: string): string {
-  const base = `${DOCS_BASE_URL}/${page}.html`;
+  const base = `${DOCS_BASE_URL || "/docs"}/${page}.html`;
   const anchor = hash?.replace(/^#/, "").trim();
   return anchor ? `${base}#${encodeURIComponent(anchor)}` : base;
 }

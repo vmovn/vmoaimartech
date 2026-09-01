@@ -4,7 +4,18 @@
  * read can never drift from what visitors see.
  */
 
-export const SITE_URL = "https://swiffer.lovable.app";
+function resolveSiteUrl(): string {
+  const configured =
+    typeof window !== "undefined" ? window.location.origin : process.env.APP_ORIGIN;
+  if (!configured) return "";
+  try {
+    return new URL(configured).origin;
+  } catch {
+    return "";
+  }
+}
+
+export const SITE_URL = resolveSiteUrl();
 export const OG_IMAGE_URL = `${SITE_URL}/api/public/og.png`;
 
 export const LANDING_TITLE = "Swiffer — WhatsApp CRM, Shared Inbox & AI Automation";

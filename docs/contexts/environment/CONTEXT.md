@@ -46,7 +46,7 @@ If a new executable environment read is introduced or an env key is removed/rena
 Prefer deterministic env-drift audit when present, plus build/public-bundle secret scan for public/private boundary changes.
 
 ## Drift Contract
-`npm run env:audit` verifies the completed `74 active executable keys = 74 catalog keys = 74 .env.example keys` contract. Do not re-scan environment implementation merely to re-establish this completed checkpoint.
+`npm run env:audit` verifies the completed `75 active executable keys = 75 catalog keys = 75 .env.example keys` contract. Do not re-scan environment implementation merely to re-establish this completed checkpoint.
 
 ## Last Verified
 - Runtime baseline: `v1.0.0-localhost-1.0.6.2`.

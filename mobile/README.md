@@ -36,7 +36,7 @@ mobile/
 
 ## Shared with the web platform
 
-- **Same backend**: reads Supabase URL and anon key from `app.json → expo.extra`; identical tables, RLS policies, and server routes.
+- **Same backend**: `app.config.js` reads the operator's `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`, and `EXPO_PUBLIC_API_BASE_URL` into `expo.extra`; identical tables, RLS policies, and server routes.
 - **Same auth model**: `auth.users` sessions persisted in Keychain / Keystore via `expo-secure-store`.
 - **Same permission model**: RLS + `user_roles` (has_role RPC) enforce the same access rules on device.
 - **Same business logic**: calls Supabase directly for reads and calls TanStack server routes (`/api/v1/*`, `/api/public/*`) via `fetch(env.API_BASE_URL + ...)` for privileged actions.

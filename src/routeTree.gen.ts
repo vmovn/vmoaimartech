@@ -26,6 +26,7 @@ import { Route as OverlayProbeRouteImport } from './routes/overlay-probe'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
 import { Route as SetupRouteImport } from './routes/setup'
 import { Route as SidebarProbeRouteImport } from './routes/sidebar-probe'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
@@ -476,6 +477,11 @@ const PrivacyRoute = PrivacyRouteImport.update({
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
+  id: '/robots.txt',
+  path: '/robots.txt',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SetupRoute = SetupRouteImport.update({
@@ -2581,6 +2587,7 @@ export interface FileRoutesByFullPath {
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/robots.txt': typeof RobotsDottxtRoute
   '/setup': typeof SetupRoute
   '/sidebar-probe': typeof SidebarProbeRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -2965,6 +2972,7 @@ export interface FileRoutesByTo {
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/robots.txt': typeof RobotsDottxtRoute
   '/setup': typeof SetupRoute
   '/sidebar-probe': typeof SidebarProbeRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -3341,6 +3349,7 @@ export interface FileRoutesById {
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/robots.txt': typeof RobotsDottxtRoute
   '/setup': typeof SetupRoute
   '/sidebar-probe': typeof SidebarProbeRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -3728,6 +3737,7 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/privacy'
     | '/reset-password'
+    | '/robots.txt'
     | '/setup'
     | '/sidebar-probe'
     | '/sitemap.xml'
@@ -4112,6 +4122,7 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/privacy'
     | '/reset-password'
+    | '/robots.txt'
     | '/setup'
     | '/sidebar-probe'
     | '/sitemap.xml'
@@ -4487,6 +4498,7 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/privacy'
     | '/reset-password'
+    | '/robots.txt'
     | '/setup'
     | '/sidebar-probe'
     | '/sitemap.xml'
@@ -4874,6 +4886,7 @@ export interface RootRouteChildren {
   PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  RobotsDottxtRoute: typeof RobotsDottxtRoute
   SetupRoute: typeof SetupRoute
   SidebarProbeRoute: typeof SidebarProbeRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
@@ -5103,6 +5116,13 @@ declare module '@tanstack/react-router' {
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/robots.txt': {
+      id: '/robots.txt'
+      path: '/robots.txt'
+      fullPath: '/robots.txt'
+      preLoaderRoute: typeof RobotsDottxtRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/setup': {
@@ -8536,6 +8556,7 @@ const rootRouteChildren: RootRouteChildren = {
   PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  RobotsDottxtRoute: RobotsDottxtRoute,
   SetupRoute: SetupRoute,
   SidebarProbeRoute: SidebarProbeRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,

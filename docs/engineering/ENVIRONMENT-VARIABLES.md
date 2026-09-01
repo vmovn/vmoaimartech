@@ -29,6 +29,7 @@ Validation: database URL must use `postgres://` or `postgresql://`; URLs must be
 | `PUBLIC_BASE_URL` | Asset base path for sub-path hosting | Conditional | No | Build public | Non-root deployment | Conditional |
 | `VITE_APP_ENV` | Browser-visible deployment label | Optional | No | Build public | Environment display | Yes |
 | `VITE_BRAND_NAME` | Static build-time brand fallback | Optional | No | Build public | Static/white-label copy | Conditional |
+| `VITE_DOCS_BASE_URL` | Operator-owned external documentation base URL | Conditional | No | Build public | Static documentation links | Conditional |
 | `DEPLOY_TARGET` | Selects Node-compatible build output | Conditional | No | Build public | Docker/Coolify Node build | Yes |
 | `NITRO_PRESET` | Alternative Nitro build selector | Conditional | No | Build public | Custom build pipeline | Conditional |
 | `SWIFFER_VERSION` | Inherited Compose image/build tag variable | Optional | No | Build public | Docker Compose | Conditional |

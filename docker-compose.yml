@@ -30,6 +30,7 @@ services:
         VITE_SUPABASE_URL: ${VITE_SUPABASE_URL}
         VITE_SUPABASE_PUBLISHABLE_KEY: ${VITE_SUPABASE_PUBLISHABLE_KEY}
         VITE_APP_ENV: production
+        VITE_DOCS_BASE_URL: ${VITE_DOCS_BASE_URL:-}
         APP_VERSION: ${SWIFFER_VERSION:-4.4.6}
     environment: *app-env
     env_file:

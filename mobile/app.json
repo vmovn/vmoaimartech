@@ -74,11 +74,6 @@
       ["expo-location", { "locationAlwaysAndWhenInUsePermission": "Attach your location to conversations and check-ins." }],
       ["expo-contacts", { "contactsPermission": "Import contacts into your CRM." }]
     ],
-    "experiments": { "typedRoutes": true },
-    "extra": {
-      "SUPABASE_URL": "https://qupmndmtvmttuemiakpf.supabase.co",
-      "SUPABASE_ANON_KEY": "sb_publishable_vIQQo4PPa-PbG3Zs-kz5vw_bdCne7Sh",
-      "API_BASE_URL": "https://project--206182b2-0a34-4382-9e54-92466a9ffea8.lovable.app"
-    }
+    "experiments": { "typedRoutes": true }
   }
 }

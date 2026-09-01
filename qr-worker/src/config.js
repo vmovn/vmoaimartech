@@ -23,9 +23,7 @@ export const config = {
   /** HMAC secret for worker → app webhook signing. */
   webhookSecret: required('WA_QR_WEBHOOK_SECRET'),
   /** Absolute URL of the Swiffer webhook endpoint. */
-  webhookUrl:
-    process.env.SWIFFER_WEBHOOK_URL ||
-    'https://swiffer.lovable.app/api/public/whatsapp/qr-webhook',
+  webhookUrl: required('SWIFFER_WEBHOOK_URL'),
 
   /** Where Baileys auth state is persisted. MUST survive restarts. */
   authDir: process.env.WA_AUTH_DIR || './data/auth',
