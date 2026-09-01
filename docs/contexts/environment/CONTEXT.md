@@ -12,6 +12,7 @@ Owns classification of environment configuration: public build variables, server
 - `docs/engineering/ENVIRONMENT-VARIABLES.md` — canonical human reference.
 - `docs/engineering/COOLIFY-ENV-CHECKLIST.md` — deployment checklist.
 - `scripts/dev/generate-local-env.mjs` — local environment generation.
+- `scripts/product/sync-cron-dispatcher-config.mjs` — process environment to Supabase Vault synchronization for internal pg_cron callbacks.
 
 ## Source of Truth
 Executable environment reads are truth; the canonical catalog/example must mirror them. Metadata may be shared, secret-value evaluation must remain server-side.
@@ -36,6 +37,7 @@ Scope:
 - missing optional capability = `NOT CONFIGURED`, not platform failure.
 - local test/smoke credentials never become persistent Product/default deployment accounts.
 - Coolify checklist contains variable names and purposes, never secret values.
+- PostgreSQL internal callbacks read `APP_ORIGIN` and `INTERNAL_CRON_TOKEN` from Supabase Vault; Product startup and local environment generation synchronize those values without exposing them to browser roles.
 
 ## Staleness trigger
 If a new executable environment read is introduced or an env key is removed/renamed, update the catalog/example/readiness docs and drift check in the same task.

@@ -2,8 +2,11 @@ import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import process from "node:process";
+import pg from "pg";
 import { parseLocalEnv, resolveLocalSecrets } from "./local-env-secrets.mjs";
+import { syncCronDispatcherConfig } from "../product/sync-cron-dispatcher-config.mjs";
 
+const { Client } = pg;
 const cli = fileURLToPath(new URL("../../node_modules/supabase/dist/supabase.js", import.meta.url));
 const raw = execFileSync(process.execPath, [cli, "status", "-o", "json"], {
   encoding: "utf8",
@@ -30,6 +33,7 @@ const existingValues = existsSync(envPath)
   ? parseLocalEnv(readFileSync(envPath, "utf8"))
   : new Map();
 const secrets = resolveLocalSecrets(existingValues);
+const appOrigin = "http://host.docker.internal:8080";
 
 const lines = [
   "# Generated for this isolated local environment. Never commit this file.",
@@ -60,7 +64,7 @@ const lines = [
   "NODE_ENV=development",
   "HOST=127.0.0.1",
   "PORT=8080",
-  "APP_ORIGIN=http://127.0.0.1:8080",
+  `APP_ORIGIN=${appOrigin}`,
   "LOG_LEVEL=debug",
   "",
   "# Third-party integrations remain intentionally unconfigured.",
@@ -71,4 +75,16 @@ const lines = [
 writeFileSync(temporaryEnvPath, lines.join("\n"), { encoding: "utf8", mode: 0o600 });
 rmSync(envPath, { force: true });
 renameSync(temporaryEnvPath, envPath);
-console.log("Wrote .env.local with local Supabase values and secure Product-owned secrets.");
+
+const database = new Client({ connectionString: databaseUrl });
+try {
+  await database.connect();
+  await syncCronDispatcherConfig(database, {
+    appOrigin,
+    internalCronToken: secrets.INTERNAL_CRON_TOKEN,
+  });
+} finally {
+  await database.end().catch(() => undefined);
+}
+
+console.log("Wrote .env.local and synchronized secure pg_cron dispatcher configuration.");

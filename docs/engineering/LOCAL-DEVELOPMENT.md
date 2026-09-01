@@ -136,7 +136,7 @@ runs the service verification.
 
 Product v1.0.0 baseline corrections are preserved as history in
 `docs/engineering/BASELINE-FIXES.md`. The baseline is frozen: all existing 290
-migrations are immutable and every future database change uses a new migration. The current chain contains 293 migrations: 290 frozen baseline migrations plus three additive Product migrations for bootstrap security and deletion-safe fixture/account cleanup.
+migrations are immutable and every future database change uses a new migration. The current chain contains 294 migrations: 290 frozen baseline migrations plus four additive Product migrations for bootstrap security, deletion-safe fixture/account cleanup, and operator-controlled internal cron callbacks.
 
 ## Seed Development Data
 

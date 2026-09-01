@@ -2,6 +2,7 @@ import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
 import pg from "pg";
+import { syncCronDispatcherConfig } from "./sync-cron-dispatcher-config.mjs";
 
 const { Client } = pg;
 const migrationsDirectory = path.resolve(process.cwd(), "supabase", "migrations");
@@ -76,6 +77,12 @@ try {
   if (pending.length > 0) {
     console.log(`[product:migrate] Applied ${pending.length}; database is current (${files.length} migrations).`);
   }
+
+  await syncCronDispatcherConfig(client, {
+    appOrigin: process.env.APP_ORIGIN,
+    internalCronToken: process.env.INTERNAL_CRON_TOKEN,
+  });
+  console.log("[product:migrate] Synchronized pg_cron dispatcher configuration.");
 } catch (error) {
   console.error(`[product:migrate] ${error instanceof Error ? error.message : String(error)}`);
   process.exitCode = 1;

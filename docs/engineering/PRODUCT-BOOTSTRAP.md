@@ -34,7 +34,8 @@ Fresh deployment
 4. applies only versions absent from `supabase_migrations.schema_migrations`;
 5. records each successful migration in the Supabase-compatible history table;
 6. runs each migration and its history write in one transaction;
-7. exits non-zero on failure, so the application does not start against an uncertain schema.
+7. synchronizes `APP_ORIGIN` and `INTERNAL_CRON_TOKEN` into Supabase Vault for the internal pg_cron dispatcher;
+8. exits non-zero on failure, so the application does not start against an uncertain schema or missing dispatcher configuration.
 
 It never resets a database and exposes no SQL or command execution over HTTP. The frozen 290 Product v1.0.0 baseline migrations remain immutable; bootstrap security was added as migration `20260829190000_a389ab41-f42c-4427-aea9-91692a609a2e.sql`.
 
@@ -45,6 +46,11 @@ deletion/audit defects without changing RLS or tenant ownership: deletion audit
 rows retain immutable resource snapshots while deleted organization/workspace
 foreign keys remain null, and workspace-member successor ordering uses the
 actual `created_at` column.
+
+Migration `20260901160000_c670d177-3247-410d-84b8-3d7a5a68dbaf.sql` replaces
+the inherited pg_cron dispatcher host and token literals with operator values
+stored encrypted in Supabase Vault. Missing or invalid configuration fails
+before any HTTP request is queued.
 
 ## Setup Security
 

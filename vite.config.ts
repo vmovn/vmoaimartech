@@ -23,6 +23,11 @@ const publicBase = process.env.PUBLIC_BASE_URL || "/";
 export default defineConfig({
   vite: {
     base: publicBase,
+    server: {
+      // pg_net runs inside the local Supabase container and reaches the host
+      // application through Docker Desktop's stable internal DNS name.
+      allowedHosts: ["host.docker.internal"],
+    },
   },
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
