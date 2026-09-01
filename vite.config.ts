@@ -1,10 +1,5 @@
-// @lovable.dev/vite-tanstack-config already includes the following — do NOT add them manually
-// or the app will break with duplicate plugins:
-//   - TanStack devtools (dev-only, first), tanstackStart, viteReact, tailwindcss, tsConfigPaths,
-//     nitro (build-only using cloudflare as a default target), VITE_* env injection, @ path alias,
-//     React/TanStack dedupe, error logger plugins, and sandbox detection (port/host/strictPort).
-// You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
-import { defineConfig } from "@lovable.dev/vite-tanstack-config";
+import { fileURLToPath } from "node:url";
+import { defineConfig } from "vite";
 
 // Node.js deploy: set DEPLOY_TARGET=node (or NITRO_PRESET=node-middleware) before `vite build`
 // to emit a Node handler at .output/server/index.mjs which app.js boots for cPanel.
@@ -20,21 +15,77 @@ const nodeDeploy =
 // if the app is ever mounted under a sub-path (e.g. "/app/").
 const publicBase = process.env.PUBLIC_BASE_URL || "/";
 
-export default defineConfig({
-  vite: {
+export default defineConfig(async ({ command }) => {
+  const [
+    { default: tailwindcss },
+    { tanstackStart },
+    { default: react },
+    { nitro },
+    { default: tsconfigPaths },
+  ] = await Promise.all([
+    import("@tailwindcss/vite"),
+    import("@tanstack/react-start/plugin/vite"),
+    import("@vitejs/plugin-react"),
+    import("nitro/vite"),
+    import("vite-tsconfig-paths"),
+  ]);
+
+  return {
     base: publicBase,
+    plugins: [
+      tailwindcss(),
+      tsconfigPaths({ projects: ["./tsconfig.json"] }),
+      tanstackStart({
+        importProtection: {
+          behavior: "error",
+          client: {
+            files: ["**/server/**"],
+            specifiers: ["server-only"],
+          },
+        },
+        // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
+        server: {
+          entry: "server",
+          ...(nodeDeploy ? { preset: "node-middleware" as const } : {}),
+        },
+      }),
+      ...(command === "build" ? nitro({ defaultPreset: "cloudflare-module" }) : []),
+      react(),
+    ],
+    resolve: {
+      alias: {
+        "@": fileURLToPath(new URL("./src", import.meta.url)),
+      },
+      dedupe: [
+        "react",
+        "react-dom",
+        "react/jsx-runtime",
+        "react/jsx-dev-runtime",
+        "@tanstack/react-query",
+        "@tanstack/query-core",
+      ],
+    },
+    optimizeDeps: {
+      include: [
+        "react",
+        "react-dom",
+        "react-dom/client",
+        "react/jsx-runtime",
+        "react/jsx-dev-runtime",
+      ],
+      ignoreOutdatedRequests: true,
+    },
     server: {
+      port: 8080,
       // pg_net runs inside the local Supabase container and reaches the host
       // application through Docker Desktop's stable internal DNS name.
       allowedHosts: ["host.docker.internal"],
+      watch: {
+        awaitWriteFinish: {
+          stabilityThreshold: 1_000,
+          pollInterval: 100,
+        },
+      },
     },
-  },
-  tanstackStart: {
-    // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
-    // nitro/vite builds from this
-    server: {
-      entry: "server",
-      ...(nodeDeploy ? { preset: "node-middleware" as const } : {}),
-    },
-  },
+  };
 });

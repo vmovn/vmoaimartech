@@ -1,20 +1,17 @@
 # syntax=docker/dockerfile:1.7
 # Swiffer — multi-stage production image.
-# TanStack Start SSR bundled with Vite; runs on Node 20 (works fine on 22 too).
+# TanStack Start SSR bundled with Vite; runs on Node 22.
 
 # ---------- 1. Dependencies ----------
-FROM node:20-alpine AS deps
+FROM node:22-alpine AS deps
 WORKDIR /app
 RUN corepack enable && apk add --no-cache libc6-compat
-COPY package.json bun.lock* package-lock.json* pnpm-lock.yaml* yarn.lock* ./
+COPY package.json package-lock.json .npmrc ./
 RUN --mount=type=cache,target=/root/.npm \
-    if [ -f bun.lock ]; then npm i -g bun && bun install --frozen-lockfile; \
-    elif [ -f pnpm-lock.yaml ]; then corepack prepare pnpm@latest --activate && pnpm i --frozen-lockfile; \
-    elif [ -f yarn.lock ]; then corepack prepare yarn@stable --activate && yarn install --frozen-lockfile; \
-    else npm ci; fi
+    npm install --global npm@11.6.2 && npm ci
 
 # ---------- 2. Build ----------
-FROM node:20-alpine AS build
+FROM node:22-alpine AS build
 WORKDIR /app
 ENV NODE_ENV=production \
     DEPLOY_TARGET=node
@@ -36,7 +33,7 @@ FROM deps AS production-deps
 RUN npm prune --omit=dev
 
 # ---------- 4. Runtime ----------
-FROM node:20-alpine AS runtime
+FROM node:22-alpine AS runtime
 ARG APP_VERSION=4.4.6
 LABEL org.opencontainers.image.title="Swiffer" \
       org.opencontainers.image.description="Swiffer omnichannel messaging platform" \
