@@ -92,10 +92,12 @@ Run a broad audit only when the user explicitly asks for an audit whose scope ge
 - No unrelated refactors inside feature work.
 
 ### Database lifecycle
-**Active state: POST-BASELINE / PRODUCT DEVELOPMENT.**
-- The 290 Product baseline migrations are immutable.
-- Never edit an applied/baseline migration.
-- New DB changes use new additive migrations.
+**Active state: PRE-PRODUCTION / MUTABLE BASELINE** (until production freeze).
+- Local databases are rebuilt with `supabase db reset`; all migrations replay from zero.
+- Do not add a patch, fix, follow-up, or cleanup migration for an existing baseline object.
+- Find the canonical original owner migration, edit that file so the final definition is correct immediately, then reset and validate.
+- A new SQL/migration file is allowed only for a genuinely new schema/feature, and only after the user explicitly asks.
+- `supabase/seed.sql` is the canonical storage-bucket provisioner (`config.toml` `[db.seed]`); do not duplicate buckets into migrations and do not put demo records there.
 - Destructive operations require explicit review.
 
 ### UI and localization

@@ -141,11 +141,5 @@ EXCEPTION WHEN OTHERS THEN NULL; END $$;
 SELECT cron.schedule(
   'export-jobs-dispatch',
   '* * * * *',
-  $$
-  SELECT net.http_post(
-    url := 'https://project--206182b2-0a34-4382-9e54-92466a9ffea8.lovable.app/api/public/hooks/process-exports',
-    headers := '{"Content-Type":"application/json","apikey":"sb_publishable_vIQQo4PPa-PbG3Zs-kz5vw_bdCne7Sh"}'::jsonb,
-    body := '{"source":"pg_cron"}'::jsonb
-  );
-  $$
+  $$SELECT public._wa_cron_post('/api/public/hooks/process-exports', '{"source":"pg_cron"}'::jsonb);$$
 );

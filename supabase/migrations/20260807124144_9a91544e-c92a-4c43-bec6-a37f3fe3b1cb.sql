@@ -54,17 +54,14 @@ LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
 AS $$
-declare
-  endpoint text := 'https://project--206182b2-0a34-4382-9e54-92466a9ffea8.lovable.app/api/public/push-dispatch';
-  cron_token text := '3b458e0c03856e1ec5db7698d05a90bcedbbfafe70ab27797141bf8ce1560b59';
 begin
-  perform net.http_post(
-    url := endpoint,
-    headers := jsonb_build_object('Content-Type','application/json','x-cron-token', cron_token),
-    body := jsonb_build_object('notification_id', new.id)
+  perform public._wa_cron_post(
+    '/api/public/push-dispatch',
+    jsonb_build_object('notification_id', new.id)
   );
   return new;
 exception when others then
+  -- Never block the insert on push delivery. Fail closed: no fallback origin/token.
   return new;
 end;
 $$;

@@ -7,6 +7,7 @@ SET search_path TO 'public'
 AS $function$
 DECLARE
   _actor uuid := auth.uid();
+  _workspace_id uuid;
 BEGIN
   IF TG_OP = 'INSERT' THEN
     INSERT INTO public.audit_logs (workspace_id, actor_id, action, resource_type, resource_id, changes)
@@ -37,10 +38,19 @@ BEGIN
     RETURN NEW;
 
   ELSIF TG_OP = 'DELETE' THEN
+    SELECT id INTO _workspace_id
+    FROM public.workspaces
+    WHERE id = OLD.workspace_id;
+
     INSERT INTO public.audit_logs (workspace_id, actor_id, action, resource_type, resource_id, changes)
     VALUES (
-      OLD.workspace_id, _actor, 'delete'::public.audit_action, 'workspace_member', OLD.user_id::text,
-      jsonb_build_object('event','member_removed','user_id', OLD.user_id, 'role', OLD.role)
+      _workspace_id, _actor, 'delete'::public.audit_action, 'workspace_member', OLD.user_id::text,
+      jsonb_build_object(
+        'event','member_removed',
+        'workspace_id', OLD.workspace_id,
+        'user_id', OLD.user_id,
+        'role', OLD.role
+      )
     );
     RETURN OLD;
   END IF;
@@ -70,7 +80,10 @@ BEGIN
     RETURN NEW;
   ELSIF TG_OP = 'DELETE' THEN
     INSERT INTO public.audit_logs (organization_id, workspace_id, actor_id, action, resource_type, resource_id, changes)
-    VALUES (OLD.organization_id, OLD.id, auth.uid(), 'delete'::public.audit_action, 'workspace', OLD.id::text, jsonb_build_object('deleted', to_jsonb(OLD)));
+    VALUES (
+      NULL, NULL, auth.uid(), 'delete'::public.audit_action, 'workspace', OLD.id::text,
+      jsonb_build_object('organization_id', OLD.organization_id, 'deleted', to_jsonb(OLD))
+    );
     RETURN OLD;
   END IF;
   RETURN NULL;

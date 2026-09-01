@@ -146,7 +146,7 @@ BEGIN
     SELECT wm.user_id INTO v_successor
     FROM public.workspace_members wm
     WHERE wm.workspace_id = r.id AND wm.user_id <> _user_id AND wm.status = 'active'
-    ORDER BY CASE wm.role WHEN 'owner' THEN 0 WHEN 'admin' THEN 1 WHEN 'manager' THEN 2 ELSE 3 END, wm.joined_at
+    ORDER BY CASE wm.role WHEN 'owner' THEN 0 WHEN 'admin' THEN 1 WHEN 'manager' THEN 2 ELSE 3 END, wm.created_at
     LIMIT 1;
 
     IF v_successor IS NULL THEN

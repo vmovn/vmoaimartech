@@ -7,50 +7,58 @@ SET search_path = public
 AS $$
 DECLARE
   _actor uuid := auth.uid();
-  _action text;
-  _changes jsonb;
+  _workspace_id uuid;
 BEGIN
   IF TG_OP = 'INSERT' THEN
-    _action := 'member_added';
-    _changes := jsonb_build_object(
-      'user_id', NEW.user_id,
-      'role',    NEW.role,
-      'status',  NEW.status
-    );
     INSERT INTO public.audit_logs (workspace_id, actor_id, action, resource_type, resource_id, changes)
-    VALUES (NEW.workspace_id, _actor, _action, 'workspace_member', NEW.user_id::text, _changes);
+    VALUES (
+      NEW.workspace_id, _actor, 'create'::public.audit_action, 'workspace_member', NEW.user_id::text,
+      jsonb_build_object('event','member_added','user_id', NEW.user_id, 'role', NEW.role, 'status', NEW.status)
+    );
     RETURN NEW;
 
   ELSIF TG_OP = 'UPDATE' THEN
     IF OLD.role IS DISTINCT FROM NEW.role THEN
       INSERT INTO public.audit_logs (workspace_id, actor_id, action, resource_type, resource_id, changes)
       VALUES (
-        NEW.workspace_id, _actor, 'role_changed', 'workspace_member', NEW.user_id::text,
-        jsonb_build_object('user_id', NEW.user_id, 'from', OLD.role, 'to', NEW.role)
+        NEW.workspace_id, _actor, 'update'::public.audit_action, 'workspace_member', NEW.user_id::text,
+        jsonb_build_object('event','role_changed','user_id', NEW.user_id, 'from', OLD.role, 'to', NEW.role)
       );
     END IF;
     IF OLD.status IS DISTINCT FROM NEW.status THEN
       INSERT INTO public.audit_logs (workspace_id, actor_id, action, resource_type, resource_id, changes)
       VALUES (
-        NEW.workspace_id, _actor,
-        CASE WHEN NEW.status = 'suspended' THEN 'member_suspended' ELSE 'member_reactivated' END,
-        'workspace_member', NEW.user_id::text,
-        jsonb_build_object('user_id', NEW.user_id, 'from', OLD.status, 'to', NEW.status)
+        NEW.workspace_id, _actor, 'update'::public.audit_action, 'workspace_member', NEW.user_id::text,
+        jsonb_build_object(
+          'event', CASE WHEN NEW.status = 'suspended' THEN 'member_suspended' ELSE 'member_reactivated' END,
+          'user_id', NEW.user_id, 'from', OLD.status, 'to', NEW.status
+        )
       );
     END IF;
     RETURN NEW;
 
   ELSIF TG_OP = 'DELETE' THEN
+    SELECT id INTO _workspace_id
+    FROM public.workspaces
+    WHERE id = OLD.workspace_id;
+
     INSERT INTO public.audit_logs (workspace_id, actor_id, action, resource_type, resource_id, changes)
     VALUES (
-      OLD.workspace_id, _actor, 'member_removed', 'workspace_member', OLD.user_id::text,
-      jsonb_build_object('user_id', OLD.user_id, 'role', OLD.role)
+      _workspace_id, _actor, 'delete'::public.audit_action, 'workspace_member', OLD.user_id::text,
+      jsonb_build_object(
+        'event','member_removed',
+        'workspace_id', OLD.workspace_id,
+        'user_id', OLD.user_id,
+        'role', OLD.role
+      )
     );
     RETURN OLD;
   END IF;
   RETURN NULL;
 END;
 $$;
+
+REVOKE ALL ON FUNCTION public.tg_workspace_members_audit() FROM PUBLIC, anon, authenticated;
 
 DROP TRIGGER IF EXISTS trg_workspace_members_audit ON public.workspace_members;
 CREATE TRIGGER trg_workspace_members_audit

@@ -91,13 +91,21 @@ BEGIN
     VALUES (NEW.id, auth.uid(), 'update', 'organization', NEW.id::text, _changes);
     RETURN NEW;
   ELSIF TG_OP = 'DELETE' THEN
-    INSERT INTO public.audit_logs (organization_id, actor_id, action, resource_type, resource_id, changes)
-    VALUES (OLD.id, auth.uid(), 'delete', 'organization', OLD.id::text, jsonb_build_object('deleted', to_jsonb(OLD)));
+    -- AFTER DELETE cannot re-reference OLD.id through the FK. Preserve the
+    -- immutable resource id and snapshot while leaving the deleted FK null.
+    INSERT INTO public.audit_logs (
+      organization_id, actor_id, action, resource_type, resource_id, changes
+    ) VALUES (
+      NULL, auth.uid(), 'delete', 'organization', OLD.id::text,
+      jsonb_build_object('deleted', to_jsonb(OLD))
+    );
     RETURN OLD;
   END IF;
   RETURN NULL;
 END;
 $$;
+
+REVOKE ALL ON FUNCTION public.tg_organizations_audit() FROM PUBLIC, anon, authenticated;
 
 DROP TRIGGER IF EXISTS trg_organizations_audit ON public.organizations;
 CREATE TRIGGER trg_organizations_audit

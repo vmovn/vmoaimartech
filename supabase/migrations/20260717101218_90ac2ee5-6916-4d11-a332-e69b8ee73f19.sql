@@ -100,13 +100,19 @@ BEGIN
     VALUES (NEW.organization_id, NEW.id, auth.uid(), 'update', 'workspace', NEW.id::text, _changes);
     RETURN NEW;
   ELSIF TG_OP = 'DELETE' THEN
-    INSERT INTO public.audit_logs (organization_id, workspace_id, actor_id, action, resource_type, resource_id, changes)
-    VALUES (OLD.organization_id, OLD.id, auth.uid(), 'delete', 'workspace', OLD.id::text, jsonb_build_object('deleted', to_jsonb(OLD)));
+    INSERT INTO public.audit_logs (
+      organization_id, workspace_id, actor_id, action, resource_type, resource_id, changes
+    ) VALUES (
+      NULL, NULL, auth.uid(), 'delete', 'workspace', OLD.id::text,
+      jsonb_build_object('organization_id', OLD.organization_id, 'deleted', to_jsonb(OLD))
+    );
     RETURN OLD;
   END IF;
   RETURN NULL;
 END;
 $$;
+
+REVOKE ALL ON FUNCTION public.tg_workspaces_audit() FROM PUBLIC, anon, authenticated;
 
 DROP TRIGGER IF EXISTS trg_workspaces_audit ON public.workspaces;
 CREATE TRIGGER trg_workspaces_audit

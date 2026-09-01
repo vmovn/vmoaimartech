@@ -12,11 +12,5 @@ END $$;
 SELECT cron.schedule(
   'sla-breach-scanner',
   '*/5 * * * *',
-  $$
-  SELECT net.http_post(
-    url := 'https://project--206182b2-0a34-4382-9e54-92466a9ffea8.lovable.app/api/public/hooks/sla-scan',
-    headers := '{"Content-Type":"application/json","apikey":"sb_publishable_vIQQo4PPa-PbG3Zs-kz5vw_bdCne7Sh"}'::jsonb,
-    body := '{}'::jsonb
-  );
-  $$
+  $$SELECT public._wa_cron_post('/api/public/hooks/sla-scan');$$
 );

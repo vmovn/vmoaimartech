@@ -51,23 +51,56 @@ CREATE POLICY "Members view their workspace deliveries" ON public.wa_qr_webhook_
   );
 
 -- 5. Cron helper now sends the private cron token instead of the public anon key
-CREATE OR REPLACE FUNCTION public._wa_cron_post(_path text, _body jsonb DEFAULT '{}'::jsonb)
+CREATE OR REPLACE FUNCTION public._wa_cron_post(
+  _path text,
+  _body jsonb DEFAULT '{}'::jsonb
+)
 RETURNS bigint
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public
+SET search_path = pg_catalog, public, net, vault
 AS $fn$
 DECLARE
-  _base text := 'https://project--206182b2-0a34-4382-9e54-92466a9ffea8.lovable.app';
-  _token text := '3b458e0c03856e1ec5db7698d05a90bcedbbfafe70ab27797141bf8ce1560b59';
+  _base text;
+  _token text;
   _req bigint;
 BEGIN
+  SELECT NULLIF(btrim(secret.decrypted_secret), '')
+  INTO _base
+  FROM vault.decrypted_secrets AS secret
+  WHERE secret.name = 'APP_ORIGIN';
+
+  SELECT NULLIF(btrim(secret.decrypted_secret), '')
+  INTO _token
+  FROM vault.decrypted_secrets AS secret
+  WHERE secret.name = 'INTERNAL_CRON_TOKEN';
+
+  IF _base IS NULL THEN
+    RAISE EXCEPTION 'pg_cron dispatcher is not configured: APP_ORIGIN is missing'
+      USING ERRCODE = '22023';
+  END IF;
+  IF _base !~ '^https?://[^/?#]+/?$' THEN
+    RAISE EXCEPTION 'pg_cron dispatcher is not configured: APP_ORIGIN must be an HTTP(S) origin'
+      USING ERRCODE = '22023';
+  END IF;
+  IF _token IS NULL OR char_length(_token) < 32 THEN
+    RAISE EXCEPTION 'pg_cron dispatcher is not configured: INTERNAL_CRON_TOKEN is missing or invalid'
+      USING ERRCODE = '22023';
+  END IF;
+
+  _base := rtrim(_base, '/');
+
   SELECT net.http_post(
     url := _base || _path,
-    headers := jsonb_build_object('Content-Type','application/json','x-cron-token',_token),
+    headers := jsonb_build_object(
+      'Content-Type', 'application/json',
+      'x-cron-token', _token
+    ),
     body := _body,
     timeout_milliseconds := 55000
-  ) INTO _req;
+  )
+  INTO _req;
+
   RETURN _req;
 END;
 $fn$;
