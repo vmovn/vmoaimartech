@@ -5,8 +5,8 @@ type PmAiLogoProps = {
   title?: string;
 };
 
-/** PM.AI.VN wordmark icon — uses `currentColor` for theme-aware fills. */
-export function PmAiLogo({ className, title = "PM.AI.VN" }: PmAiLogoProps) {
+/** PM.ai.vn wordmark icon — uses `currentColor` for theme-aware fills. */
+export function PmAiLogo({ className, title = "PM.ai.vn" }: PmAiLogoProps) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"

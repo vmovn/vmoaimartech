@@ -8,6 +8,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '@/integrations/supabase/types';
 import { runChat } from '@/lib/ai/complete.functions';
+import { BRAND_NAME } from '@/lib/branding/brand';
 
 export const Route = createFileRoute('/api/mobile/ai-reply')({
   server: {
@@ -60,7 +61,7 @@ export const Route = createFileRoute('/api/mobile/ai-reply')({
                 {
                   role: 'system',
                   content:
-                    'You are a helpful support agent replying inside Swiffer. Draft a concise, friendly reply. Never invent facts.',
+                    `You are a helpful support agent replying inside ${BRAND_NAME}. Draft a concise, friendly reply. Never invent facts.`,
                 },
                 { role: 'user', content: `Conversation so far:\n${transcript}\n\nDraft the next agent reply.` },
               ],

@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Swiffer",
+    "name": "PM.ai.vn",
     "slug": "swiffer",
     "scheme": "swiffer",
     "version": "1.0.0",
@@ -25,7 +25,7 @@
         "NSPhotoLibraryUsageDescription": "Attach media from your photo library.",
         "NSPhotoLibraryAddUsageDescription": "Save captured photos and scanned documents.",
         "NSMicrophoneUsageDescription": "Record voice notes for conversations.",
-        "NSFaceIDUsageDescription": "Use Face ID to unlock Swiffer and protect workspace data.",
+        "NSFaceIDUsageDescription": "Use Face ID to unlock PM.ai.vn and protect workspace data.",
         "NSLocationWhenInUseUsageDescription": "Attach your location to conversations and check-ins.",
         "NSLocationAlwaysAndWhenInUseUsageDescription": "Track field visits and location-based automations.",
         "NSContactsUsageDescription": "Import contacts into your CRM.",
@@ -68,7 +68,7 @@
       "expo-secure-store",
       "expo-notifications",
       "expo-localization",
-      ["expo-local-authentication", { "faceIDPermission": "Use Face ID to unlock Swiffer." }],
+      ["expo-local-authentication", { "faceIDPermission": "Use Face ID to unlock PM.ai.vn." }],
       ["expo-image-picker", { "photosPermission": "Allow access to attach media." }],
       ["expo-camera", { "cameraPermission": "Take photos, scan documents, and read QR/barcodes.", "microphonePermission": "Record voice notes and video." }],
       ["expo-location", { "locationAlwaysAndWhenInUsePermission": "Attach your location to conversations and check-ins." }],

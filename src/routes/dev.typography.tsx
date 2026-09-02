@@ -173,7 +173,7 @@ const CELLS: Cell[] = [
   },
   { id: "caption",  label: "Caption",  render: () => <Caption>Last updated 2 hours ago</Caption> },
   { id: "eyebrow",  label: "Eyebrow",  render: () => <Eyebrow>Featured</Eyebrow> },
-  { id: "display",  label: "Display",  render: () => <Display size="md">Ag Swiffer</Display> },
+  { id: "display",  label: "Display",  render: () => <Display size="md">Ag PM.ai.vn</Display> },
   {
     id: "table",
     label: "Table typography",

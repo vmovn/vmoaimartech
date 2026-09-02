@@ -457,7 +457,7 @@ export const generateCalendarEvent = createServerFn({ method: "POST" })
     const uid = `${b.id}@swiffer`;
 
     const ics = [
-      "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Swiffer//Booking//EN",
+      "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//PM.ai.vn//Booking//EN",
       "BEGIN:VEVENT",
       `UID:${uid}`,
       `DTSTAMP:${icsDate(new Date().toISOString())}`,

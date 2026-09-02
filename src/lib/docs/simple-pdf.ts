@@ -3,6 +3,7 @@
  * Runs anywhere — browser, Node, and the edge/Worker runtime — because it only
  * builds a byte string; no native modules, no filesystem.
  */
+import { BRAND_NAME } from "@/lib/branding/brand";
 
 export type PdfBlock =
   | { type: "title"; text: string }
@@ -205,7 +206,7 @@ export function buildPdf(blocks: PdfBlock[], meta: { title: string; author: stri
   }
 
   const infoNumber = addObject(
-    `<< /Title (${escapePdf(sanitize(meta.title))}) /Author (${escapePdf(sanitize(meta.author))}) /Producer (Swiffer) >>`,
+    `<< /Title (${escapePdf(sanitize(meta.title))}) /Author (${escapePdf(sanitize(meta.author))}) /Producer (${escapePdf(sanitize(BRAND_NAME))}) >>`,
   );
   const catalogNumber = addObject(`<< /Type /Catalog /Pages ${pagesNumber} 0 R >>`);
 

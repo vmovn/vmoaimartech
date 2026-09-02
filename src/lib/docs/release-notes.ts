@@ -1,4 +1,5 @@
 import { APP_RELEASE_CHANNEL, APP_VERSION } from "@/lib/app-version";
+import { BRAND_NAME } from "@/lib/branding/brand";
 import type { PdfBlock } from "@/lib/docs/simple-pdf";
 
 export interface ReleaseNotes {
@@ -58,7 +59,7 @@ export const CURRENT_RELEASE_NOTES: ReleaseNotes = {
 
 export function releaseNotesToPdfBlocks(notes: ReleaseNotes): PdfBlock[] {
   const blocks: PdfBlock[] = [
-    { type: "title", text: `Swiffer v${notes.version}` },
+    { type: "title", text: `${BRAND_NAME} v${notes.version}` },
     { type: "subtitle", text: `Release notes \u00b7 ${APP_RELEASE_CHANNEL} \u00b7 ${notes.date}` },
     { type: "rule" },
     { type: "text", text: notes.headline },
@@ -71,7 +72,7 @@ export function releaseNotesToPdfBlocks(notes: ReleaseNotes): PdfBlock[] {
   blocks.push({ type: "rule" });
   blocks.push({
     type: "subtitle",
-    text: "Full history: /docs/changelog.html \u00b7 (c) 2026 Swiffer",
+    text: `Full history: /docs/changelog.html \u00b7 (c) 2026 ${BRAND_NAME}`,
   });
   return blocks;
 }

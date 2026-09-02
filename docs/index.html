@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Swiffer — Documentation v4.4.6</title>
-<meta name="description" content="Production-grade documentation for Swiffer: setup, deployment, configuration, features, demo mode, setup wizard, changelog, troubleshooting and FAQ." />
+<title>PM.ai.vn — Documentation v4.4.6</title>
+<meta name="description" content="Production-grade documentation for PM.ai.vn: setup, deployment, configuration, features, demo mode, setup wizard, changelog, troubleshooting and FAQ." />
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
 <link rel="dns-prefetch" href="https://cdn.jsdelivr.net" />
 <link rel="stylesheet" href="./style.css" />
@@ -16,9 +16,9 @@
 <header class="topbar">
   <button class="menu-btn" id="menuBtn" aria-label="Toggle navigation">☰</button>
   <div class="brand">
-    <span class="logo">S</span>
+    <span class="logo">P</span>
     <div>
-      <div class="brand-name">Swiffer Docs</div>
+      <div class="brand-name">PM.ai.vn Docs</div>
       <div class="brand-ver">v4.4.6 · Production</div>
     </div>
   </div>
@@ -143,11 +143,11 @@
 
     <!-- ===== A. INTRODUCTION ===== -->
     <section id="introduction">
-      <h1>Swiffer <span class="badge">v4.4.6</span> <span class="badge success">Production</span></h1>
-      <p class="lead">Swiffer is an enterprise-grade omnichannel SaaS platform for customer conversations, CRM, sales, marketing automation, billing, and workflow orchestration — self-hostable and CodeCanyon-ready.</p>
+      <h1>PM.ai.vn <span class="badge">v4.4.6</span> <span class="badge success">Production</span></h1>
+      <p class="lead">PM.ai.vn is an enterprise-grade omnichannel SaaS platform for customer conversations, CRM, sales, marketing automation, billing, and workflow orchestration — self-hostable and CodeCanyon-ready.</p>
 
       <h2>Overview</h2>
-      <p>Swiffer unifies WhatsApp, Instagram, Messenger, Email, SMS, and Live Chat into a single omnichannel inbox, powered by an AI Assistant, no-code Workflow Builder, and a full Business Intelligence suite. It ships with a Setup Wizard, PWA, role-based access, demo mode, and multi-tenant SaaS billing.</p>
+      <p>PM.ai.vn unifies WhatsApp, Instagram, Messenger, Email, SMS, and Live Chat into a single omnichannel inbox, powered by an AI Assistant, no-code Workflow Builder, and a full Business Intelligence suite. It ships with a Setup Wizard, PWA, role-based access, demo mode, and multi-tenant SaaS billing.</p>
 
       <h2>Features Summary</h2>
       <div class="grid">
@@ -184,7 +184,7 @@
     <!-- ===== B. INSTALLATION GUIDE ===== -->
     <section id="installation">
       <h2>Installation Guide</h2>
-      <p>This is the definitive path for self-hosting Swiffer. Follow every step in order.</p>
+      <p>This is the definitive path for self-hosting PM.ai.vn. Follow every step in order.</p>
 
       <h3>System Requirements</h3>
       <table class="tbl">
@@ -213,7 +213,7 @@ bun install
 npm install</code></pre>
 
       <h3>3. Database Setup</h3>
-      <p>Swiffer uses Supabase Postgres. Create a project, then apply the shipped migrations:</p>
+      <p>PM.ai.vn uses Supabase Postgres. Create a project, then apply the shipped migrations:</p>
 <pre><code class="language-bash">npx supabase link --project-ref &lt;YOUR_PROJECT_REF&gt;
 npx supabase db push</code></pre>
       <div class="callout info">
@@ -365,7 +365,7 @@ docker run -p 8080:8080 --env-file .env swiffer</code></pre>
   "port": 587,
   "username": "no-reply@yourdomain.com",
   "from_address": "no-reply@yourdomain.com",
-  "from_name": "Swiffer",
+  "from_name": "PM.ai.vn",
   "encryption": "tls"
 }</code></pre>
 
@@ -621,7 +621,7 @@ WHERE scope = 'platform' AND key = 'setup_complete';</code></pre>
       <p><strong>Can I skip a wizard step?</strong> No. Each step server-validates before <em>Next</em> is enabled.</p>
 
       <h3>Deployment</h3>
-      <p><strong>Does Swiffer work on shared hosting?</strong> Yes on cPanel with Node.js Selector (Node 22 LTS) + Passenger. See <a href="#build-deploy">Build &amp; Deployment</a>.</p>
+      <p><strong>Does PM.ai.vn work on shared hosting?</strong> Yes on cPanel with Node.js Selector (Node 22 LTS) + Passenger. See <a href="#build-deploy">Build &amp; Deployment</a>.</p>
       <p><strong>Docker support?</strong> Yes — a <code>Dockerfile</code> is included; multi-stage build produces a slim runtime image.</p>
 
       <h3>Roles</h3>
@@ -636,7 +636,7 @@ WHERE scope = 'platform' AND key = 'setup_complete';</code></pre>
 
     <!-- ===== FOOTER ===== -->
     <footer class="footer">
-      <div>© 2026 Swiffer · v4.4.6 · Built by <a href="https://wrapcoders.com/" target="_blank" rel="noopener">WRAPCODERS</a></div>
+      <div>© 2026 PM.ai.vn · v4.4.6 · Built by <a href="https://wrapcoders.com/" target="_blank" rel="noopener">WRAPCODERS</a></div>
       <div>
         <a href="./index.html">Docs</a> ·
         <a href="./changelog.html">Changelog</a> ·

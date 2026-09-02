@@ -11,6 +11,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '@/integrations/supabase/types';
 import { runChat } from '@/lib/ai/complete.functions';
+import { BRAND_NAME } from '@/lib/branding/brand';
 import {
   authenticateMobileRequest,
   requireWorkspaceMembership,
@@ -44,7 +45,7 @@ type Body = {
 
 const SYSTEM = {
   chat:
-    'You are Swiffer AI, the in-app assistant for a support & sales agent. Be concise, factual, and action-oriented. If the user asks to perform an app action, respond with a JSON command envelope.',
+    `You are ${BRAND_NAME} AI, the in-app assistant for a support & sales agent. Be concise, factual, and action-oriented. If the user asks to perform an app action, respond with a JSON command envelope.`,
   reply:
     'You are a helpful support agent. Draft a short, friendly reply. Never invent facts.',
   summarize_conversation:

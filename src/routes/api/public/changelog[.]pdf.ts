@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { APP_VERSION } from "@/lib/app-version";
+import { BRAND_NAME } from "@/lib/branding/brand";
 import { CURRENT_RELEASE_NOTES, releaseNotesToPdfBlocks } from "@/lib/docs/release-notes";
 import { buildPdf } from "@/lib/docs/simple-pdf";
 
@@ -15,15 +16,15 @@ export const Route = createFileRoute("/api/public/changelog.pdf")({
     handlers: {
       GET: async () => {
         const pdf = buildPdf(releaseNotesToPdfBlocks(CURRENT_RELEASE_NOTES), {
-          title: `Swiffer v${APP_VERSION} release notes`,
-          author: "Swiffer",
+          title: `${BRAND_NAME} v${APP_VERSION} release notes`,
+          author: BRAND_NAME,
         });
 
         return new Response(pdf as unknown as BodyInit, {
           status: 200,
           headers: {
             "content-type": "application/pdf",
-            "content-disposition": `attachment; filename="swiffer-v${APP_VERSION}-release-notes.pdf"`,
+            "content-disposition": `attachment; filename="pm-ai-vn-v${APP_VERSION}-release-notes.pdf"`,
             "cache-control": "public, max-age=3600",
             "x-content-type-options": "nosniff",
           },

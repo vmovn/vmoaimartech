@@ -1,5 +1,6 @@
 // Plugin & theme code templates + snippets for the developer tools hub.
 // Client-safe module: pure strings, no server imports.
+import { BRAND_NAME } from "@/lib/branding/brand";
 
 export type Template = {
   id: string;
@@ -13,7 +14,7 @@ const MANIFEST_JSON = (slug: string, name: string) => `{
   "slug": "${slug}",
   "name": "${name}",
   "version": "1.0.0",
-  "description": "A Swiffer plugin",
+  "description": "A ${BRAND_NAME} plugin",
   "author": "Your Name",
   "license": "MIT",
   "entry": "dist/index.js",
@@ -54,7 +55,7 @@ export default definePlugin({
 
 const README = (name: string) => `# ${name}
 
-A Swiffer plugin built with the Extension SDK.
+A ${BRAND_NAME} plugin built with the Extension SDK.
 
 ## Develop
 \`\`\`bash

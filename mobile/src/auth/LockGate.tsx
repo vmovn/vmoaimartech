@@ -38,7 +38,7 @@ export function LockGate({ children }: { children: ReactNode }) {
     if (!locked) return;
     if (!prefs?.biometricEnabled) return;
     if (!cap?.hasHardware || !cap.isEnrolled) return;
-    promptBiometric('Unlock Swiffer').then((r) => {
+    promptBiometric('Unlock PM.ai.vn').then((r) => {
       if (r.ok) setLocked(false);
       else if (r.reason && r.reason !== 'cancelled') setError(r.reason.replace('_', ' '));
     });
@@ -60,7 +60,7 @@ export function LockGate({ children }: { children: ReactNode }) {
           <Button
             title={`Unlock with ${cap.kind === 'faceId' ? 'Face ID' : cap.kind === 'touchId' ? 'Touch ID' : 'biometrics'}`}
             onPress={async () => {
-              const r = await promptBiometric('Unlock Swiffer');
+              const r = await promptBiometric('Unlock PM.ai.vn');
               if (r.ok) setLocked(false);
               else if (r.reason !== 'cancelled') setError(r.reason.replace('_', ' '));
             }}

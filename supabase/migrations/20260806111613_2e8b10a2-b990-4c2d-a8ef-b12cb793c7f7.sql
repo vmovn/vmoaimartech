@@ -1,6 +1,6 @@
 INSERT INTO public.settings (scope, key, value, organization_id, workspace_id, user_id)
 VALUES ('platform', 'general', jsonb_build_object(
-  'platform_name', 'Swiffer',
+  'platform_name', 'PM.ai.vn',
   'whatsapp_cta_enabled', true,
   'whatsapp_token', '+971501234567',
   'whatsapp_message', 'Xin chào! Tôi muốn tìm hiểu thêm về {site}.',

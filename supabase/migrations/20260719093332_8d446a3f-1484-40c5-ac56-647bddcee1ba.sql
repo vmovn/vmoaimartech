@@ -90,7 +90,7 @@ INSERT INTO public.plugin_categories (slug, label, description, icon, sort_order
   ('communication', 'Giao tiếp', 'Kênh nhắn tin, thoại và video', 'message-square', 40),
   ('crm', 'CRM và bán hàng', 'Làm giàu dữ liệu liên hệ, công cụ bán hàng và tự động hóa cơ hội', 'users', 50),
   ('commerce', 'Thương mại', 'Danh mục, thanh toán và quản lý đơn hàng', 'shopping-bag', 60),
-  ('integration', 'Tích hợp', 'Kết nối Swiffer với các dịch vụ bên thứ ba', 'plug', 70),
+  ('integration', 'Tích hợp', 'Kết nối PM.ai.vn với các dịch vụ bên thứ ba', 'plug', 70),
   ('developer', 'Công cụ phát triển', 'API, webhook và tiện ích dành cho nhà phát triển', 'code-2', 80),
   ('other', 'Khác', 'Các tiện ích khác', 'package', 999);
 

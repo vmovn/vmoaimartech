@@ -67,7 +67,7 @@ export default function SignIn() {
         <View style={{ flex: 1, justifyContent: 'center', gap: t.spacing.lg }}>
           <View>
             <Text style={[t.typography.h1, { color: t.colors.foreground }]}>Welcome back</Text>
-            <Text style={{ color: t.colors.mutedFg, marginTop: 4 }}>Sign in to your Swiffer workspace</Text>
+            <Text style={{ color: t.colors.mutedFg, marginTop: 4 }}>Sign in to your PM.ai.vn workspace</Text>
           </View>
 
           <View style={{ flexDirection: 'row', gap: t.spacing.sm }}>

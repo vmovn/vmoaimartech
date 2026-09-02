@@ -7,6 +7,7 @@
  */
 import { createFileRoute } from "@tanstack/react-router";
 import { encryptToken } from "@/lib/instagram/token-crypto.server";
+import { BRAND_NAME } from "@/lib/branding/brand";
 
 const GRAPH = "https://graph.facebook.com/v21.0";
 
@@ -24,7 +25,7 @@ function html(title: string, message: string, returnTo: string, ok: boolean) {
   return new Response(
     `<!doctype html><html><head><meta charset="utf-8"><title>${t}</title>
 <style>body{font-family:-apple-system,Inter,system-ui,sans-serif;background:#0b0b0d;color:#f6f6f6;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}.card{background:#141418;border:1px solid #26262c;border-radius:8px;padding:32px;max-width:420px;text-align:center}.ok{color:#22c55e}.err{color:#ef4444}a{color:#a4161a;text-decoration:none;font-weight:600}</style>
-</head><body><div class="card"><h1 class="${ok ? "ok" : "err"}">${t}</h1><p>${m}</p><p><a href="${rHtml}">Return to Swiffer →</a></p><script>setTimeout(()=>{try{window.opener&&window.opener.postMessage({type:"instagram-oauth",ok:${ok ? "true" : "false"}},"*");}catch(e){}if(window.opener){setTimeout(()=>window.close(),1200)}else{location.href=${JSON.stringify(r)}}},600)</script></div></body></html>`,
+</head><body><div class="card"><h1 class="${ok ? "ok" : "err"}">${t}</h1><p>${m}</p><p><a href="${rHtml}">Return to ${esc(BRAND_NAME)} →</a></p><script>setTimeout(()=>{try{window.opener&&window.opener.postMessage({type:"instagram-oauth",ok:${ok ? "true" : "false"}},"*");}catch(e){}if(window.opener){setTimeout(()=>window.close(),1200)}else{location.href=${JSON.stringify(r)}}},600)</script></div></body></html>`,
     { status: 200, headers: { "content-type": "text/html; charset=utf-8", "x-content-type-options": "nosniff", "referrer-policy": "no-referrer" } },
   );
 }

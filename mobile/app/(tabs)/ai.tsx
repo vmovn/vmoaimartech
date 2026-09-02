@@ -39,7 +39,7 @@ export default function AIAssistantScreen() {
       id: 'sys',
       role: 'assistant',
       content:
-        "Hi, I'm your Swiffer AI Assistant. Ask me anything — draft replies, summaries, insights, tasks, lead scoring, or use / for commands.",
+        "Hi, I'm your PM.ai.vn AI Assistant. Ask me anything — draft replies, summaries, insights, tasks, lead scoring, or use / for commands.",
     },
   ]);
   const [input, setInput] = useState('');
@@ -197,7 +197,7 @@ export default function AIAssistantScreen() {
       <View style={{ paddingHorizontal: t.spacing.lg, paddingTop: t.spacing.md }}>
         <Text style={[t.typography.h2, { color: t.colors.foreground }]}>AI Assistant</Text>
         <Text style={{ color: t.colors.mutedFg, marginTop: 2, fontSize: 13 }}>
-          Powered by the Swiffer AI Provider Engine
+          Powered by the PM.ai.vn AI Provider Engine
         </Text>
       </View>
 

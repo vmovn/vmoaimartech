@@ -1503,7 +1503,7 @@ export const getAppointmentIcs = createServerFn({ method: "GET" })
     const lines = [
       "BEGIN:VCALENDAR",
       "VERSION:2.0",
-      "PRODID:-//Swiffer//Portal//EN",
+      "PRODID:-//PM.ai.vn//Portal//EN",
       "CALSCALE:GREGORIAN",
       "METHOD:PUBLISH",
       "BEGIN:VEVENT",

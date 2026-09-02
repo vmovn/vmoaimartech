@@ -3,6 +3,7 @@
  * structured data (JSON-LD) in the route head, so the markup search engines
  * read can never drift from what visitors see.
  */
+import { BRAND_NAME } from "@/lib/branding/brand";
 
 function resolveSiteUrl(): string {
   const configured =
@@ -18,10 +19,10 @@ function resolveSiteUrl(): string {
 export const SITE_URL = resolveSiteUrl();
 export const OG_IMAGE_URL = `${SITE_URL}/api/public/og.png`;
 
-export const LANDING_TITLE = "Swiffer — WhatsApp CRM, Shared Inbox & AI Automation";
+export const LANDING_TITLE = `${BRAND_NAME} — WhatsApp CRM, Shared Inbox & AI Automation`;
 
 export const LANDING_DESCRIPTION =
-  "Swiffer is a self-hosted WhatsApp CRM: shared team inbox, sales pipeline, AI chatbots, broadcast campaigns and commerce on the official Cloud API.";
+  `${BRAND_NAME} is a self-hosted WhatsApp CRM: shared team inbox, sales pipeline, AI chatbots, broadcast campaigns and commerce on the official Cloud API.`;
 
 export const LANDING_SOCIAL_DESCRIPTION =
   "Run sales, support and marketing on WhatsApp from one multi-tenant platform. Official Cloud API, AI Studio, automations and self-hosting.";
@@ -49,14 +50,14 @@ export const LANDING_FAQS: Faq[] = [
   {
     id: "self-host",
     category: "deployment",
-    q: "Can I self-host Swiffer?",
+    q: `Can I self-host ${BRAND_NAME}?`,
     a: "Yes — ship it with Docker, Cloudflare Workers, a VPS via systemd, or cPanel. Full instructions in the docs.",
   },
   {
     id: "cloud-api",
     category: "channels",
     q: "Do you support the official WhatsApp Cloud API?",
-    a: "Yes. Swiffer is built directly on Meta's Cloud API — no third-party gateways or proxies.",
+    a: `Yes. ${BRAND_NAME} is built directly on Meta's Cloud API — no third-party gateways or proxies.`,
   },
   {
     id: "multi-tenant",
@@ -152,7 +153,7 @@ export function landingJsonLd() {
       {
         "@type": "Organization",
         "@id": `${SITE_URL}/#organization`,
-        name: "Swiffer",
+        name: BRAND_NAME,
         url: SITE_URL,
         logo: `${SITE_URL}/icon-512.png`,
         description: LANDING_SOCIAL_DESCRIPTION,
@@ -161,7 +162,7 @@ export function landingJsonLd() {
         "@type": "WebSite",
         "@id": `${SITE_URL}/#website`,
         url: SITE_URL,
-        name: "Swiffer",
+        name: BRAND_NAME,
         description: LANDING_DESCRIPTION,
         publisher: { "@id": `${SITE_URL}/#organization` },
         inLanguage: "en",
@@ -169,7 +170,7 @@ export function landingJsonLd() {
       {
         "@type": "SoftwareApplication",
         "@id": `${SITE_URL}/#software`,
-        name: "Swiffer",
+        name: BRAND_NAME,
         applicationCategory: "BusinessApplication",
         applicationSubCategory: "CRM",
         operatingSystem: "Web, iOS, Android",

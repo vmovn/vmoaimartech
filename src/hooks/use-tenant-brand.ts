@@ -1,6 +1,6 @@
 /**
  * useTenantBrand — reads the active workspace's white-label brand identity
- * (display name + logo) with a stable Swiffer default. Internal keys, table
+ * (display name + logo) with a stable shipped default. Internal keys, table
  * names, and workspace IDs are untouched; this is presentation only.
  */
 import { useEffect, useState, useSyncExternalStore } from "react";

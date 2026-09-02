@@ -47,7 +47,7 @@ export default function DeviceScreen() {
             const files = await NativeCap.Files.pickFiles({ multiple: false });
             if (files[0]) Alert.alert('Picked', `${files[0].name} (${files[0].size ?? '?'} bytes)`);
           })} />
-          <Row label="Share text" onPress={() => wrap(() => NativeCap.Files.shareText('Hello from Swiffer', 'Share note'))} />
+          <Row label="Share text" onPress={() => wrap(() => NativeCap.Files.shareText('Hello from PM.ai.vn', 'Share note'))} />
         </Section>
 
         <Section title="Scanners">

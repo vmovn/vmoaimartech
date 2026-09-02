@@ -4,6 +4,7 @@
  * immediately flow into the installable manifest.
  */
 import { createFileRoute } from "@tanstack/react-router";
+import { BRAND_NAME } from "@/lib/branding/brand";
 
 type Icon = { src: string; sizes: string; type?: string; purpose?: string };
 type PwaSettings = {
@@ -23,8 +24,8 @@ type PwaSettings = {
 };
 
 const DEFAULTS: Required<Omit<PwaSettings, "icon_url" | "icon_512_url" | "splash_icon_url" | "shortcut_icon_url">> = {
-  name: "Swiffer",
-  short_name: "Swiffer",
+  name: BRAND_NAME,
+  short_name: BRAND_NAME,
   description: "The AI-Powered WhatsApp CRM Platform",
   theme_color: "#a67c00",
   background_color: "#ffffff",
