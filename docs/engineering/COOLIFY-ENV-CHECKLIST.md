@@ -216,3 +216,66 @@ APP_REPLICAS
 ```
 
 Run `npm run env:audit` before deploying. After deployment, verify `/api/public/health`, `/api/public/health/ready`, then complete `/setup` exactly once.
+
+## AI Core v1 — operator run (locked)
+
+AI Core v1 is frozen. Super Admin configuration is required for Premium Credits; do not expect automatic platform-premium provisioning, automatic vendor prices, or invented plan allowances.
+
+### Core runtime
+
+```text
+APP_ORIGIN
+SUPABASE_URL
+SUPABASE_PUBLISHABLE_KEY
+SUPABASE_SERVICE_ROLE_KEY
+INTERNAL_CRON_TOKEN
+```
+
+`APP_ORIGIN` must be the production HTTPS origin (no path, no localhost). `INTERNAL_CRON_TOKEN` must be ≥32 characters. Product migrate/startup copies `APP_ORIGIN` and `INTERNAL_CRON_TOKEN` into Supabase Vault via `scripts/product/sync-cron-dispatcher-config.mjs`. pg_cron then posts to `APP_ORIGIN/api/public/hooks/analyze-conversations` with `x-cron-token`. Confirm Vault after deploy; do not hardcode a developer URL.
+
+### Platform Local AI (Ollama)
+
+```text
+OLLAMA_BASE_URL
+OLLAMA_UTILITY_MODEL
+OLLAMA_MAX_CONCURRENCY
+OLLAMA_WORKSPACE_MAX_CONCURRENCY
+```
+
+When `OLLAMA_BASE_URL` is set, first login and workspace creation ensure a workspace-scoped platform Ollama row and the existing utility feature configs. Missing Ollama must not block signup. Production must not use localhost.
+
+### Workspace BYOK
+
+```text
+AI_CREDENTIAL_ENCRYPTION_KEY
+```
+
+Required only to save or use encrypted workspace keys. A 32-byte base64 AES-256 key. Missing this key does not block startup; BYOK save/decrypt fails clearly. Workspace keys never appear in `VITE_*`.
+
+### Platform Premium AI (manual)
+
+Set at least one operator ENV, for example:
+
+```text
+GEMINI_API_KEY
+OPENAI_API_KEY
+DEEPSEEK_API_KEY
+```
+
+Then in Super Admin:
+
+1. Create the platform provider (secret name = the ENV key).
+2. Apply to all workspaces.
+3. Sync models.
+4. Set real `inputCostPer1k` / `outputCostPer1k` (sync does not invent prices; zero prices fail closed).
+5. Set plan `ai_premium_credits` to a real allowance (or `unlimited`). Seeded plans default to missing/zero until you save this.
+6. Save the plan so `tenant_quotas` reseeds for active subscriptions.
+
+`LOVABLE_API_KEY` is email/connector only. There is no `XAI_API_KEY`. Lovable AI and xAI/Grok are not supported.
+
+### Live smoke (one paid call, not CI)
+
+1. Configure one real platform provider and price one real model.
+2. Give a test plan a small Premium Credit allowance and save/reseed.
+3. Perform ONE premium request; confirm the answer and that org credits decreased.
+4. Optionally perform ONE BYOK request; confirm credits are unchanged.

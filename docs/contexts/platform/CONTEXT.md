@@ -5,7 +5,7 @@ Owns Platform → Organization → Workspace hierarchy, membership, roles/permis
 
 ## Primary Entry Points
 - `src/lib/tenant/active-tenant.ts`
-- `src/lib/tenant/provision.functions.ts`
+- `src/lib/tenant/provision.functions.ts` (first-login; best-effort Platform Local AI after SQL workspace create)
 - `src/lib/tenant/org-url-sync.tsx`
 - `src/lib/rbac.ts`
 - `src/lib/rbac-org.ts`

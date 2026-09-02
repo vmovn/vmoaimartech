@@ -7,6 +7,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
+import { logger } from "@/shared/lib/logger";
 import {
   readActiveWorkspaceHeader,
   resolveCallerWorkspaceId,
@@ -113,6 +114,66 @@ export async function ensurePlatformOllamaForWorkspace(
   }
 
   return { ok: true, providerId };
+}
+
+export type EnsurePlatformOllamaForUserResult = {
+  attempted: number;
+  provisioned: number;
+  skipped?: string;
+};
+
+/**
+ * Best-effort Platform Local AI for every workspace the user already owns.
+ * First-login `ensureMyOrganization` creates the workspace in SQL; this is
+ * the application-side follow-up. Never throws — signup/login must succeed
+ * when Ollama is absent or provision fails.
+ */
+export async function ensurePlatformOllamaForUserWorkspaces(
+  supabaseAdmin: AdminClient,
+  userId: string,
+): Promise<EnsurePlatformOllamaForUserResult> {
+  try {
+    const { data: memberships, error } = await supabaseAdmin
+      .from("workspace_members")
+      .select("workspace_id")
+      .eq("user_id", userId);
+
+    if (error) {
+      logger.warn("ai.platform_ollama.provision_failed", { userId, reason: error.message });
+      return { attempted: 0, provisioned: 0 };
+    }
+
+    const workspaceIds = [...new Set(
+      ((memberships ?? []) as Array<{ workspace_id: string }>).map((row) => row.workspace_id),
+    )];
+    let provisioned = 0;
+    let skipped: string | undefined;
+
+    for (const workspaceId of workspaceIds) {
+      try {
+        const result = await ensurePlatformOllamaForWorkspace(supabaseAdmin, workspaceId);
+        if (result.ok) provisioned += 1;
+        else if (result.skipped) skipped = result.skipped;
+      } catch (err) {
+        logger.warn("ai.platform_ollama.provision_failed", {
+          userId,
+          workspaceId,
+          reason: err instanceof Error ? err.message : "unknown",
+        });
+      }
+    }
+
+    if (skipped) {
+      logger.info("ai.platform_ollama.skipped", { userId, skipped });
+    }
+    return { attempted: workspaceIds.length, provisioned, skipped };
+  } catch (err) {
+    logger.warn("ai.platform_ollama.provision_failed", {
+      userId,
+      reason: err instanceof Error ? err.message : "unknown",
+    });
+    return { attempted: 0, provisioned: 0 };
+  }
 }
 
 export const ensurePlatformOllamaProvider = createServerFn({ method: "POST" })

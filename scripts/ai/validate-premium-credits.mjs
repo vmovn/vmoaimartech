@@ -5,8 +5,8 @@
 import pg from "pg";
 
 const { Pool } = pg;
-const connectionString = process.env.LOCAL_SUPABASE_DB_URL
-  ?? "postgresql://postgres:postgres@127.0.0.1:56322/postgres";
+const connectionString = process.env.DATABASE_URL
+  ?? "postgresql://postgres:postgres@127.0.0.1:54322/postgres";
 if (!/127\.0\.0\.1|localhost/.test(connectionString)) {
   throw new Error("Premium Credits validation refuses to run against a non-local database");
 }

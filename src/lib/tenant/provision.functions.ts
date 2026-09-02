@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { logger } from "@/shared/lib/logger";
 
 /** Repairs and returns the signed-in user's first usable organization. */
 export const ensureMyOrganization = createServerFn({ method: "POST" })
@@ -17,5 +18,18 @@ export const ensureMyOrganization = createServerFn({ method: "POST" })
     );
     if (error) throw new Error(error.message);
     if (!organizationId) throw new Error("Could not prepare your organization");
+
+    try {
+      const { ensurePlatformOllamaForUserWorkspaces } = await import(
+        "@/lib/ai/platform-ollama.functions"
+      );
+      await ensurePlatformOllamaForUserWorkspaces(supabaseAdmin, context.userId);
+    } catch (provisionError) {
+      logger.warn("ai.platform_ollama.provision_failed", {
+        userId: context.userId,
+        reason: provisionError instanceof Error ? provisionError.message : "unknown",
+      });
+    }
+
     return { organizationId };
   });
