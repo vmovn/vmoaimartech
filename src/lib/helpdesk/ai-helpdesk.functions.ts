@@ -97,7 +97,7 @@ async function callAI(opts: {
     userId: opts.userId,
     feature: opts.feature,
     request: {
-      model: "google/gemini-3-flash-preview",
+      model: "",
       messages: [
         { role: "system", content: opts.system },
         { role: "user", content: opts.user },

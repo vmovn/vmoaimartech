@@ -1,9 +1,11 @@
 /**
  * Application-facing entrypoints. Every AI call in the app should go through
- * `aiChat` (or `aiChatByFeature`) — never call a provider adapter directly.
+ * `runChat` / `runEmbed` (or the `aiChat` server function) — never call a
+ * provider adapter directly.
  *
- * Handles: provider resolution, fallback chain, credential loading, rate limit,
- * logging, cost tracking, and error mapping.
+ * `runChat` owns feature routing: when `feature` is set it loads
+ * `ai_feature_config` for (workspace_id, feature) and applies provider /
+ * fallback / model / parameter policy. Explicit caller selections win.
  */
 
 import { createServerFn } from "@tanstack/react-start";
@@ -20,6 +22,11 @@ import { estimateMessageTokens } from "./tokens";
 import { logAIRequest } from "./logger.server";
 import { enforceAIRateLimit } from "./rate-limiter.server";
 import { renderTemplate } from "./prompts";
+import {
+  applyFeatureRequestPolicy,
+  assertFeatureEnabled,
+  resolveFeatureProviderChain,
+} from "./feature-routing";
 
 // ---------- Record loaders ----------
 
@@ -114,6 +121,8 @@ interface RunOpts {
   primaryProviderId?: string | null;
   fallbackProviderIds?: string[];
   rateLimitPerMin?: number;
+  /** Used only when injecting ai_feature_config.system_prompt (aiChat templates). */
+  promptVariables?: Record<string, unknown>;
 }
 
 async function callWithProvider(provider: AIProviderRecord, req: ChatRequest): Promise<ChatResponse> {
@@ -123,11 +132,28 @@ async function callWithProvider(provider: AIProviderRecord, req: ChatRequest): P
 }
 
 export async function runChat(opts: RunOpts): Promise<ChatResponse & { providerId: string; providerKind: string }> {
-  const chain: string[] = [];
-  if (opts.primaryProviderId) chain.push(opts.primaryProviderId);
-  for (const id of opts.fallbackProviderIds ?? []) if (!chain.includes(id)) chain.push(id);
+  let featureCfg: AIFeatureConfig | null = null;
+  if (opts.feature) {
+    featureCfg = await loadFeatureConfig(opts.workspaceId, opts.feature);
+    assertFeatureEnabled(opts.feature, featureCfg);
+  }
 
-  // Fall back to workspace default if nothing was configured.
+  const chainIds = resolveFeatureProviderChain({
+    primaryProviderId: opts.primaryProviderId,
+    fallbackProviderIds: opts.fallbackProviderIds,
+    featureConfig: featureCfg,
+  });
+  const request = applyFeatureRequestPolicy(
+    opts.request,
+    featureCfg,
+    opts.promptVariables ?? {},
+  );
+
+  const chain: string[] = [];
+  if (chainIds.primaryProviderId) chain.push(chainIds.primaryProviderId);
+  for (const id of chainIds.fallbackProviderIds) if (!chain.includes(id)) chain.push(id);
+
+  // Workspace default only when the feature has no explicit routing.
   if (chain.length === 0) {
     const def = await loadDefaultProvider(opts.workspaceId);
     if (!def) throw new AIError("not_found", "No AI provider configured for this workspace");
@@ -147,17 +173,17 @@ export async function runChat(opts: RunOpts): Promise<ChatResponse & { providerI
 
     const start = Date.now();
     try {
-      const modelId = opts.request.model || await loadDefaultModelId(provider.id);
+      const modelId = request.model || await loadDefaultModelId(provider.id);
       if (!modelId) {
         throw new AIError("not_found", `No AI model configured for provider "${provider.name}"`, {
           providerKind: provider.kind,
         });
       }
-      const request = { ...opts.request, model: modelId };
-      const res = await callWithProvider(provider, request);
+      const resolvedRequest = { ...request, model: modelId };
+      const res = await callWithProvider(provider, resolvedRequest);
       const model = await loadModel(provider.id, modelId).catch(() => null);
       const usage = res.usage ?? {
-        prompt_tokens: estimateMessageTokens(opts.request.messages),
+        prompt_tokens: estimateMessageTokens(request.messages),
         completion_tokens: Math.ceil((res.content?.length ?? 0) / 4),
         total_tokens: 0,
       };
@@ -167,7 +193,7 @@ export async function runChat(opts: RunOpts): Promise<ChatResponse & { providerI
         workspaceId: opts.workspaceId, userId: opts.userId, providerId: provider.id,
         providerKind: provider.kind, model: modelId, operation: "chat",
         feature: opts.feature, status: "success", latencyMs: Date.now() - start,
-        usage, costUsd: cost, requestPreview: { messages: opts.request.messages.slice(-3) },
+        usage, costUsd: cost, requestPreview: { messages: request.messages.slice(-3) },
         responsePreview: { content: res.content?.slice(0, 800) },
       });
       return { ...res, usage, providerId: provider.id, providerKind: provider.kind };
@@ -177,7 +203,7 @@ export async function runChat(opts: RunOpts): Promise<ChatResponse & { providerI
       const aiErr = err instanceof AIError ? err : null;
       await logAIRequest({
         workspaceId: opts.workspaceId, userId: opts.userId, providerId: provider.id,
-        providerKind: provider.kind, model: opts.request.model, operation: "chat",
+        providerKind: provider.kind, model: request.model, operation: "chat",
         feature: opts.feature,
         status: aiErr?.type === "rate_limit" ? "rate_limited"
           : aiErr?.type === "timeout" ? "timeout" : "error",
@@ -292,48 +318,31 @@ export const aiChat = createServerFn({ method: "POST" })
   .handler(async ({ data, context }): Promise<AIChatResult> => {
     const userId = context.userId;
     const workspaceId = await getWorkspaceId(userId);
+    const variables = data.variables ?? {};
 
-    // Optional feature config
-    let featureCfg: AIFeatureConfig | null = null;
-    if (data.feature) featureCfg = await loadFeatureConfig(workspaceId, data.feature);
-    if (featureCfg && !featureCfg.enabled) throw new AIError("validation", `Feature ${data.feature} disabled`);
-
-    const systemContent = data.system ?? featureCfg?.systemPrompt ?? undefined;
     const messages: AIMessage[] = [];
-    if (systemContent) messages.push({ role: "system", content: renderTemplate(systemContent, data.variables ?? {}) });
-    for (const m of data.messages) {
-      messages.push({ ...m, content: renderTemplate(m.content, data.variables ?? {}) });
+    if (data.system) {
+      messages.push({ role: "system", content: renderTemplate(data.system, variables) });
     }
-
-    const providerId = data.providerId ?? featureCfg?.providerId ?? null;
-    const fallbacks = featureCfg?.fallbackProviderIds ?? [];
-
-    // Pick model: request → feature config → provider default → gemini flash
-    let model = data.model ?? featureCfg?.model ?? "";
-    if (!model) {
-      const p = providerId ? await loadProvider(providerId) : await loadDefaultProvider(workspaceId);
-      if (p) {
-        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-        const { data: mrow } = await supabaseAdmin.from("ai_models" as never)
-          .select("model_id")
-          .eq("provider_id", p.id).eq("enabled", true)
-          .order("is_default", { ascending: false }).limit(1).maybeSingle();
-        model = (mrow as { model_id?: string } | null)?.model_id ?? "";
-      } else {
-        model = "";
-      }
+    for (const m of data.messages) {
+      messages.push({ ...m, content: renderTemplate(m.content, variables) });
     }
 
     const req: ChatRequest = {
-      model, messages,
-      temperature: data.temperature ?? featureCfg?.temperature ?? undefined,
-      max_tokens: data.max_tokens ?? featureCfg?.maxTokens ?? undefined,
+      model: data.model ?? "",
+      messages,
+      temperature: data.temperature,
+      max_tokens: data.max_tokens,
       response_format: data.response_format,
     };
 
     const res = await runChat({
-      workspaceId, userId, feature: data.feature ?? null,
-      request: req, primaryProviderId: providerId, fallbackProviderIds: fallbacks,
+      workspaceId,
+      userId,
+      feature: data.feature ?? null,
+      request: req,
+      primaryProviderId: data.providerId,
+      promptVariables: variables,
     });
     return {
       content: res.content,

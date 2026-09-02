@@ -22,12 +22,13 @@ AI owns suggestions/generation/orchestration metadata; domain services own canon
 - provider keys remain server-side according to environment boundary.
 - scores/suggestions should remain explainable enough for business use when they influence customer actions.
 - adding an AI provider should reuse provider configuration abstractions before adding bespoke branching.
+- `runChat` owns `ai_feature_config` routing. Lookup is always `workspace_id` + `feature`. Explicit `primaryProviderId` / `request.model` win over config. Missing config uses the workspace default provider. Disabled config fails before provider transport.
 
 ## Validation
 Provider/config change → provider/config tests and secret boundary. Domain assistant change → targeted domain behavior, not whole-repo AI audit.
+Feature-routing change → `src/lib/ai/feature-routing.test.ts`.
 
 ## Last Verified
-- Runtime baseline: `v1.0.0-localhost-1.0.6.2`.
-- Memory installation checkpoint: `v1.0.0-localhost-1.0.7` / `0f401975274490d0201581325a932d7865f73208`.
-- Date: 2026-08-31.
-- Verification scope: Primary Entry Point paths only; domain semantics were not re-audited.
+- Runtime baseline: `v1.0.0-Freedom-v1.0.0` / `972431b9eb47d48c8ff8deb1cb3e03d312762269`.
+- Date: 2026-09-02.
+- Verification scope: `runChat` now loads `ai_feature_config`; P0 callsites no longer pin Gemini models.

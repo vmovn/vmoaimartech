@@ -345,7 +345,7 @@ Base every field on evidence in the transcript. If unknown, use null or an empty
     ];
 
     const req: ChatRequest = {
-      model: "google/gemini-3-flash-preview",
+      model: "",
       messages: aiMessages,
       temperature: 0.2,
       max_tokens: 1200,
