@@ -45,11 +45,14 @@ The verified Product setup is four steps:
 Step labels are presentation, but the secure server contract remains invariant.
 
 Vietnam-first operator guidance for the System step lives in
-`src/lib/setup/launch-guidance.ts`. Optional integrations stay non-blocking.
-Recommended first keys for a Vietnam launch are Gemini, Telegram Bot, and a
-Meta App (Messenger/Instagram). Local operator keys belong in
+`src/lib/setup/launch-guidance.ts`. The System step lists every catalog
+capability and environment **variable name** (purpose, requiredness, scope,
+Coolify flag, validation) without secret values. Optional integrations stay
+non-blocking. Recommended first keys for a Vietnam launch are Gemini, Telegram
+Bot, and a Meta App (Messenger/Instagram). Local operator keys belong in
 `.env.integrations.local`, which START merges into `.env.local` and RESET does
-not delete.
+not delete. Display brand on this step is `PM.ai.vn`; production origin is
+`https://pm.ai.vn`.
 
 Business-step defaults are `vi`, `Asia/Ho_Chi_Minh`, `VND`, `DD/MM/YYYY`.
 
@@ -61,4 +64,4 @@ Security/bootstrap logic → targeted setup-state/access tests; verify first adm
 - Runtime baseline: `v1.0.0-localhost-1.0.6.2`.
 - Memory installation checkpoint: `v1.0.0-localhost-1.0.7` / `0f401975274490d0201581325a932d7865f73208`.
 - Date: 2026-09-02.
-- Verification scope: Primary Entry Points, Vietnam-first System-step launch guidance, and Business-step regional defaults. Secure setup semantics were not re-audited here.
+- Verification scope: Primary Entry Points, Vietnam-first System-step launch guidance (full catalog capability/variable-name listing, PM.ai.vn display, `https://pm.ai.vn` origin), and Business-step regional defaults. Secure setup semantics were not re-audited here.

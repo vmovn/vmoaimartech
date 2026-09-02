@@ -1,7 +1,12 @@
 /**
- * Vietnam-first operator guidance for first-run setup and pm.ai.vn launch.
+ * Vietnam-first operator guidance for first-run setup and PM.ai.vn launch.
  * Metadata only — never include secret values. Optional integrations stay
  * non-blocking; this file recommends what to configure, not what to require.
+ *
+ * `keys` are the names to highlight on the System step (required-core /
+ * recommended). Every catalog variable for that capability still appears in
+ * the capability card via environment readiness — do not treat `keys` as the
+ * full inventory.
  */
 
 export type LaunchPriority =
@@ -34,8 +39,8 @@ export const LAUNCH_GUIDANCE: Record<string, LaunchGuidance> = {
     priority: "required-core",
     labelVi: "Bắt buộc",
     keys: ["SUPABASE_URL", "SUPABASE_PUBLISHABLE_KEY", "SUPABASE_SERVICE_ROLE_KEY"],
-    howVi: "Local do START-LOCAL tạo. Production lấy từ dự án Supabase của pm.ai.vn — không copy khóa local.",
-    howEn: "Local START-LOCAL supplies this. Production uses the pm.ai.vn Supabase project — never copy local keys.",
+    howVi: "Local do START-LOCAL tạo. Production lấy từ dự án Supabase của PM.ai.vn — không copy khóa local.",
+    howEn: "Local START-LOCAL supplies this. Production uses the PM.ai.vn Supabase project — never copy local keys.",
   },
   "setup-security": {
     priority: "required-core",
@@ -48,8 +53,8 @@ export const LAUNCH_GUIDANCE: Record<string, LaunchGuidance> = {
     priority: "required-core",
     labelVi: "Bắt buộc",
     keys: ["APP_ORIGIN", "SESSION_SECRET"],
-    howVi: `Local dùng origin Docker. Production bắt buộc ${PRODUCTION_ORIGIN} (HTTPS), không localhost.`,
-    howEn: `Local uses the Docker origin. Production must be ${PRODUCTION_ORIGIN} over HTTPS, never localhost.`,
+    howVi: `Local dùng origin Docker. Production bắt buộc ${PRODUCTION_ORIGIN} (HTTPS), không localhost. NODE_ENV/HOST/PORT/LOG_LEVEL có mặc định an toàn.`,
+    howEn: `Local uses the Docker origin. Production must be ${PRODUCTION_ORIGIN} over HTTPS, never localhost. NODE_ENV/HOST/PORT/LOG_LEVEL have safe defaults.`,
   },
   storage: {
     priority: "required-core",
@@ -76,22 +81,22 @@ export const LAUNCH_GUIDANCE: Record<string, LaunchGuidance> = {
     priority: "required-core",
     labelVi: "Bắt buộc",
     keys: ["WEBHOOK_DISPATCH_SECRET"],
-    howVi: "Hạ tầng API đã có. Secret local do START-LOCAL tạo; Coolify cần secret riêng.",
-    howEn: "API routes are already present. Local START-LOCAL creates the secret; Coolify needs its own.",
+    howVi: "Hạ tầng API đã có. Secret local do START-LOCAL tạo; Coolify cần secret riêng. Webhook outbound ký bằng header x-pmai-signature — không đưa secret ra trình duyệt.",
+    howEn: "API routes are already present. Local START-LOCAL creates the secret; Coolify needs its own. Outbound webhooks sign with x-pmai-signature — never expose the secret to the browser.",
   },
   "background-jobs": {
     priority: "required-core",
     labelVi: "Bắt buộc",
     keys: ["INTERNAL_CRON_TOKEN"],
-    howVi: "Local đồng bộ vào Vault khi START. Production cần cùng token trên app và Vault.",
-    howEn: "Local START syncs this into Vault. Production must use the same token on the app and Vault.",
+    howVi: "Local đồng bộ INTERNAL_CRON_TOKEN và APP_ORIGIN vào Vault khi START. Production cần cùng token trên app và Vault — pg_cron gọi hook nội bộ qua token này.",
+    howEn: "Local START syncs INTERNAL_CRON_TOKEN and APP_ORIGIN into Vault. Production must use the same token on the app and Vault — pg_cron calls internal hooks with it.",
   },
   widgets: {
     priority: "later",
     labelVi: "Sau khi chạy",
     keys: ["WIDGET_SIGNING_SECRET"],
-    howVi: "Secret đã có local. Bật live chat/widget sau trong Cài đặt.",
-    howEn: "The local secret already exists. Enable live chat/widgets later in Settings.",
+    howVi: "Secret đã có local. Bật live chat / widget nhúng / cổng khách hàng sau trong Cài đặt. Không đưa WIDGET_SIGNING_SECRET vào VITE_*.",
+    howEn: "The local secret already exists. Enable live chat, embed widgets and the client portal later in Settings. Never put WIDGET_SIGNING_SECRET in VITE_*.",
   },
   plugins: {
     priority: "later",
@@ -105,9 +110,9 @@ export const LAUNCH_GUIDANCE: Record<string, LaunchGuidance> = {
     labelVi: "Nên lấy ngay",
     keys: ["GEMINI_API_KEY"],
     howVi:
-      "Ưu tiên Gemini (hạn mức miễn phí, tiếng Việt tốt): Google AI Studio → GEMINI_API_KEY. Phương án rẻ: DEEPSEEK_API_KEY. Local miễn phí: Ollama (không cần key). Chỉ cần 1 nhà cung cấp. Sau setup: Super Admin → AI providers → bật Gemini, secret name GEMINI_API_KEY.",
+      "Ưu tiên Gemini (hạn mức miễn phí, tiếng Việt tốt): Google AI Studio → GEMINI_API_KEY. Phương án rẻ: DEEPSEEK_API_KEY. Local miễn phí: OLLAMA_BASE_URL (không cần key khách). Nhà cung cấp khác trong thẻ: OPENAI_API_KEY, ANTHROPIC_API_KEY, OPENROUTER_API_KEY, CUSTOM_AI_API_KEY. Production Ollama không dùng localhost. BYOK workspace cần AI_CREDENTIAL_ENCRYPTION_KEY. Chỉ cần 1 nhà cung cấp để bắt đầu. Sau setup: Super Admin → AI providers → bật Gemini, secret name GEMINI_API_KEY.",
     howEn:
-      "Prefer Gemini (free tier, strong Vietnamese): Google AI Studio → GEMINI_API_KEY. Cheap fallback: DEEPSEEK_API_KEY. Free local: Ollama (no key). One provider is enough. After setup: Super Admin → AI providers → enable Gemini with secret name GEMINI_API_KEY.",
+      "Prefer Gemini (free tier, strong Vietnamese): Google AI Studio → GEMINI_API_KEY. Cheap fallback: DEEPSEEK_API_KEY. Free local: OLLAMA_BASE_URL (no customer key). Other keys in this card: OPENAI_API_KEY, ANTHROPIC_API_KEY, OPENROUTER_API_KEY, CUSTOM_AI_API_KEY. Production Ollama must not use localhost. Workspace BYOK needs AI_CREDENTIAL_ENCRYPTION_KEY. One provider is enough to start. After setup: Super Admin → AI providers → enable Gemini with secret name GEMINI_API_KEY.",
   },
   telegram: {
     priority: "recommended",
@@ -158,17 +163,19 @@ export const LAUNCH_GUIDANCE: Record<string, LaunchGuidance> = {
     priority: "later",
     labelVi: "Khi có worker riêng",
     keys: ["WA_QR_WORKER_URL"],
-    howVi: "Cần quy trình QR worker độc lập. Chỉ bật khi đã có dịch vụ phụ.",
-    howEn: "Requires a separate QR worker process. Enable only after that service exists.",
+    howVi:
+      "Cần QR worker độc lập. App gọi WA_QR_WORKER_URL với WA_QR_WORKER_TOKEN và WA_QR_WORKER_SIGNING_SECRET. Worker gọi lại PMAI_WEBHOOK_URL (HTTPS, đuôi /api/public/whatsapp/qr-webhook) với WA_QR_WEBHOOK_SECRET. WA_AUTH_DIR phải là thư mục persistent. Production không dùng localhost.",
+    howEn:
+      "Requires a separate QR worker. The app calls WA_QR_WORKER_URL with WA_QR_WORKER_TOKEN and WA_QR_WORKER_SIGNING_SECRET. The worker posts back to PMAI_WEBHOOK_URL (HTTPS, ending /api/public/whatsapp/qr-webhook) with WA_QR_WEBHOOK_SECRET. WA_AUTH_DIR must be persistent storage. Production must not use localhost.",
   },
   email: {
     priority: "later",
     labelVi: "Sau khi chạy",
     keys: ["SMTP_HOST"],
     howVi:
-      "Cấu hình SMTP hoặc Resend/Mailgun trong Marketplace sau setup. SMTP_HOST chỉ là tín hiệu sẵn sàng, chưa phải vận chuyển thư.",
+      "Cấu hình SMTP hoặc Resend/Mailgun trong Marketplace sau setup. SMTP_HOST chỉ là tín hiệu sẵn sàng, chưa phải vận chuyển thư. LOVABLE_API_KEY chỉ cho email/connector Lovable — không dùng cho suy luận AI của PM.ai.vn.",
     howEn:
-      "Configure SMTP or Resend/Mailgun in Marketplace after setup. SMTP_HOST is a readiness marker, not a mail transport.",
+      "Configure SMTP or Resend/Mailgun in Marketplace after setup. SMTP_HOST is a readiness marker, not a mail transport. LOVABLE_API_KEY is for Lovable email/connector only — not PM.ai.vn AI inference.",
   },
   sms: {
     priority: "skip-vn-first",
@@ -197,8 +204,10 @@ export const LAUNCH_GUIDANCE: Record<string, LaunchGuidance> = {
     priority: "later",
     labelVi: "Sau khi chạy",
     keys: ["GOOGLE_CALENDAR_APP_USER_CONNECTOR_CLIENT_API_KEY"],
-    howVi: "Ưu tiên Google Calendar (phổ biến tại VN) hơn Outlook. Kết nối sau trong Đặt lịch.",
-    howEn: "Prefer Google Calendar (dominant in Vietnam) over Outlook. Connect later in Booking.",
+    howVi:
+      "Ưu tiên Google Calendar (phổ biến tại VN) hơn Outlook. Cả hai khóa connector và APP_USER_CONNECTION_KEY_SECRET nằm trong thẻ này. Kết nối sau trong Đặt lịch.",
+    howEn:
+      "Prefer Google Calendar (dominant in Vietnam) over Outlook. Both connector keys and APP_USER_CONNECTION_KEY_SECRET are in this card. Connect later in Booking.",
   },
   "integration-marketplace": {
     priority: "later",
@@ -210,9 +219,9 @@ export const LAUNCH_GUIDANCE: Record<string, LaunchGuidance> = {
   deployment: {
     priority: "required-core",
     labelVi: "Khi lên Coolify",
-    keys: ["APP_ORIGIN", "VITE_APP_ENV"],
-    howVi: `Coolify: NODE_ENV=production, APP_ORIGIN=${PRODUCTION_ORIGIN}, VITE_APP_ENV=production. Không copy giá trị local/Docker.`,
-    howEn: `Coolify: NODE_ENV=production, APP_ORIGIN=${PRODUCTION_ORIGIN}, VITE_APP_ENV=production. Do not copy local/Docker values.`,
+    keys: ["VITE_APP_ENV", "PMAI_VERSION", "VITE_BRAND_NAME"],
+    howVi: `Coolify: NODE_ENV=production, APP_ORIGIN=${PRODUCTION_ORIGIN}, VITE_APP_ENV=production. PMAI_VERSION gắn tag image Compose. VITE_BRAND_NAME tùy chọn (mặc định PM.ai.vn). Không copy giá trị local/Docker.`,
+    howEn: `Coolify: NODE_ENV=production, APP_ORIGIN=${PRODUCTION_ORIGIN}, VITE_APP_ENV=production. PMAI_VERSION stamps the Compose image tag. VITE_BRAND_NAME is optional (default PM.ai.vn). Do not copy local/Docker values.`,
   },
   "local-development": {
     priority: "local-only",
@@ -269,6 +278,47 @@ export const LAUNCH_KEY_CHECKLIST: Array<{
   },
 ];
 
+export const PRODUCTION_COOLIFY_CHECKLIST: Array<{
+  key: string;
+  whereVi: string;
+  whereEn: string;
+}> = [
+  {
+    key: "APP_ORIGIN",
+    whereVi: `Bắt buộc ${PRODUCTION_ORIGIN} (HTTPS) — không localhost`,
+    whereEn: `Must be ${PRODUCTION_ORIGIN} (HTTPS) — never localhost`,
+  },
+  {
+    key: "VITE_APP_ENV",
+    whereVi: "production trên Coolify",
+    whereEn: "production on Coolify",
+  },
+  {
+    key: "PMAI_VERSION",
+    whereVi: "Tag image Docker Compose / Coolify (tùy chọn)",
+    whereEn: "Docker Compose / Coolify image tag (optional)",
+  },
+  {
+    key: "VITE_BRAND_NAME",
+    whereVi: "Tùy chọn; mặc định PM.ai.vn nếu bỏ trống",
+    whereEn: "Optional; defaults to PM.ai.vn when unset",
+  },
+];
+
+export const LAUNCH_PRIORITY_ORDER: LaunchPriority[] = [
+  "required-core",
+  "recommended",
+  "later",
+  "skip-vn-first",
+  "local-only",
+];
+
 export function getLaunchGuidance(capabilityId: string): LaunchGuidance | undefined {
   return LAUNCH_GUIDANCE[capabilityId];
+}
+
+export function envKeyHighlightLabel(priority: LaunchPriority): string | null {
+  if (priority === "required-core") return "bắt buộc";
+  if (priority === "recommended") return "nên lấy";
+  return null;
 }

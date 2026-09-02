@@ -46,17 +46,21 @@ import type { CapabilityReadiness } from "@/lib/setup/environment-readiness.serv
 import {
   INTEGRATIONS_ENV_FILE,
   LAUNCH_KEY_CHECKLIST,
+  LAUNCH_PRIORITY_ORDER,
+  PRODUCTION_COOLIFY_CHECKLIST,
   PRODUCTION_ORIGIN,
+  envKeyHighlightLabel,
   getLaunchGuidance,
   type LaunchPriority,
 } from "@/lib/setup/launch-guidance";
 import { BRAND_NAME } from "@/lib/branding/brand";
+import { ENVIRONMENT_CAPABILITIES, ENVIRONMENT_VARIABLES } from "@/lib/environment/environment-catalog";
 
 export const Route = createFileRoute("/setup")({
   head: () => ({
     meta: [
-      { title: "Product Setup" },
-      { name: "description", content: "Secure first-run Product initialization." },
+      { title: `${BRAND_NAME} Setup` },
+      { name: "description", content: `Secure first-run ${BRAND_NAME} initialization.` },
       { name: "robots", content: "noindex, nofollow" },
     ],
   }),
@@ -629,8 +633,8 @@ function SystemStep({
           <ShieldCheck className="h-5 w-5" /> System / Hệ thống
         </CardTitle>
         <CardDescription>
-          Hệ thống cốt lõi đã đủ thì được hoàn tất setup. Tích hợp tùy chọn không chặn lần chạy đầu.
-          / Core runtime is enough to finish setup. Optional integrations never block first-run.
+          Hệ thống cốt lõi của {BRAND_NAME} đã đủ thì được hoàn tất setup. Tích hợp tùy chọn không chặn lần chạy đầu.
+          / {BRAND_NAME} core runtime is enough to finish setup. Optional integrations never block first-run.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-5">
@@ -646,15 +650,17 @@ function SystemStep({
               <div>
                 <p className="font-medium">
                   {report.ready
-                    ? "Hệ thống cốt lõi đã sẵn sàng / Core runtime is ready"
-                    : "Hệ thống cốt lõi cần xử lý / Core runtime needs attention"}
+                    ? `Hệ thống cốt lõi ${BRAND_NAME} đã sẵn sàng / ${BRAND_NAME} core runtime is ready`
+                    : `Hệ thống cốt lõi ${BRAND_NAME} cần xử lý / ${BRAND_NAME} core runtime needs attention`}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  CHƯA CẤU HÌNH là trạng thái đúng cho tích hợp chưa có key — không phải lỗi cài đặt.
+                  CHƯA CẤU HÌNH / TÙY CHỌN là trạng thái đúng khi tích hợp chưa có key — không phải lỗi cài đặt.
+                  Chỉ CẦN XỬ LÝ hoặc KHÔNG HỢP LỆ mới chặn bước tiếp theo.
                 </p>
               </div>
               <StatusBadge status={report.ready ? "READY" : "NEEDS_ATTENTION"} />
             </div>
+            <StatusLegend />
             <LaunchPlaybook />
             <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
               <SummaryMetric label="Sẵn sàng / Ready" value={report.summary.ready} />
@@ -664,7 +670,7 @@ function SystemStep({
             </div>
             <Accordion
               type="multiple"
-              defaultValue={["core", "platform", "integration"]}
+              defaultValue={["core", "platform", "integration", "deployment", "local"]}
               className="rounded-lg border px-4"
             >
               {(
@@ -675,7 +681,7 @@ function SystemStep({
                     <span>
                       {CATEGORY_LABELS[category].vi}{" "}
                       <span className="text-muted-foreground">
-                        / {CATEGORY_LABELS[category].en}
+                        / {CATEGORY_LABELS[category].en} ({report.categories[category].length})
                       </span>
                     </span>
                   </AccordionTrigger>
@@ -694,19 +700,61 @@ function SystemStep({
   );
 }
 
-function LaunchPlaybook() {
+function StatusLegend() {
   return (
-    <div className="space-y-3 rounded-lg border p-4">
-      <p className="font-medium">Hướng dẫn sẵn sàng cho {PRODUCTION_ORIGIN.replace("https://", "")}</p>
-      <p className="text-sm text-muted-foreground">
-        Mục tiêu lần này là cho platform chạy được với lựa chọn miễn phí/bền vững, định dạng Việt Nam.
-        Không copy <code>.env.local</code> lên Coolify. Production:{" "}
-        <code>APP_ORIGIN={PRODUCTION_ORIGIN}</code>, HTTPS.
-      </p>
+    <div className="rounded-lg border p-4 text-sm">
+      <p className="font-medium">Chú giải trạng thái / Status legend</p>
+      <ul className="mt-2 grid gap-1 text-muted-foreground sm:grid-cols-2">
+        <li><span className="text-foreground">SẴN SÀNG</span> — metadata/dịch vụ cốt lõi OK</li>
+        <li><span className="text-foreground">CHƯA CẤU HÌNH</span> — tích hợp chưa có key, đúng kỳ vọng</li>
+        <li><span className="text-foreground">TÙY CHỌN</span> — không chặn hoàn tất setup</li>
+        <li><span className="text-foreground">CHỈ LOCAL</span> — không copy sang Coolify</li>
+        <li><span className="text-foreground">CẦN XỬ LÝ</span> — thiếu giá trị bắt buộc</li>
+        <li><span className="text-foreground">KHÔNG HỢP LỆ</span> — đã có nhưng sai định dạng</li>
+      </ul>
+    </div>
+  );
+}
+
+function LaunchPlaybook() {
+  const grouped = LAUNCH_PRIORITY_ORDER.map((priority) => ({
+    priority,
+    label: LAUNCH_GUIDANCE_LABEL[priority],
+    items: ENVIRONMENT_CAPABILITIES.filter(
+      (capability) => getLaunchGuidance(capability.id)?.priority === priority,
+    ),
+  })).filter((group) => group.items.length > 0);
+
+  return (
+    <div className="space-y-4 rounded-lg border p-4">
+      <div>
+        <p className="font-medium">Hướng dẫn sẵn sàng cho {BRAND_NAME}</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Mục tiêu lần này: {BRAND_NAME} chạy được với lựa chọn miễn phí/bền vững và định dạng Việt Nam.
+          Không copy <code>.env.local</code> lên Coolify. Production:{" "}
+          <code>APP_ORIGIN={PRODUCTION_ORIGIN}</code>, HTTPS. Origin công khai là{" "}
+          <code>pm.ai.vn</code>; tên hiển thị là {BRAND_NAME}.
+        </p>
+      </div>
+
       <div className="space-y-2 text-sm">
-        <p className="font-medium">Nên lấy key ngay (ghi vào {INTEGRATIONS_ENV_FILE} rồi chạy lại START-LOCAL):</p>
+        <p className="font-medium">
+          Nên lấy key ngay (ghi vào {INTEGRATIONS_ENV_FILE} rồi chạy lại START-LOCAL):
+        </p>
         <ul className="list-disc space-y-1 pl-5">
           {LAUNCH_KEY_CHECKLIST.map((item) => (
+            <li key={item.key}>
+              <code>{item.key}</code>
+              <span className="text-muted-foreground"> — {item.whereVi} / {item.whereEn}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div className="space-y-2 text-sm">
+        <p className="font-medium">Khi lên Coolify / production:</p>
+        <ul className="list-disc space-y-1 pl-5">
+          {PRODUCTION_COOLIFY_CHECKLIST.map((item) => (
             <li key={item.key}>
               <code>{item.key}</code>
               <span className="text-muted-foreground"> — {item.whereVi}</span>
@@ -714,13 +762,37 @@ function LaunchPlaybook() {
           ))}
         </ul>
       </div>
+
+      <div className="space-y-2 text-sm">
+        <p className="font-medium">Toàn bộ nhóm khả năng trên bước này:</p>
+        {grouped.map((group) => (
+          <div key={group.priority}>
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              {group.label} ({group.items.length})
+            </p>
+            <p className="text-muted-foreground">
+              {group.items.map((item) => item.nameVi).join(" · ")}
+            </p>
+          </div>
+        ))}
+      </div>
+
       <p className="text-sm text-muted-foreground">
         Bỏ qua lần đầu: WhatsApp Cloud (phí Meta), Twilio SMS, Stripe/Paddle (không phải cổng VND).
         Zalo chưa có trong mã nguồn — không cấu hình giả. File {INTEGRATIONS_ENV_FILE} không bị RESET xóa.
+        Mọi tên biến bên dưới chỉ là tên — setup không hiển thị giá trị secret.
       </p>
     </div>
   );
 }
+
+const LAUNCH_GUIDANCE_LABEL: Record<LaunchPriority, string> = {
+  "required-core": "Bắt buộc",
+  recommended: "Nên lấy ngay",
+  later: "Sau khi chạy",
+  "skip-vn-first": "Bỏ qua lần đầu",
+  "local-only": "Chỉ local/CI",
+};
 
 function PriorityBadge({ priority }: { priority: LaunchPriority }) {
   const label =
@@ -742,12 +814,13 @@ function PriorityBadge({ priority }: { priority: LaunchPriority }) {
 
 function CapabilityCheck({ capability }: { capability: CapabilityReadiness }) {
   const guidance = getLaunchGuidance(capability.id);
-  const recommended = new Set(guidance?.keys ?? []);
+  const highlight = new Set(guidance?.keys ?? []);
+  const highlightLabel = guidance ? envKeyHighlightLabel(guidance.priority) : null;
   const shownKeys =
-    recommended.size > 0
+    highlight.size > 0
       ? [
-          ...capability.environment.filter((item) => recommended.has(item.key)),
-          ...capability.environment.filter((item) => !recommended.has(item.key)),
+          ...capability.environment.filter((item) => highlight.has(item.key)),
+          ...capability.environment.filter((item) => !highlight.has(item.key)),
         ]
       : capability.environment;
 
@@ -766,48 +839,96 @@ function CapabilityCheck({ capability }: { capability: CapabilityReadiness }) {
       <p className="mt-3 text-sm">{capability.descriptionVi}</p>
       <p className="mt-1 text-sm text-muted-foreground">{capability.descriptionEn}</p>
       <p className="mt-2 text-xs text-muted-foreground">{capability.detailVi}</p>
-      {guidance && <p className="mt-2 text-sm">{guidance.howVi}</p>}
+      {capability.detailEn && capability.detailEn !== capability.detailVi && (
+        <p className="text-xs text-muted-foreground">{capability.detailEn}</p>
+      )}
+      {guidance && (
+        <>
+          <p className="mt-2 text-sm">{guidance.howVi}</p>
+          <p className="text-sm text-muted-foreground">{guidance.howEn}</p>
+        </>
+      )}
       {capability.features.length > 0 && (
         <p className="mt-2 text-xs text-muted-foreground">
-          Khả năng: {capability.features.join(" · ")}
+          Khả năng / Capabilities: {capability.features.join(" · ")}
         </p>
       )}
       {shownKeys.length > 0 && (
-        <div className="mt-3 border-t pt-3">
-          <p className="mb-2 text-xs font-medium">
-            Tên biến môi trường / Environment variable names only
+        <div className="mt-3 space-y-2 border-t pt-3">
+          <p className="text-xs font-medium">
+            Tên biến môi trường ({shownKeys.length}) / Environment variable names only — không hiện giá trị
           </p>
-          <div className="flex flex-wrap gap-2">
-            {shownKeys.map((variable) => {
-              const isRecommended = recommended.has(variable.key);
-              return (
-                <span
-                  key={variable.key}
-                  className="inline-flex items-center gap-1 rounded-control border px-2 py-1 text-xs"
-                >
-                  <code>{variable.key}</code>
-                  {isRecommended && (
-                    <span className="text-muted-foreground">nên lấy</span>
+          {shownKeys.map((variable) => {
+            const meta = ENVIRONMENT_VARIABLES.find((item) => item.key === variable.key);
+            const isHighlight = highlight.has(variable.key);
+            return (
+              <div key={variable.key} className="rounded-md border bg-muted/20 px-2 py-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <code className="text-xs">{variable.key}</code>
+                  {isHighlight && highlightLabel && (
+                    <span className="text-xs text-muted-foreground">{highlightLabel}</span>
+                  )}
+                  {variable.secret === "YES" && (
+                    <span className="text-xs text-muted-foreground">secret</span>
+                  )}
+                  {variable.setupBlocking === "YES" && (
+                    <span className="text-xs text-muted-foreground">chặn setup</span>
                   )}
                   {variable.configured && variable.valid ? (
                     <CheckCircle2 className="h-3 w-3 text-emerald-600" />
                   ) : variable.configured ? (
                     <XCircle className="h-3 w-3 text-destructive" />
                   ) : (
-                    <span className="text-muted-foreground">—</span>
+                    <span className="text-xs text-muted-foreground">chưa có</span>
                   )}
                   <span className="sr-only">
-                    {variable.configured ? "Configured" : "Not configured"}
+                    {variable.configured
+                      ? variable.valid
+                        ? "Configured and valid"
+                        : "Configured but invalid"
+                      : "Not configured"}
                   </span>
-                </span>
-              );
-            })}
-          </div>
+                </div>
+                {meta && (
+                  <>
+                    <p className="mt-1 text-xs">
+                      {meta.nameVi} / {meta.nameEn}
+                    </p>
+                    <p className="text-xs text-muted-foreground">{meta.purpose}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {REQUIREDNESS_LABEL[variable.requiredness]} · {SCOPE_LABEL[variable.scope]} ·
+                      Coolify {variable.coolify}
+                      {meta.enabledWhen ? ` · ${meta.enabledWhen}` : ""}
+                    </p>
+                    {meta.validation && (
+                      <p className="text-xs text-muted-foreground">Hợp lệ khi / Valid when: {meta.validation}</p>
+                    )}
+                  </>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
   );
 }
+
+const REQUIREDNESS_LABEL: Record<string, string> = {
+  REQUIRED: "Bắt buộc",
+  CONDITIONAL: "Có điều kiện",
+  OPTIONAL: "Tùy chọn",
+  DEV_ONLY: "Chỉ local",
+  CI_ONLY: "Chỉ CI",
+};
+
+const SCOPE_LABEL: Record<string, string> = {
+  BUILD_PUBLIC: "Public lúc build",
+  RUNTIME_SERVER: "Server runtime",
+  SUPABASE_EDGE: "Supabase Edge",
+  LOCAL_ONLY: "Chỉ local",
+  CI: "CI",
+};
 
 function StatusBadge({
   status,
@@ -882,7 +1003,7 @@ function SetupShell({
             <Rocket className="h-7 w-7 text-primary-foreground" />
           </div>
           <h1 className="text-3xl font-semibold tracking-tight">
-            First-run Setup / Thiết lập lần đầu
+            {BRAND_NAME} — First-run Setup / Thiết lập lần đầu
           </h1>
           <p className="text-muted-foreground">
             Chuẩn bị chủ sở hữu và Không gian làm việc đầu tiên theo mặc định Việt Nam.
