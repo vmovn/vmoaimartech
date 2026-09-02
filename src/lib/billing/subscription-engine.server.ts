@@ -13,6 +13,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { emit, persistEvent } from "./events";
 import { getBillingProvider } from "./providers";
 import type { BillingProviderId, SubscriptionSnapshot } from "./providers/types";
+import { seedQuotasForSubscription } from "./quota-manager.server";
 
 export interface CreateSubscriptionInput {
   organization_id: string;
@@ -34,7 +35,7 @@ export async function upsertSubscriptionFromSnapshot(
 
   const existing = await supabase
     .from("subscriptions")
-    .select("id, status")
+    .select("id, status, plan_id, current_period_start, current_period_end")
     .eq("organization_id", organization_id)
     .maybeSingle();
 
@@ -56,6 +57,15 @@ export async function upsertSubscriptionFromSnapshot(
   if (existing.data) {
     const { error } = await supabase.from("subscriptions").update(patch).eq("id", existing.data.id);
     if (error) throw error;
+    const samePeriod = existing.data.current_period_start === snap.current_period_start;
+    await seedQuotasForSubscription(
+      supabase,
+      organization_id,
+      plan.data.id,
+      snap.current_period_start,
+      snap.current_period_end ?? "infinity",
+      samePeriod,
+    );
     const evt = existing.data.status !== snap.status
       ? (snap.status === "canceled" ? "subscription.canceled" as const : "subscription.updated" as const)
       : "subscription.updated" as const;
@@ -65,6 +75,13 @@ export async function upsertSubscriptionFromSnapshot(
   }
   const inserted = await supabase.from("subscriptions").insert(patch).select("id").single();
   if (inserted.error) throw inserted.error;
+  await seedQuotasForSubscription(
+    supabase,
+    organization_id,
+    plan.data.id,
+    snap.current_period_start,
+    snap.current_period_end ?? "infinity",
+  );
   await emit({ type: "subscription.created", organization_id, data: snap });
   await persistEvent(supabase, { type: "subscription.created", organization_id, occurred_at: new Date().toISOString(), data: snap }, { subscription_id: inserted.data.id, provider: snap.provider });
   return { id: inserted.data.id, created: true };

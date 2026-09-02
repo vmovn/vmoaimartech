@@ -45,6 +45,40 @@ CREATE POLICY "ai_settings admins write" ON public.ai_settings
   USING (public.has_workspace_role(workspace_id, auth.uid(), ARRAY['owner','admin']::workspace_role[]))
   WITH CHECK (public.has_workspace_role(workspace_id, auth.uid(), ARRAY['owner','admin']::workspace_role[]));
 
+-- Optional workspace/user ceilings inside the organization Premium Credit pool.
+-- These are governance guards, not purchased balances or transferable wallets.
+CREATE TABLE public.ai_user_credit_limits (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  workspace_id uuid NOT NULL REFERENCES public.workspaces(id) ON DELETE CASCADE,
+  user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  monthly_credit_limit bigint CHECK (monthly_credit_limit IS NULL OR monthly_credit_limit >= 0),
+  daily_credit_limit bigint CHECK (daily_credit_limit IS NULL OR daily_credit_limit >= 0),
+  updated_by uuid REFERENCES auth.users(id) ON DELETE SET NULL,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE (workspace_id, user_id)
+);
+CREATE INDEX ai_user_credit_limits_workspace_idx
+  ON public.ai_user_credit_limits(workspace_id, user_id);
+GRANT SELECT ON public.ai_user_credit_limits TO authenticated;
+GRANT INSERT, UPDATE, DELETE ON public.ai_user_credit_limits TO authenticated;
+GRANT ALL ON public.ai_user_credit_limits TO service_role;
+ALTER TABLE public.ai_user_credit_limits ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "ai_user_credit_limits own or admins read" ON public.ai_user_credit_limits
+  FOR SELECT TO authenticated
+  USING (
+    (user_id = auth.uid() AND public.is_workspace_member(workspace_id, auth.uid()))
+    OR public.has_workspace_role(workspace_id, auth.uid(), ARRAY['owner','admin']::workspace_role[])
+  );
+CREATE POLICY "ai_user_credit_limits admins manage" ON public.ai_user_credit_limits
+  FOR ALL TO authenticated
+  USING (public.has_workspace_role(workspace_id, auth.uid(), ARRAY['owner','admin']::workspace_role[]))
+  WITH CHECK (
+    public.has_workspace_role(workspace_id, auth.uid(), ARRAY['owner','admin']::workspace_role[])
+    AND public.is_workspace_member(workspace_id, user_id)
+    AND (updated_by IS NULL OR updated_by = auth.uid())
+  );
+
 CREATE TABLE IF NOT EXISTS public.ai_audit_logs (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   workspace_id uuid NOT NULL,
@@ -81,4 +115,7 @@ $$;
 
 DROP TRIGGER IF EXISTS ai_settings_touch_trg ON public.ai_settings;
 CREATE TRIGGER ai_settings_touch_trg BEFORE UPDATE ON public.ai_settings
+  FOR EACH ROW EXECUTE FUNCTION public.ai_settings_touch();
+
+CREATE TRIGGER ai_user_credit_limits_touch_trg BEFORE UPDATE ON public.ai_user_credit_limits
   FOR EACH ROW EXECUTE FUNCTION public.ai_settings_touch();

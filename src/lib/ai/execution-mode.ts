@@ -15,7 +15,7 @@ import { isActiveAiProviderKind } from "./registry.server";
 import type { AiTaskPolicy, ExecutionMode } from "./task-policy";
 import { getTaskPolicy } from "./task-policy";
 
-export type CostOwner = "platform_compute" | "premium_credits" | "workspace_api";
+export type CostOwner = "platform_compute" | "platform" | "workspace_api";
 
 export function decideExecutionMode(record: AIProviderRecord): ExecutionMode {
   if (isPlatformManagedOllama(record)) return "platform_local";
@@ -27,14 +27,14 @@ export function decideExecutionMode(record: AIProviderRecord): ExecutionMode {
 
 export function costOwnerFor(mode: ExecutionMode): CostOwner {
   if (mode === "platform_local") return "platform_compute";
-  if (mode === "premium_credits") return "premium_credits";
+  if (mode === "premium_credits") return "platform";
   return "workspace_api";
 }
 
 /**
- * Conceptual credit units for a future Credit Engine.
+ * Pre-settlement credit marker.
  * 0 = do not debit Premium Credits.
- * null = meter later (premium_credits). P5 does not debit a ledger.
+ * null = reserve and settle through the Premium Credits engine.
  */
 export function conceptualCreditsToCharge(mode: ExecutionMode): 0 | null {
   if (mode === "workspace_byok" || mode === "platform_local") return 0;
@@ -92,5 +92,27 @@ export function buildAiAccountingMetadata(
     credentialSource: decideCredentialSource(record),
     taskClass: policy.taskClass,
     defaultExecutionMode: policy.defaultExecutionMode,
+  };
+}
+
+export function buildSettledAiAccountingMetadata(
+  record: AIProviderRecord,
+  feature: string | null | undefined,
+  input: {
+    aiRequestId: string;
+    actualCredits: number;
+    estimatedCostUsd: number;
+    usageEstimated: boolean;
+  },
+): Record<string, unknown> {
+  const mode = decideExecutionMode(record);
+  const credits = mode === "premium_credits" ? Math.max(1, Math.ceil(input.actualCredits)) : 0;
+  return {
+    ...buildAiAccountingMetadata(record, feature),
+    aiRequestId: input.aiRequestId,
+    creditsToCharge: credits,
+    creditsCharged: credits,
+    estimatedCostUsd: input.estimatedCostUsd,
+    usageEstimated: input.usageEstimated,
   };
 }

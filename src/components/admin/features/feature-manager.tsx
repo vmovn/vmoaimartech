@@ -49,7 +49,9 @@ export function FeatureManager() {
   });
 
   const plans = (plansQ.data ?? []) as PlanRow[];
-  const monthlyPlans = useMemo(() => plans.filter((p) => p.interval === "month" && p.is_public !== false), [plans]);
+  // Every active commercial interval is configurable. Yearly/lifetime plans
+  // do not inherit paid API allowances implicitly from their monthly sibling.
+  const monthlyPlans = useMemo(() => plans.filter((p) => p.is_active && p.is_public !== false), [plans]);
 
   const [draft, setDraft] = useState<Draft>({});
 
@@ -162,7 +164,7 @@ export function FeatureManager() {
               </CardDescription>
             </div>
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              {monthlyPlans.length} monthly plans · {LIMITS.length} limits · {FEATURES.length} feature flags
+              {monthlyPlans.length} plans · {LIMITS.length} limits · {FEATURES.length} feature flags
             </div>
           </CardHeader>
         </Card>
@@ -197,7 +199,7 @@ export function FeatureManager() {
                                   <span>{p.name}</span>
                                   {dirtyPlanIds.includes(p.id) && <Badge variant="secondary" className="h-5 text-[11px]">unsaved</Badge>}
                                 </div>
-                                <div className="text-xs font-normal text-muted-foreground capitalize">{p.tier}</div>
+                                <div className="text-xs font-normal text-muted-foreground capitalize">{p.tier} · {p.interval}</div>
                               </th>
                             ))}
                           </tr>

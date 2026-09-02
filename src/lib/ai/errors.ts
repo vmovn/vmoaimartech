@@ -6,6 +6,8 @@ export type AIErrorType =
   | "validation"     // 400 — bad request body
   | "context_length" // input too large
   | "not_found"      // model or endpoint missing
+  | "quota"          // Premium Credits / user cap exhausted
+  | "configuration"  // operator-owned AI/billing configuration unavailable
   | "server"         // 5xx upstream
   | "cancelled"
   | "unknown";
@@ -27,6 +29,16 @@ export class AIError extends Error {
     this.httpStatus = opts.httpStatus;
     this.providerKind = opts.providerKind;
     this.retryable = opts.retryable ?? (type === "rate_limit" || type === "timeout" || type === "network" || type === "server");
+  }
+}
+
+export class AICreditsError extends AIError {
+  readonly code: string;
+
+  constructor(type: "quota" | "configuration", code: string, message: string) {
+    super(type, message, { retryable: false });
+    this.name = "AICreditsError";
+    this.code = code;
   }
 }
 

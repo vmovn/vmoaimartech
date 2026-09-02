@@ -15,6 +15,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { seedQuotasForSubscription } from "./quota-manager.server";
 
 /* -------------------------------------------------------------------------- */
 /*  Types                                                                      */
@@ -43,6 +44,18 @@ const planInputShape = z.object({
   highlight: z.boolean().default(false),
   sort_order: z.number().int().default(0),
   monthly_plan_code: z.string().nullable().optional(),
+}).superRefine((plan, context) => {
+  if (!Object.prototype.hasOwnProperty.call(plan.limits, "ai_premium_credits")) return;
+  const value = plan.limits.ai_premium_credits;
+  const valid = value === null || value === "unlimited"
+    || (typeof value === "number" && Number.isInteger(value) && value >= 0);
+  if (!valid) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["limits", "ai_premium_credits"],
+      message: "Premium AI Credits must be a non-negative integer, null, or an explicit unlimited contract.",
+    });
+  }
 });
 
 /* -------------------------------------------------------------------------- */
@@ -155,6 +168,24 @@ export const upsertPlan = createServerFn({ method: "POST" })
       .select("*")
       .single();
     if (error) throw error;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const subscriptions = await supabaseAdmin
+      .from("subscriptions")
+      .select("organization_id, current_period_start, current_period_end")
+      .eq("plan_id", row.id)
+      .in("status", ["active", "trialing"]);
+    if (subscriptions.error) throw subscriptions.error;
+    for (const subscription of subscriptions.data ?? []) {
+      if (!subscription.current_period_start) continue;
+      await seedQuotasForSubscription(
+        supabaseAdmin,
+        subscription.organization_id,
+        row.id,
+        subscription.current_period_start,
+        subscription.current_period_end ?? "infinity",
+        true,
+      );
+    }
     return row;
   });
 
@@ -221,6 +252,14 @@ export const startTrial = createServerFn({ method: "POST" })
       .select("*, plan:plans!plan_id(*)")
       .single();
     if (error) throw error;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await seedQuotasForSubscription(
+      supabaseAdmin,
+      data.organization_id,
+      plan.data.id,
+      patch.current_period_start,
+      patch.current_period_end,
+    );
     return row;
   });
 
@@ -278,6 +317,14 @@ export const changePlan = createServerFn({ method: "POST" })
       .select("*, plan:plans!plan_id(*)")
       .single();
     if (error) throw error;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await seedQuotasForSubscription(
+      supabaseAdmin,
+      data.organization_id,
+      plan.data.id,
+      patch.current_period_start,
+      patch.current_period_end ?? "infinity",
+    );
     return row;
   });
 

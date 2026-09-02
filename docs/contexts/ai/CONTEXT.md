@@ -17,6 +17,7 @@ Owns AI provider configuration, completion/orchestration helpers, AI analytics/c
 - `src/lib/ai/providers/**`, `src/lib/admin/ai-providers.functions.ts`
 - `src/lib/ai/platform-ollama.ts`, `src/lib/ai/platform-ollama.functions.ts`
 - `src/lib/ai/task-policy.ts`, `src/lib/ai/execution-mode.ts`
+- `src/lib/ai/premium-credits.ts`, `src/lib/ai/premium-credits.server.ts`, `src/lib/ai/premium-credits.functions.ts`
 - `src/lib/ai/intelligence.server.ts`, `src/lib/ai/background-intelligence.ts`, `src/lib/ai/background-intelligence.server.ts`, `src/lib/ai/ollama-fairness.ts`
 - `src/routes/api/public/hooks/analyze-conversations.ts`
 
@@ -36,7 +37,9 @@ AI owns suggestions/generation/orchestration metadata; domain services own canon
 - A provider may execute only when `ai_providers.workspace_id` equals the execution workspace. Explicit cross-tenant provider IDs fail closed.
 - Workspace BYOK API keys live in server-only `ai_provider_secrets` (ciphertext), never on `ai_providers`. Decrypt uses operator `AI_CREDENTIAL_ENCRYPTION_KEY`. Credential sources are `workspace_encrypted` | `platform_env` | `keyless` and are never mixed. Platform Ollama remains keyless.
 - `runChat`/`runEmbed` resolve credentials through `resolveProviderCredentials` after the tenant check. Ciphertext and plaintext never return to the browser.
-- Accounting metadata (`executionMode`, `costOwner`, `creditsToCharge`) is written to existing `ai_request_logs.metadata`. No credit ledger in this phase.
+- Accounting metadata (`executionMode`, `costOwner`, `creditsToCharge`, `creditsCharged`) is written to existing `ai_request_logs.metadata`; AI does not duplicate the purchased balance owned by billing quotas.
+- `premium_credits` resolves a priced `ai_models` row and atomically reserves the organization plan pool before provider transport. Successful calls settle actual credits (`ceil(computeCost * 1000)`, minimum 1); missing provider usage settles the conservative reservation. Provider failure releases it. Pricing/quota/configuration errors fail closed without economic fallback.
+- `platform_local` and `workspace_byok` never reserve or debit Premium Credits. Null `userId` charges only the organization pool; a real user additionally observes optional workspace/user period and daily ceilings derived from the same settled usage events plus active reservations.
 - PLATFORM_LOCAL utility intelligence is backgrounded on the existing `conversation_intelligence.needs_reanalysis` flag (message INSERT trigger coalesces by conversation PK). Canonical message/conversation persist must not wait on Ollama. The cron hook `/api/public/hooks/analyze-conversations` drains with CAS lease claim (`analysis_claimed_at`, `needs_reanalysis` stays true while claimed), tenant check (`entity.workspace_id` equals queued workspace), Zod validation before persist, and bounded retry of transient AI errors only. Expired leases are reclaimable without a new message. Success/terminal updates are snapshot-guarded on `last_message_at` so a newer message keeps the row pending. Interactive `analyzeConversation` remains available. Premium/user-triggered features are not auto-queued.
 - Shared platform Ollama in-flight calls are bounded per Node process by `OLLAMA_MAX_CONCURRENCY` (default 2) and `OLLAMA_WORKSPACE_MAX_CONCURRENCY` (default 1). This is not a substitute for the per-minute rate limiter and is replica-local.
 - `lovable` and `grok` remain inert DB/type compatibility values. They are not executable, not selectable, and not auto-seeded. `LOVABLE_API_KEY` remains for non-AI Lovable email/connector services.
@@ -53,4 +56,4 @@ Background intelligence / Ollama fairness → `src/lib/ai/background-intelligenc
 ## Last Verified
 - Runtime baseline: `v1.0.0-Freedom-v1.0.6` / `35e99bb1c28686662338a8b544601a0dd2eef2be`.
 - Date: 2026-09-02.
-- Verification scope: Phase 6.1 crash-safe `analysis_claimed_at` lease on conversation intelligence. P1–P6 routing/economics/fairness unchanged.
+- Verification scope: Phase 7 Premium Credit policy, pricing safety, chat/embed reservation and settlement, request-log metadata, member usage/cap UI. P1–P6.1 routing/provider/BYOK/Ollama/background policy unchanged.

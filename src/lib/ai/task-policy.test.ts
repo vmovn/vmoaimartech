@@ -13,6 +13,7 @@ import {
 } from "./task-policy";
 import {
   buildAiAccountingMetadata,
+  buildSettledAiAccountingMetadata,
   conceptualCreditsToCharge,
   decideExecutionMode,
   pickProviderForTask,
@@ -120,6 +121,7 @@ describe("execution mode from credential ownership", () => {
     expect(decideCredentialSource(platformGemini)).toBe("platform_env");
     expect(decideExecutionMode(platformGemini)).toBe("premium_credits");
     expect(conceptualCreditsToCharge("premium_credits")).toBeNull();
+    expect(buildAiAccountingMetadata(platformGemini, "reply_assistant").costOwner).toBe("platform");
     const policy = getTaskPolicy("reply_assistant");
     expect(providerAllowedForTask(platformGemini, policy)).toBe(true);
     expect(pickProviderForTask([platformGemini], policy)?.id).toBe(platformGemini.id);
@@ -132,6 +134,9 @@ describe("execution mode from credential ownership", () => {
     expect(meta.executionMode).toBe("workspace_byok");
     expect(meta.creditsToCharge).toBe(0);
     expect(meta.costOwner).toBe("workspace_api");
+    expect(buildSettledAiAccountingMetadata(byokGemini, "reply_assistant", {
+      aiRequestId: "byok-request", actualCredits: 123, estimatedCostUsd: 0.123, usageEstimated: false,
+    })).toMatchObject({ creditsToCharge: 0, creditsCharged: 0 });
   });
 
   it("routes the same premium feature across platform and BYOK vendors without vendor branches", () => {
@@ -151,6 +156,22 @@ describe("execution mode from credential ownership", () => {
     expect(conceptualCreditsToCharge("platform_local")).toBe(0);
     expect(pickProviderForTask([platformOllama, platformGemini], policy)?.id).toBe(platformOllama.id);
     expect(providerAllowedForTask(platformGemini, policy)).toBe(false);
+    expect(buildSettledAiAccountingMetadata(platformOllama, "conversation_intelligence", {
+      aiRequestId: "local-request", actualCredits: 123, estimatedCostUsd: 0, usageEstimated: true,
+    })).toMatchObject({ creditsToCharge: 0, creditsCharged: 0 });
+  });
+
+  it("writes actual charged credits for successful platform premium accounting", () => {
+    expect(buildSettledAiAccountingMetadata(platformGemini, "reply_assistant", {
+      aiRequestId: "premium-request", actualCredits: 7, estimatedCostUsd: 0.007, usageEstimated: false,
+    })).toMatchObject({
+      executionMode: "premium_credits",
+      costOwner: "platform",
+      creditsToCharge: 7,
+      creditsCharged: 7,
+      estimatedCostUsd: 0.007,
+      aiRequestId: "premium-request",
+    });
   });
 
   it("does not let Platform Local AI become a customer-facing fallback", () => {

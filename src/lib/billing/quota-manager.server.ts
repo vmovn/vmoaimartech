@@ -111,13 +111,18 @@ export async function seedQuotasForSubscription(
   plan_id: string,
   period_start: string,
   period_end: string,
+  preserveUsed = false,
 ): Promise<void> {
-  const [planRes, metersRes] = await Promise.all([
+  const [planRes, metersRes, existingRes] = await Promise.all([
     supabase.from("plans").select("limits, currency").eq("id", plan_id).single(),
     supabase.from("usage_meters").select("code, unit_amount_cents, currency"),
+    preserveUsed
+      ? supabase.from("tenant_quotas").select("meter_code, used").eq("organization_id", organization_id).eq("period_start", period_start)
+      : Promise.resolve({ data: [] as Array<{ meter_code: string; used: number }>, error: null }),
   ]);
   if (planRes.error || !planRes.data) throw planRes.error ?? new Error("plan not found");
   const limits = (planRes.data.limits ?? {}) as Record<string, number | null | string>;
+  const existingUsed = new Map((existingRes.data ?? []).map((row) => [row.meter_code, Number(row.used ?? 0)]));
   const rows = Object.entries(limits).map(([meter_code, v]) => {
     const included = v === null || v === "unlimited" ? 0 : Number(v);
     const meter = (metersRes.data ?? []).find((m: any) => m.code === meter_code);
@@ -126,7 +131,7 @@ export async function seedQuotasForSubscription(
       meter_code,
       period_start,
       period_end,
-      used: 0,
+      used: preserveUsed ? (existingUsed.get(meter_code) ?? 0) : 0,
       included,
       hard_limit: v === null || v === "unlimited" ? null : included, // soft-cap: same as included by default
       overage_unit_price_cents: meter?.unit_amount_cents ?? null,
@@ -134,5 +139,6 @@ export async function seedQuotasForSubscription(
     };
   });
   if (!rows.length) return;
-  await supabase.from("tenant_quotas").upsert(rows, { onConflict: "organization_id,meter_code,period_start" });
+  const result = await supabase.from("tenant_quotas").upsert(rows, { onConflict: "organization_id,meter_code,period_start" });
+  if (result.error) throw result.error;
 }

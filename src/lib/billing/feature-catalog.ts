@@ -75,6 +75,8 @@ export const LIMITS: LimitDefinition[] = [
     defaults: { free: 2, starter: 10, pro: 50, business: 200, enterprise: null } },
   { kind: "limit", key: "ai_requests_per_month", label: "AI Usage", description: "AI Provider Engine requests per month (all providers).", unit: "requests/mo", icon: Sparkles, group: "ai",
     defaults: { free: 100, starter: 2500, pro: 25000, business: 100000, enterprise: null } },
+  { kind: "limit", key: "ai_premium_credits", label: "Premium AI Credits", description: "Credits for PM.ai.vn-provided premium AI models.", unit: "credits / subscription period", icon: Sparkles, group: "ai",
+    defaults: { free: 0, starter: 0, pro: 0, business: 0, enterprise: 0 } },
   { kind: "limit", key: "storage_mb", label: "Storage", description: "Media & attachment storage.", unit: "MB", icon: HardDrive, group: "infrastructure",
     defaults: { free: 100, starter: 1024, pro: 10240, business: 102400, enterprise: null } },
   { kind: "limit", key: "api_requests_per_month", label: "API Requests", description: "Outbound + inbound API calls per month.", unit: "requests/mo", icon: Zap, group: "infrastructure",

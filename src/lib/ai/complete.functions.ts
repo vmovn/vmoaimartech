@@ -35,10 +35,23 @@ import { shouldApplyOllamaFairness, withOllamaFairness } from "./ollama-fairness
 import { getTaskPolicy } from "./task-policy";
 import {
   buildAiAccountingMetadata,
+  buildSettledAiAccountingMetadata,
+  decideExecutionMode,
   missingProviderForTaskError,
   pickProviderForTask,
   providerAllowedForTask,
 } from "./execution-mode";
+import {
+  actualPremiumCredits,
+  estimateChatCreditReservation,
+  estimateEmbedCreditReservation,
+  requiresPremiumCredits,
+} from "./premium-credits";
+import {
+  releasePremiumCredits,
+  reservePremiumCredits,
+  settlePremiumCredits,
+} from "./premium-credits.server";
 
 // ---------- Record loaders ----------
 
@@ -134,6 +147,8 @@ interface RunOpts {
   rateLimitPerMin?: number;
   /** Used only when injecting ai_feature_config.system_prompt (aiChat templates). */
   promptVariables?: Record<string, unknown>;
+  /** Stable accounting identity supplied by workers when they retry a logical call. */
+  requestId?: string;
 }
 
 async function callWithProvider(
@@ -171,6 +186,7 @@ function takeProviderForWorkspace(
 }
 
 export async function runChat(opts: RunOpts): Promise<ChatResponse & { providerId: string; providerKind: string }> {
+  const logicalRequestId = opts.requestId ?? globalThis.crypto.randomUUID();
   let featureCfg: AIFeatureConfig | null = null;
   if (opts.feature) {
     featureCfg = await loadFeatureConfig(opts.workspaceId, opts.feature);
@@ -225,6 +241,10 @@ export async function runChat(opts: RunOpts): Promise<ChatResponse & { providerI
 
     const start = Date.now();
     const accounting = buildAiAccountingMetadata(provider, opts.feature);
+    const aiRequestId = `${logicalRequestId}:${provider.id}`;
+    let reserved = false;
+    let providerSucceeded = false;
+    let resolvedModelId: string | undefined;
     try {
       const modelId = request.model || await loadDefaultModelId(provider.id);
       if (!modelId) {
@@ -232,44 +252,92 @@ export async function runChat(opts: RunOpts): Promise<ChatResponse & { providerI
           providerKind: provider.kind,
         });
       }
+      resolvedModelId = modelId;
       const resolvedRequest = { ...request, model: modelId };
-      const invoke = () => callWithProvider(provider, resolvedRequest, opts.workspaceId);
-      const res = shouldApplyOllamaFairness(String(accounting.executionMode))
-        ? await withOllamaFairness(opts.workspaceId, invoke)
-        : await invoke();
       const model = await loadModel(provider.id, modelId).catch(() => null);
       if (model && !modelBelongsToProvider(model.providerId, provider.id)) {
         throw new AIError("auth", "AI model does not belong to the resolved provider");
       }
+      const premium = requiresPremiumCredits(decideExecutionMode(provider));
+      const estimate = premium ? estimateChatCreditReservation(model!, resolvedRequest) : null;
+      if (estimate) {
+        await reservePremiumCredits({
+          requestId: aiRequestId,
+          workspaceId: opts.workspaceId,
+          userId: opts.userId,
+          feature: opts.feature,
+          providerId: provider.id,
+          model: modelId,
+          credits: estimate.reservedCredits,
+        });
+        reserved = true;
+      }
+      const invoke = () => callWithProvider(provider, resolvedRequest, opts.workspaceId);
+      const res = shouldApplyOllamaFairness(String(accounting.executionMode))
+        ? await withOllamaFairness(opts.workspaceId, invoke)
+        : await invoke();
+      providerSucceeded = true;
+      const usageEstimated = !res.usage;
       const usage = res.usage ?? {
         prompt_tokens: estimateMessageTokens(request.messages),
         completion_tokens: Math.ceil((res.content?.length ?? 0) / 4),
         total_tokens: 0,
       };
       usage.total_tokens = usage.prompt_tokens + usage.completion_tokens;
-      const cost = computeCost(model, usage);
+      const actual = premium && !usageEstimated
+        ? actualPremiumCredits(model!, usage)
+        : null;
+      const cost = actual?.costUsd ?? (premium ? estimate!.estimatedCostUsd : computeCost(model, usage));
+      const credits = premium
+        ? (usageEstimated ? estimate!.reservedCredits : actual!.credits)
+        : 0;
+      if (premium) {
+        await settlePremiumCredits({
+          requestId: aiRequestId,
+          actualCredits: credits,
+          usageEstimated,
+          metadata: {
+            provider_kind: provider.kind,
+            estimated_cost_usd: cost,
+          },
+        });
+      }
+      const settledAccounting = buildSettledAiAccountingMetadata(provider, opts.feature, {
+        aiRequestId,
+        actualCredits: credits,
+        estimatedCostUsd: cost,
+        usageEstimated,
+      });
       await logAIRequest({
         workspaceId: opts.workspaceId, userId: opts.userId, providerId: provider.id,
         providerKind: provider.kind, model: modelId, operation: "chat",
         feature: opts.feature, status: "success", latencyMs: Date.now() - start,
         usage, costUsd: cost, requestPreview: { messages: request.messages.slice(-3) },
         responsePreview: { content: res.content?.slice(0, 800) },
-        metadata: accounting,
+        metadata: settledAccounting,
       });
       return { ...res, usage, providerId: provider.id, providerKind: provider.kind };
     } catch (e) {
       const err = e as AIError | Error;
       lastError = err;
       const aiErr = err instanceof AIError ? err : null;
+      if (reserved && !providerSucceeded) {
+        await releasePremiumCredits(aiRequestId).catch(() => undefined);
+      }
       await logAIRequest({
         workspaceId: opts.workspaceId, userId: opts.userId, providerId: provider.id,
-        providerKind: provider.kind, model: request.model, operation: "chat",
+        providerKind: provider.kind, model: resolvedModelId ?? request.model, operation: "chat",
         feature: opts.feature,
         status: aiErr?.type === "rate_limit" ? "rate_limited"
           : aiErr?.type === "timeout" ? "timeout" : "error",
         httpStatus: aiErr?.httpStatus, latencyMs: Date.now() - start,
         errorType: aiErr?.type, errorMessage: err.message,
-        metadata: accounting,
+        metadata: {
+          ...accounting,
+          aiRequestId,
+          creditsToCharge: 0,
+          creditsCharged: 0,
+        },
       });
       // Only fall through for retryable errors.
       if (aiErr && !aiErr.retryable) throw aiErr;
@@ -287,12 +355,14 @@ interface RunEmbedOpts {
   model?: string | null;
   primaryProviderId?: string | null;
   fallbackProviderIds?: string[];
+  requestId?: string;
 }
 
 export async function runEmbed(opts: RunEmbedOpts): Promise<EmbedResponse & {
   providerId: string;
   providerKind: string;
 }> {
+  const logicalRequestId = opts.requestId ?? globalThis.crypto.randomUUID();
   const providers: AIProviderRecord[] = [];
   const explicitIds = explicitProviderIds(opts);
   for (const id of [opts.primaryProviderId, ...(opts.fallbackProviderIds ?? [])]) {
@@ -323,23 +393,106 @@ export async function runEmbed(opts: RunEmbedOpts): Promise<EmbedResponse & {
       });
       continue;
     }
-    const model = opts.model
+    const modelId = opts.model
       || (typeof provider.config.embedding_model === "string" ? provider.config.embedding_model : null)
       || await loadDefaultModelId(provider.id, "embed");
-    if (!model) {
+    if (!modelId) {
       lastError = new AIError("not_found", `No embedding model configured for provider "${provider.name}"`, {
         providerKind: provider.kind,
       });
       continue;
     }
+    const start = Date.now();
+    const accounting = buildAiAccountingMetadata(provider, opts.feature);
+    const aiRequestId = `${logicalRequestId}:${provider.id}`;
+    let reserved = false;
+    let providerSucceeded = false;
     try {
+      const model = await loadModel(provider.id, modelId).catch(() => null);
+      if (model && !modelBelongsToProvider(model.providerId, provider.id)) {
+        throw new AIError("auth", "AI model does not belong to the resolved provider");
+      }
+      const premium = requiresPremiumCredits(decideExecutionMode(provider));
+      const estimate = premium ? estimateEmbedCreditReservation(model!, opts.input) : null;
+      if (estimate) {
+        await reservePremiumCredits({
+          requestId: aiRequestId,
+          workspaceId: opts.workspaceId,
+          userId: opts.userId,
+          feature: opts.feature,
+          providerId: provider.id,
+          model: modelId,
+          credits: estimate.reservedCredits,
+        });
+        reserved = true;
+      }
       const response = await impl.embed(
-        { model, input: opts.input },
+        { model: modelId, input: opts.input },
         await resolveProviderCredentials(provider, opts.workspaceId),
       );
-      return { ...response, providerId: provider.id, providerKind: provider.kind };
+      providerSucceeded = true;
+      const usageEstimated = !response.usage;
+      const rawInput = Array.isArray(opts.input) ? opts.input.join("\n") : opts.input;
+      const inferredInputTokens = estimate?.inputTokens ?? Math.max(1, Math.ceil(rawInput.length / 4));
+      const usage = response.usage ?? {
+        prompt_tokens: inferredInputTokens,
+        completion_tokens: 0,
+        total_tokens: inferredInputTokens,
+      };
+      const actual = premium && !usageEstimated ? actualPremiumCredits(model!, usage) : null;
+      const cost = actual?.costUsd ?? (premium ? estimate!.estimatedCostUsd : computeCost(model, usage));
+      const credits = premium ? (usageEstimated ? estimate!.reservedCredits : actual!.credits) : 0;
+      if (premium) {
+        await settlePremiumCredits({
+          requestId: aiRequestId,
+          actualCredits: credits,
+          usageEstimated,
+          metadata: { provider_kind: provider.kind, estimated_cost_usd: cost },
+        });
+      }
+      await logAIRequest({
+        workspaceId: opts.workspaceId,
+        userId: opts.userId,
+        providerId: provider.id,
+        providerKind: provider.kind,
+        model: modelId,
+        operation: "embed",
+        feature: opts.feature,
+        status: "success",
+        latencyMs: Date.now() - start,
+        usage,
+        costUsd: cost,
+        metadata: buildSettledAiAccountingMetadata(provider, opts.feature, {
+          aiRequestId,
+          actualCredits: credits,
+          estimatedCostUsd: cost,
+          usageEstimated,
+        }),
+      });
+      return { ...response, usage, providerId: provider.id, providerKind: provider.kind };
     } catch (error) {
+      if (reserved && !providerSucceeded) {
+        await releasePremiumCredits(aiRequestId).catch(() => undefined);
+      }
+      const aiErr = error instanceof AIError ? error : null;
+      await logAIRequest({
+        workspaceId: opts.workspaceId,
+        userId: opts.userId,
+        providerId: provider.id,
+        providerKind: provider.kind,
+        model: modelId,
+        operation: "embed",
+        feature: opts.feature,
+        status: aiErr?.type === "rate_limit" ? "rate_limited"
+          : aiErr?.type === "timeout" ? "timeout" : "error",
+        httpStatus: aiErr?.httpStatus,
+        latencyMs: Date.now() - start,
+        errorType: aiErr?.type,
+        errorMessage: (error as Error).message,
+        metadata: { ...accounting, aiRequestId, creditsToCharge: 0, creditsCharged: 0 },
+      });
       lastError = error as Error;
+      if (aiErr && !aiErr.retryable) throw aiErr;
     }
   }
   throw lastError ?? new AIError("validation", "No configured AI provider supports embeddings");

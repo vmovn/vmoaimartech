@@ -6,6 +6,11 @@ import {
   type AiSettings, type AiSettingsQuotaUsage, type AiAuditLogEntry, type AiSettingsOption,
 } from "@/lib/ai/settings.functions";
 import { toast } from "sonner";
+import {
+  getPremiumCreditSummary,
+  listPremiumCreditMembers,
+  setPremiumCreditMemberLimit,
+} from "@/lib/ai/premium-credits.functions";
 
 export type { AiSettings, AiSettingsQuotaUsage, AiAuditLogEntry, AiSettingsOption };
 
@@ -58,5 +63,39 @@ export function useAiProviderOptions(workspaceId: string | undefined) {
     queryKey: ["ai-provider-options", workspaceId],
     queryFn: () => fn({ data: { workspaceId: workspaceId! } }),
     enabled: !!workspaceId,
+  });
+}
+
+export function usePremiumCreditSummary(workspaceId: string | undefined) {
+  const fn = useServerFn(getPremiumCreditSummary);
+  return useQuery({
+    queryKey: ["premium-credit-summary", workspaceId],
+    queryFn: () => fn({ data: { workspaceId: workspaceId! } }),
+    enabled: !!workspaceId,
+    refetchInterval: 60_000,
+  });
+}
+
+export function usePremiumCreditMembers(workspaceId: string | undefined, enabled: boolean) {
+  const fn = useServerFn(listPremiumCreditMembers);
+  return useQuery({
+    queryKey: ["premium-credit-members", workspaceId],
+    queryFn: () => fn({ data: { workspaceId: workspaceId! } }),
+    enabled: !!workspaceId && enabled,
+  });
+}
+
+export function usePremiumCreditMemberMutation(workspaceId: string | undefined) {
+  const fn = useServerFn(setPremiumCreditMemberLimit);
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { userId: string; monthlyLimit: number | null; dailyLimit: number | null }) =>
+      fn({ data: { workspaceId: workspaceId!, ...input } }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["premium-credit-summary", workspaceId] });
+      queryClient.invalidateQueries({ queryKey: ["premium-credit-members", workspaceId] });
+      toast.success("Premium Credit limit saved");
+    },
+    onError: (error: unknown) => toast.error(error instanceof Error ? error.message : "Failed to save Premium Credit limit"),
   });
 }

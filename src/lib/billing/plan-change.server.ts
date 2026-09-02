@@ -41,6 +41,8 @@ export type PendingChange = {
   created_at: string;
 };
 
+import { seedQuotasForSubscription } from "./quota-manager.server";
+
 const DAY = 86_400_000;
 
 /** Normalised monthly price so month/year plans can be compared. */
@@ -243,6 +245,14 @@ export async function applyPlanEntitlement(
     .select("*, plan:plans!plan_id(*)")
     .single();
   if (error) throw error;
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  await seedQuotasForSubscription(
+    supabaseAdmin,
+    organization_id,
+    plan.id,
+    data.current_period_start,
+    data.current_period_end ?? "infinity",
+  );
   return data;
 }
 

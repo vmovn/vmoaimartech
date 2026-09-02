@@ -7,6 +7,7 @@ import { useCurrentWorkspace } from "@/hooks/use-workspace";
 import {
   useAiSettings, useAiSettingsMutation, useAiQuotaUsage,
   useAiAuditLogs, useAiProviderOptions,
+  usePremiumCreditSummary, usePremiumCreditMembers, usePremiumCreditMemberMutation,
   type AiSettings,
 } from "@/hooks/use-ai-settings";
 import { Button } from "@/components/ui/button";
@@ -56,6 +57,9 @@ export function AiSettingsPanel() {
   const quotaQ = useAiQuotaUsage(workspaceId);
   const auditQ = useAiAuditLogs(workspaceId);
   const mutation = useAiSettingsMutation(workspaceId);
+  const premiumQ = usePremiumCreditSummary(workspaceId);
+  const premiumMembersQ = usePremiumCreditMembers(workspaceId, premiumQ.data?.isAdmin === true);
+  const premiumLimitMutation = usePremiumCreditMemberMutation(workspaceId);
 
   const [form, setForm] = useState<AiSettings | null>(null);
   useEffect(() => {
@@ -262,6 +266,13 @@ export function AiSettingsPanel() {
 
         {/* ============ Limits & cost ============ */}
         <TabsContent value="limits" className="mt-4 space-y-4">
+          <PremiumCreditsPanel
+            summary={premiumQ.data}
+            loading={premiumQ.isLoading}
+            members={premiumMembersQ.data}
+            saving={premiumLimitMutation.isPending}
+            onSave={(input) => premiumLimitMutation.mutate(input)}
+          />
           <QuotaSummary quota={quotaQ.data} form={form} />
           <div className="grid md:grid-cols-2 gap-3">
             <NumberCard
@@ -399,6 +410,83 @@ export function AiSettingsPanel() {
 }
 
 // ==================== Building blocks ====================
+
+function PremiumCreditsPanel({
+  summary,
+  loading,
+  members,
+  saving,
+  onSave,
+}: {
+  summary: import("@/lib/ai/premium-credits.functions").PremiumCreditSummary | undefined;
+  loading: boolean;
+  members: import("@/lib/ai/premium-credits.functions").PremiumCreditMemberUsage[] | undefined;
+  saving: boolean;
+  onSave: (input: { userId: string; monthlyLimit: number | null; dailyLimit: number | null }) => void;
+}) {
+  if (loading) {
+    return <div className="rounded-md border p-4 text-sm text-muted-foreground"><Loader2 className="mr-2 inline h-4 w-4 animate-spin" />Loading Premium Credits…</div>;
+  }
+  if (!summary) return null;
+  const percent = summary.limit && summary.limit > 0 ? Math.min(100, (summary.used / summary.limit) * 100) : 0;
+  return (
+    <div className="space-y-3 rounded-md border p-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="text-sm font-semibold">Premium AI Credits</p>
+          <p className="text-xs text-muted-foreground">Shared by every workspace in the organization for PM.ai.vn-provided premium models.</p>
+        </div>
+        <Badge variant={summary.configured ? "outline" : "destructive"}>
+          {summary.configured ? `${summary.used.toLocaleString()} used` : "Plan allowance unavailable"}
+        </Badge>
+      </div>
+      {summary.configured && (
+        <>
+          <Progress value={percent} className="h-2" />
+          <div className="grid gap-2 text-xs sm:grid-cols-3">
+            <div><span className="text-muted-foreground">Organization remaining</span><p className="font-medium">{summary.remaining == null ? "Unlimited by contract" : summary.remaining.toLocaleString()}</p></div>
+            <div><span className="text-muted-foreground">Your usage</span><p className="font-medium">{summary.ownUsage.toLocaleString()}{summary.ownMonthlyLimit == null ? "" : ` / ${summary.ownMonthlyLimit.toLocaleString()}`}</p></div>
+            <div><span className="text-muted-foreground">Renewal/reset</span><p className="font-medium">{summary.resetAt ? new Date(summary.resetAt).toLocaleDateString() : "Lifetime period"}</p></div>
+          </div>
+        </>
+      )}
+      {summary.isAdmin && members && members.length > 0 && (
+        <div className="space-y-2 border-t pt-3">
+          <p className="text-xs font-medium">Member ceilings</p>
+          {members.map((member) => (
+            <PremiumCreditMemberRow key={member.userId} member={member} saving={saving} onSave={onSave} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PremiumCreditMemberRow({
+  member,
+  saving,
+  onSave,
+}: {
+  member: import("@/lib/ai/premium-credits.functions").PremiumCreditMemberUsage;
+  saving: boolean;
+  onSave: (input: { userId: string; monthlyLimit: number | null; dailyLimit: number | null }) => void;
+}) {
+  const [monthlyLimit, setMonthlyLimit] = useState<number | null>(member.monthlyLimit);
+  const [dailyLimit, setDailyLimit] = useState<number | null>(member.dailyLimit);
+  useEffect(() => {
+    setMonthlyLimit(member.monthlyLimit);
+    setDailyLimit(member.dailyLimit);
+  }, [member.monthlyLimit, member.dailyLimit]);
+  return (
+    <div className="grid items-center gap-2 rounded-sm bg-muted/30 p-2 text-xs md:grid-cols-[minmax(150px,1fr)_90px_130px_130px_auto]">
+      <div><p className="font-medium">{member.name}</p><p className="text-muted-foreground capitalize">{member.role}</p></div>
+      <div><span className="text-muted-foreground">Used</span><p>{member.used.toLocaleString()}</p></div>
+      <Input type="number" min={0} value={monthlyLimit ?? ""} placeholder="Period cap" onChange={(event) => setMonthlyLimit(event.target.value === "" ? null : Math.max(0, Number(event.target.value)))} />
+      <Input type="number" min={0} value={dailyLimit ?? ""} placeholder="Daily cap" onChange={(event) => setDailyLimit(event.target.value === "" ? null : Math.max(0, Number(event.target.value)))} />
+      <Button size="sm" variant="outline" disabled={saving} onClick={() => onSave({ userId: member.userId, monthlyLimit, dailyLimit })}>Save</Button>
+    </div>
+  );
+}
 
 function Row({ title, desc, children }: { title: string; desc?: string; children: React.ReactNode }) {
   return (
