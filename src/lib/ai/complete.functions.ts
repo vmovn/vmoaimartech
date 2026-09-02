@@ -31,6 +31,7 @@ import {
 import { assertProviderTenant, modelBelongsToProvider } from "./provider-tenant";
 import { readActiveWorkspaceHeader, resolveCallerWorkspaceId, type AuthRpcClient } from "./workspace-auth";
 import { platformOllamaRateLimitPerMin } from "./platform-ollama";
+import { shouldApplyOllamaFairness, withOllamaFairness } from "./ollama-fairness";
 import { getTaskPolicy } from "./task-policy";
 import {
   buildAiAccountingMetadata,
@@ -232,7 +233,10 @@ export async function runChat(opts: RunOpts): Promise<ChatResponse & { providerI
         });
       }
       const resolvedRequest = { ...request, model: modelId };
-      const res = await callWithProvider(provider, resolvedRequest, opts.workspaceId);
+      const invoke = () => callWithProvider(provider, resolvedRequest, opts.workspaceId);
+      const res = shouldApplyOllamaFairness(String(accounting.executionMode))
+        ? await withOllamaFairness(opts.workspaceId, invoke)
+        : await invoke();
       const model = await loadModel(provider.id, modelId).catch(() => null);
       if (model && !modelBelongsToProvider(model.providerId, provider.id)) {
         throw new AIError("auth", "AI model does not belong to the resolved provider");

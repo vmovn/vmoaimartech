@@ -17,6 +17,8 @@ Owns AI provider configuration, completion/orchestration helpers, AI analytics/c
 - `src/lib/ai/providers/**`, `src/lib/admin/ai-providers.functions.ts`
 - `src/lib/ai/platform-ollama.ts`, `src/lib/ai/platform-ollama.functions.ts`
 - `src/lib/ai/task-policy.ts`, `src/lib/ai/execution-mode.ts`
+- `src/lib/ai/intelligence.server.ts`, `src/lib/ai/background-intelligence.ts`, `src/lib/ai/background-intelligence.server.ts`, `src/lib/ai/ollama-fairness.ts`
+- `src/routes/api/public/hooks/analyze-conversations.ts`
 
 ## Source of Truth
 AI owns suggestions/generation/orchestration metadata; domain services own canonical business state.
@@ -35,6 +37,8 @@ AI owns suggestions/generation/orchestration metadata; domain services own canon
 - Workspace BYOK API keys live in server-only `ai_provider_secrets` (ciphertext), never on `ai_providers`. Decrypt uses operator `AI_CREDENTIAL_ENCRYPTION_KEY`. Credential sources are `workspace_encrypted` | `platform_env` | `keyless` and are never mixed. Platform Ollama remains keyless.
 - `runChat`/`runEmbed` resolve credentials through `resolveProviderCredentials` after the tenant check. Ciphertext and plaintext never return to the browser.
 - Accounting metadata (`executionMode`, `costOwner`, `creditsToCharge`) is written to existing `ai_request_logs.metadata`. No credit ledger in this phase.
+- PLATFORM_LOCAL utility intelligence is backgrounded on the existing `conversation_intelligence.needs_reanalysis` flag (message INSERT trigger coalesces by conversation PK). Canonical message/conversation persist must not wait on Ollama. The cron hook `/api/public/hooks/analyze-conversations` drains with CAS claim, tenant check (`entity.workspace_id` equals queued workspace), Zod validation before persist, and bounded retry of transient AI errors only. Interactive `analyzeConversation` remains available. Premium/user-triggered features are not auto-queued.
+- Shared platform Ollama in-flight calls are bounded per Node process by `OLLAMA_MAX_CONCURRENCY` (default 2) and `OLLAMA_WORKSPACE_MAX_CONCURRENCY` (default 1). This is not a substitute for the per-minute rate limiter and is replica-local.
 - `lovable` and `grok` remain inert DB/type compatibility values. They are not executable, not selectable, and not auto-seeded. `LOVABLE_API_KEY` remains for non-AI Lovable email/connector services.
 
 ## Validation
@@ -44,8 +48,9 @@ Tenant-boundary change → `src/lib/ai/tenant-boundary.test.ts`.
 Platform Ollama URL/policy → `src/lib/ai/platform-ollama.test.ts`.
 Workspace BYOK crypto/credentials → `src/lib/ai/credential-crypto.test.ts`, `src/lib/ai/provider-credentials.test.ts`.
 Task policy / execution mode → `src/lib/ai/task-policy.test.ts`.
+Background intelligence / Ollama fairness → `src/lib/ai/background-intelligence.test.ts`.
 
 ## Last Verified
-- Runtime baseline: `v1.0.0-Freedom-v1.0.4` / `64fbd57dbcc4c76c293c6d793fa236e19e0fe029`.
+- Runtime baseline: `v1.0.0-Freedom-v1.0.5` / `0dfb97e39ae88c3c774cdd6bccfab85e5a173cde`.
 - Date: 2026-09-02.
-- Verification scope: three-layer AI economic policy, Lovable/xAI AI-runtime removal, preserved platform premium providers and optional BYOK.
+- Verification scope: Phase 6 background conversation intelligence on `needs_reanalysis` + shared Ollama in-flight fairness. P1–P5 economic/provider contracts unchanged.

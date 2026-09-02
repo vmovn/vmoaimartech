@@ -49,6 +49,6 @@ Prefer deterministic env-drift audit when present, plus build/public-bundle secr
 `npm run env:audit` verifies the completed catalog/example/executable-key contract. Do not re-scan environment implementation merely to re-establish this completed checkpoint.
 
 ## Last Verified
-- Runtime baseline: `v1.0.0-Freedom-v1.0.4` / `64fbd57dbcc4c76c293c6d793fa236e19e0fe029`.
+- Runtime baseline: `v1.0.0-Freedom-v1.0.5` / `0dfb97e39ae88c3c774cdd6bccfab85e5a173cde`.
 - Date: 2026-09-02.
-- Verification scope: removed `XAI_API_KEY` (AI-only). `LOVABLE_API_KEY` remains for managed email events and App User Connector, not AI inference.
+- Verification scope: added optional `OLLAMA_MAX_CONCURRENCY` and `OLLAMA_WORKSPACE_MAX_CONCURRENCY` for shared platform Ollama in-flight caps.

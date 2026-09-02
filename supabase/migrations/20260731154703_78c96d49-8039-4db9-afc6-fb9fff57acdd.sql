@@ -115,3 +115,4 @@ SELECT cron.schedule('billing-automation-15min', '*/15 * * * *', $$SELECT public
 SELECT cron.schedule('sla-breach-scanner', '*/5 * * * *', $$SELECT public._wa_cron_post('/api/public/hooks/sla-scan');$$);
 SELECT cron.schedule('birthday-reminders-daily', '0 8 * * *', $$SELECT public._wa_cron_post('/api/public/hooks/birthday-reminders');$$);
 SELECT cron.schedule('task-reminders-every-5min', '*/5 * * * *', $$SELECT public._wa_cron_post('/api/public/hooks/task-reminders');$$);
+SELECT cron.schedule('swiffer-analyze-conversations', '* * * * *', $$SELECT public._wa_cron_post('/api/public/hooks/analyze-conversations');$$);
