@@ -206,7 +206,8 @@ begin
         cost_usd = u.cost_usd + excluded.cost_usd,
         errors = u.errors + excluded.errors;
 end $$;
-grant execute on function public.upsert_ai_usage_daily(uuid,date,uuid,text,integer,integer,integer,integer,numeric,integer) to authenticated, service_role;
+revoke all on function public.upsert_ai_usage_daily(uuid,date,uuid,text,integer,integer,integer,integer,numeric,integer) from public, authenticated;
+grant execute on function public.upsert_ai_usage_daily(uuid,date,uuid,text,integer,integer,integer,integer,numeric,integer) to service_role;
 
 create or replace function public.enforce_single_default_ai_provider()
 returns trigger language plpgsql as $$

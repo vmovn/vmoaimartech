@@ -5,6 +5,10 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
+import {
+  resolveCallerWorkspaceId,
+  type AuthRpcClient,
+} from "./workspace-auth";
 
 export interface AiSettings {
   workspace_id: string;
@@ -79,6 +83,11 @@ export const getAiSettings = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((v: unknown) => z.object({ workspaceId: z.string().uuid() }).parse(v))
   .handler(async ({ data, context }): Promise<AiSettings> => {
+    await resolveCallerWorkspaceId({
+      supabase: context.supabase as unknown as AuthRpcClient,
+      userId: context.userId,
+      requestedWorkspaceId: data.workspaceId,
+    });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = context.supabase as any;
     const existing = await db.from("ai_settings").select("*").eq("workspace_id", data.workspaceId).maybeSingle();
@@ -131,6 +140,12 @@ export const updateAiSettings = createServerFn({ method: "POST" })
       .parse(v),
   )
   .handler(async ({ data, context }): Promise<AiSettings> => {
+    await resolveCallerWorkspaceId({
+      supabase: context.supabase as unknown as AuthRpcClient,
+      userId: context.userId,
+      requestedWorkspaceId: data.workspaceId,
+      requireAdmin: true,
+    });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = context.supabase as any;
 
@@ -180,6 +195,11 @@ export const getAiQuotaUsage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((v: unknown) => z.object({ workspaceId: z.string().uuid() }).parse(v))
   .handler(async ({ data, context }): Promise<AiSettingsQuotaUsage> => {
+    await resolveCallerWorkspaceId({
+      supabase: context.supabase as unknown as AuthRpcClient,
+      userId: context.userId,
+      requestedWorkspaceId: data.workspaceId,
+    });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = context.supabase as any;
     const today = new Date().toISOString().slice(0, 10);
@@ -229,6 +249,12 @@ export const listAiAuditLogs = createServerFn({ method: "POST" })
     }).parse(v),
   )
   .handler(async ({ data, context }): Promise<AiAuditLogEntry[]> => {
+    await resolveCallerWorkspaceId({
+      supabase: context.supabase as unknown as AuthRpcClient,
+      userId: context.userId,
+      requestedWorkspaceId: data.workspaceId,
+      requireAdmin: true,
+    });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = context.supabase as any;
     const rows = await db
@@ -270,6 +296,11 @@ export const listAiProviderOptions = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((v: unknown) => z.object({ workspaceId: z.string().uuid() }).parse(v))
   .handler(async ({ data, context }): Promise<AiSettingsOption[]> => {
+    await resolveCallerWorkspaceId({
+      supabase: context.supabase as unknown as AuthRpcClient,
+      userId: context.userId,
+      requestedWorkspaceId: data.workspaceId,
+    });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = context.supabase as any;
     const provs = await db

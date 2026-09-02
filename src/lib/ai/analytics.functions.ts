@@ -8,6 +8,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
+import { resolveCallerWorkspaceId, type AuthRpcClient } from "./workspace-auth";
 
 // ==================== Types ====================
 
@@ -238,6 +239,11 @@ export const getAiAnalytics = createServerFn({ method: "POST" })
       .parse(v),
   )
   .handler(async ({ data, context }): Promise<AiAnalyticsReport> => {
+    await resolveCallerWorkspaceId({
+      supabase: context.supabase as unknown as AuthRpcClient,
+      userId: context.userId,
+      requestedWorkspaceId: data.workspaceId,
+    });
     const { supabase } = context;
     const days = data.days;
     const to = new Date();

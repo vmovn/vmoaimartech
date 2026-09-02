@@ -1,6 +1,14 @@
 /**
  * AI configuration server functions — CRUD for providers, models, feature
  * configs, and prompts, plus health-check runners.
+ *
+ * Authorization contract:
+ * - Super Admin platform ops live in `src/lib/admin/ai-providers.functions.ts`.
+ * - Workspace Owner/Admin: mutate providers, models, feature routing, prompts.
+ * - Workspace member: list providers/usage/logs for the active workspace.
+ * - Never infer workspace from the first membership row; use the active
+ *   workspace header (`x-swiffer-workspace-id`) plus membership RPCs.
+ * - Service role writes run only after that tenant guard.
  */
 
 import { createServerFn } from "@tanstack/react-start";
@@ -9,6 +17,11 @@ import { z } from "zod";
 import type { AIProviderKind } from "./types";
 import { getAIProvider, listProviderKinds, resolveCredentials } from "./registry.server";
 import { AIError } from "./errors";
+import {
+  readActiveWorkspaceHeader,
+  resolveCallerWorkspaceId,
+  type AuthRpcClient,
+} from "./workspace-auth";
 
 // --------- Serializable return shapes (avoid Record<string,unknown>) ---------
 
@@ -118,12 +131,38 @@ function serializeConfig(c: unknown): string {
   try { return JSON.stringify(c ?? {}); } catch { return "{}"; }
 }
 
-async function getWorkspaceId(userId: string): Promise<string> {
+async function requireAiWorkspace(
+  context: { supabase: unknown; userId: string },
+  opts: { admin?: boolean } = {},
+): Promise<string> {
+  return resolveCallerWorkspaceId({
+    supabase: context.supabase as unknown as AuthRpcClient,
+    userId: context.userId,
+    headerWorkspaceId: readActiveWorkspaceHeader(),
+    requireAdmin: opts.admin === true,
+  });
+}
+
+async function requireProviderInWorkspace(providerId: string, workspaceId: string): Promise<{
+  id: string; workspace_id: string; kind: AIProviderKind; name: string;
+  base_url: string | null; api_key_secret_name: string | null;
+  organization_id: string | null; enabled: boolean; is_default: boolean;
+  priority: number; config: Record<string, unknown>;
+}> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data } = await supabaseAdmin.from("workspace_members")
-    .select("workspace_id").eq("user_id", userId).limit(1).maybeSingle();
-  if (!data) throw new Error("No workspace found for current user");
-  return (data as { workspace_id: string }).workspace_id;
+  const { data: row } = await supabaseAdmin.from("ai_providers" as never)
+    .select("*").eq("id", providerId).maybeSingle();
+  if (!row) throw new AIError("not_found", "Provider not found");
+  const rec = row as unknown as {
+    id: string; workspace_id: string; kind: AIProviderKind; name: string;
+    base_url: string | null; api_key_secret_name: string | null;
+    organization_id: string | null; enabled: boolean; is_default: boolean;
+    priority: number; config: Record<string, unknown>;
+  };
+  if (rec.workspace_id !== workspaceId) {
+    throw new AIError("auth", "AI provider does not belong to this workspace");
+  }
+  return rec;
 }
 
 function normalizeProvider(row: unknown): AIProviderRow {
@@ -202,7 +241,7 @@ function normalizePrompt(row: unknown): AIPromptRow {
 export const listAIProviders = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<AIProviderRow[]> => {
-    const workspaceId = await getWorkspaceId(context.userId);
+    const workspaceId = await requireAiWorkspace(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data } = await supabaseAdmin.from("ai_providers" as never)
       .select("*, ai_provider_health(*), ai_models(count)")
@@ -232,7 +271,7 @@ export const upsertAIProvider = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((v: unknown) => upsertAIProviderInput.parse(v))
   .handler(async ({ data, context }): Promise<AIProviderRow> => {
-    const workspaceId = await getWorkspaceId(context.userId);
+    const workspaceId = await requireAiWorkspace(context, { admin: true });
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const row = {
       workspace_id: workspaceId, kind: data.kind, name: data.name,
@@ -242,8 +281,9 @@ export const upsertAIProvider = createServerFn({ method: "POST" })
     };
     if (data.id) {
       const { data: updated, error } = await supabaseAdmin.from("ai_providers" as never)
-        .update(row as never).eq("id", data.id).select().single();
+        .update(row as never).eq("id", data.id).eq("workspace_id", workspaceId).select().maybeSingle();
       if (error) throw new Error(error.message);
+      if (!updated) throw new AIError("not_found", "Provider not found");
       return normalizeProvider(updated);
     }
     const { data: inserted, error } = await supabaseAdmin.from("ai_providers" as never)
@@ -256,7 +296,7 @@ export const deleteAIProvider = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((v: unknown) => z.object({ id: z.string().uuid() }).parse(v))
   .handler(async ({ data, context }): Promise<{ ok: true }> => {
-    const workspaceId = await getWorkspaceId(context.userId);
+    const workspaceId = await requireAiWorkspace(context, { admin: true });
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await supabaseAdmin.from("ai_providers" as never).delete()
       .eq("id", data.id).eq("workspace_id", workspaceId);
@@ -268,17 +308,10 @@ export interface HealthResult { ok: boolean; latency_ms: number; error?: string 
 export const testAIProvider = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((v: unknown) => z.object({ id: z.string().uuid() }).parse(v))
-  .handler(async ({ data }): Promise<HealthResult> => {
+  .handler(async ({ data, context }): Promise<HealthResult> => {
+    const workspaceId = await requireAiWorkspace(context, { admin: true });
+    const rec = await requireProviderInWorkspace(data.id, workspaceId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: row } = await supabaseAdmin.from("ai_providers" as never)
-      .select("*").eq("id", data.id).maybeSingle();
-    if (!row) throw new Error("Provider not found");
-    const rec = row as unknown as {
-      id: string; workspace_id: string; kind: AIProviderKind; name: string;
-      base_url: string | null; api_key_secret_name: string | null;
-      organization_id: string | null; enabled: boolean; is_default: boolean;
-      priority: number; config: Record<string, unknown>;
-    };
     try {
       const impl = getAIProvider(rec.kind);
       const creds = resolveCredentials({
@@ -316,20 +349,15 @@ export interface RemoteModel { id: string; name?: string }
 export const listProviderModelsRemote = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((v: unknown) => z.object({ id: z.string().uuid() }).parse(v))
-  .handler(async ({ data }): Promise<RemoteModel[]> => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: row } = await supabaseAdmin.from("ai_providers" as never)
-      .select("*").eq("id", data.id).maybeSingle();
-    if (!row) throw new Error("Provider not found");
-    const r = row as unknown as Record<string, unknown>;
-    const impl = getAIProvider(r.kind as AIProviderKind);
+  .handler(async ({ data, context }): Promise<RemoteModel[]> => {
+    const workspaceId = await requireAiWorkspace(context, { admin: true });
+    const rec = await requireProviderInWorkspace(data.id, workspaceId);
+    const impl = getAIProvider(rec.kind);
     const creds = resolveCredentials({
-      id: r.id as string, workspaceId: r.workspace_id as string, kind: r.kind as AIProviderKind,
-      name: r.name as string, baseUrl: (r.base_url as string | null) ?? null,
-      apiKeySecretName: (r.api_key_secret_name as string | null) ?? null,
-      organizationId: (r.organization_id as string | null) ?? null,
-      enabled: r.enabled as boolean, isDefault: r.is_default as boolean,
-      priority: (r.priority as number) ?? 100, config: (r.config as Record<string, unknown>) ?? {},
+      id: rec.id, workspaceId: rec.workspace_id, kind: rec.kind, name: rec.name,
+      baseUrl: rec.base_url, apiKeySecretName: rec.api_key_secret_name,
+      organizationId: rec.organization_id, enabled: rec.enabled,
+      isDefault: rec.is_default, priority: rec.priority, config: rec.config,
     });
     const models = (await impl.listModels?.(creds)) ?? [];
     return models.map((m) => ({ id: m.id, name: m.name }));
@@ -355,7 +383,9 @@ export type UpsertAIModelInput = z.infer<typeof upsertAIModelInput>;
 export const upsertAIModel = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((v: unknown) => upsertAIModelInput.parse(v))
-  .handler(async ({ data }): Promise<AIModelRow> => {
+  .handler(async ({ data, context }): Promise<AIModelRow> => {
+    const workspaceId = await requireAiWorkspace(context, { admin: true });
+    await requireProviderInWorkspace(data.providerId, workspaceId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const row = {
       provider_id: data.providerId, model_id: data.modelId, display_name: data.displayName,
@@ -377,8 +407,14 @@ export const upsertAIModel = createServerFn({ method: "POST" })
 export const deleteAIModel = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((v: unknown) => z.object({ id: z.string().uuid() }).parse(v))
-  .handler(async ({ data }): Promise<{ ok: true }> => {
+  .handler(async ({ data, context }): Promise<{ ok: true }> => {
+    const workspaceId = await requireAiWorkspace(context, { admin: true });
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: model } = await supabaseAdmin.from("ai_models" as never)
+      .select("id, provider_id").eq("id", data.id).maybeSingle();
+    const providerId = (model as { provider_id?: string } | null)?.provider_id;
+    if (!providerId) throw new AIError("not_found", "Model not found");
+    await requireProviderInWorkspace(providerId, workspaceId);
     await supabaseAdmin.from("ai_models" as never).delete().eq("id", data.id);
     return { ok: true };
   });
@@ -402,7 +438,9 @@ export const upsertAIFeatureConfig = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((v: unknown) => upsertAIFeatureConfigInput.parse(v))
   .handler(async ({ data, context }): Promise<AIFeatureConfigRow> => {
-    const workspaceId = await getWorkspaceId(context.userId);
+    const workspaceId = await requireAiWorkspace(context, { admin: true });
+    if (data.providerId) await requireProviderInWorkspace(data.providerId, workspaceId);
+    for (const id of data.fallbackProviderIds) await requireProviderInWorkspace(id, workspaceId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: row, error } = await supabaseAdmin.from("ai_feature_config" as never).upsert({
       workspace_id: workspaceId, feature: data.feature,
@@ -435,7 +473,7 @@ export const upsertAIPrompt = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((v: unknown) => upsertAIPromptInput.parse(v))
   .handler(async ({ data, context }): Promise<AIPromptRow> => {
-    const workspaceId = await getWorkspaceId(context.userId);
+    const workspaceId = await requireAiWorkspace(context, { admin: true });
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const row = {
       workspace_id: workspaceId, key: data.key, name: data.name,
@@ -445,8 +483,10 @@ export const upsertAIPrompt = createServerFn({ method: "POST" })
       updated_at: new Date().toISOString(),
     };
     if (data.id) {
-      const { data: updated, error } = await supabaseAdmin.from("ai_prompts" as never).update(row as never).eq("id", data.id).select().single();
+      const { data: updated, error } = await supabaseAdmin.from("ai_prompts" as never)
+        .update(row as never).eq("id", data.id).eq("workspace_id", workspaceId).select().maybeSingle();
       if (error) throw new Error(error.message);
+      if (!updated) throw new AIError("not_found", "Prompt not found");
       return normalizePrompt(updated);
     }
     const { data: inserted, error } = await supabaseAdmin.from("ai_prompts" as never).insert(row as never).select().single();
@@ -459,7 +499,7 @@ export const upsertAIPrompt = createServerFn({ method: "POST" })
 export const getAIUsageSummary = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<AIUsageDailyRow[]> => {
-    const workspaceId = await getWorkspaceId(context.userId);
+    const workspaceId = await requireAiWorkspace(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const since = new Date(Date.now() - 30 * 86_400_000).toISOString().slice(0, 10);
     const { data } = await supabaseAdmin.from("ai_usage_daily" as never)
@@ -489,7 +529,7 @@ export const getAIRecentLogs = createServerFn({ method: "POST" })
     providerId: z.string().uuid().optional(),
   }).parse(v))
   .handler(async ({ data, context }): Promise<AIRequestLogRow[]> => {
-    const workspaceId = await getWorkspaceId(context.userId);
+    const workspaceId = await requireAiWorkspace(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     let q = supabaseAdmin.from("ai_request_logs" as never).select("*")
       .eq("workspace_id", workspaceId).order("created_at", { ascending: false }).limit(data.limit);

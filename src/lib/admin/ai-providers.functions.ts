@@ -1,9 +1,13 @@
 /**
  * Super Admin — AI Provider management.
  *
- * Lets platform staff create, configure, test and delete AI providers for any
- * workspace, sync their model catalogs, and run an end-to-end smoke test that
- * proves the app-wide `runChat` path works with the configured provider.
+ * Authorization contract (Phase 2):
+ * - Super Admin: platform provider management, including any workspace row.
+ * - Workspace Owner/Admin: their workspace providers/feature routing via
+ *   `src/lib/ai/config.functions.ts` (not this module).
+ * - Member: invoke AI; read safe settings; never manage credentials.
+ *
+ * This module does not expose API-key values. Rows store env secret names only.
  *
  * Authorization: every handler verifies the caller's platform role through the
  * caller's own RLS-scoped client BEFORE `supabaseAdmin` is imported.

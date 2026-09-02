@@ -2,6 +2,7 @@
  * AI request logging + daily usage aggregation.
  */
 import type { AIProviderKind, TokenUsage } from "./types";
+import { selectAiLogPreviews } from "./log-privacy";
 
 interface LogEntry {
   workspaceId: string;
@@ -33,9 +34,33 @@ function redact(value: unknown): unknown {
   } catch { return "[unserializable]"; }
 }
 
+async function loadLogPrivacy(workspaceId: string): Promise<{ logPrompts: boolean; logResponses: boolean }> {
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data } = await supabaseAdmin.from("ai_settings" as never)
+      .select("log_prompts, log_responses")
+      .eq("workspace_id", workspaceId)
+      .maybeSingle();
+    const row = data as { log_prompts?: boolean; log_responses?: boolean } | null;
+    return {
+      logPrompts: row?.log_prompts !== false,
+      logResponses: row?.log_responses !== false,
+    };
+  } catch {
+    return { logPrompts: true, logResponses: true };
+  }
+}
+
 export async function logAIRequest(entry: LogEntry): Promise<void> {
   try {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const privacy = await loadLogPrivacy(entry.workspaceId);
+    const previews = selectAiLogPreviews({
+      logPrompts: privacy.logPrompts,
+      logResponses: privacy.logResponses,
+      requestPreview: entry.requestPreview,
+      responsePreview: entry.responsePreview,
+    });
     await supabaseAdmin.from("ai_request_logs" as never).insert({
       workspace_id: entry.workspaceId,
       user_id: entry.userId ?? null,
@@ -53,12 +78,12 @@ export async function logAIRequest(entry: LogEntry): Promise<void> {
       cost_usd: entry.costUsd ?? 0,
       error_type: entry.errorType ?? null,
       error_message: entry.errorMessage ?? null,
-      request_preview: redact(entry.requestPreview),
-      response_preview: redact(entry.responsePreview),
+      request_preview: redact(previews.requestPreview),
+      response_preview: redact(previews.responsePreview),
       metadata: entry.metadata ?? {},
     } as never);
 
-    // Update daily rollup
+    // Update daily rollup (service_role only RPC)
     const day = new Date().toISOString().slice(0, 10);
     await supabaseAdmin.rpc("upsert_ai_usage_daily" as never, {
       p_workspace_id: entry.workspaceId,

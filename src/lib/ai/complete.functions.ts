@@ -27,6 +27,8 @@ import {
   assertFeatureEnabled,
   resolveFeatureProviderChain,
 } from "./feature-routing";
+import { assertProviderTenant, modelBelongsToProvider } from "./provider-tenant";
+import { readActiveWorkspaceHeader, resolveCallerWorkspaceId, type AuthRpcClient } from "./workspace-auth";
 
 // ---------- Record loaders ----------
 
@@ -131,6 +133,30 @@ async function callWithProvider(provider: AIProviderRecord, req: ChatRequest): P
   return impl.chat(req, creds);
 }
 
+function explicitProviderIds(opts: {
+  primaryProviderId?: string | null;
+  fallbackProviderIds?: string[];
+}): Set<string> {
+  const ids = new Set<string>();
+  if (opts.primaryProviderId) ids.add(opts.primaryProviderId);
+  if (opts.fallbackProviderIds) for (const id of opts.fallbackProviderIds) ids.add(id);
+  return ids;
+}
+
+function takeProviderForWorkspace(
+  provider: AIProviderRecord | null,
+  workspaceId: string,
+  explicit: boolean,
+): AIProviderRecord | null {
+  if (!provider || !provider.enabled) return null;
+  if (!assertProviderTenant({
+    providerWorkspaceId: provider.workspaceId,
+    executionWorkspaceId: workspaceId,
+    explicit,
+  })) return null;
+  return provider;
+}
+
 export async function runChat(opts: RunOpts): Promise<ChatResponse & { providerId: string; providerKind: string }> {
   let featureCfg: AIFeatureConfig | null = null;
   if (opts.feature) {
@@ -152,6 +178,7 @@ export async function runChat(opts: RunOpts): Promise<ChatResponse & { providerI
   const chain: string[] = [];
   if (chainIds.primaryProviderId) chain.push(chainIds.primaryProviderId);
   for (const id of chainIds.fallbackProviderIds) if (!chain.includes(id)) chain.push(id);
+  const explicitIds = explicitProviderIds(opts);
 
   // Workspace default only when the feature has no explicit routing.
   if (chain.length === 0) {
@@ -162,8 +189,13 @@ export async function runChat(opts: RunOpts): Promise<ChatResponse & { providerI
 
   let lastError: AIError | Error | null = null;
   for (const providerId of chain) {
-    const provider = await loadProvider(providerId);
-    if (!provider || !provider.enabled) continue;
+    const loaded = await loadProvider(providerId);
+    const provider = takeProviderForWorkspace(
+      loaded,
+      opts.workspaceId,
+      explicitIds.has(providerId),
+    );
+    if (!provider) continue;
 
     await enforceAIRateLimit({
       workspaceId: opts.workspaceId, userId: opts.userId ?? null,
@@ -182,6 +214,9 @@ export async function runChat(opts: RunOpts): Promise<ChatResponse & { providerI
       const resolvedRequest = { ...request, model: modelId };
       const res = await callWithProvider(provider, resolvedRequest);
       const model = await loadModel(provider.id, modelId).catch(() => null);
+      if (model && !modelBelongsToProvider(model.providerId, provider.id)) {
+        throw new AIError("auth", "AI model does not belong to the resolved provider");
+      }
       const usage = res.usage ?? {
         prompt_tokens: estimateMessageTokens(request.messages),
         completion_tokens: Math.ceil((res.content?.length ?? 0) / 4),
@@ -232,13 +267,22 @@ export async function runEmbed(opts: RunEmbedOpts): Promise<EmbedResponse & {
   providerKind: string;
 }> {
   const providers: AIProviderRecord[] = [];
+  const explicitIds = explicitProviderIds(opts);
   for (const id of [opts.primaryProviderId, ...(opts.fallbackProviderIds ?? [])]) {
     if (!id || providers.some((p) => p.id === id)) continue;
-    const provider = await loadProvider(id);
-    if (provider?.enabled) providers.push(provider);
+    const provider = takeProviderForWorkspace(
+      await loadProvider(id),
+      opts.workspaceId,
+      explicitIds.has(id),
+    );
+    if (provider) providers.push(provider);
   }
   if (providers.length === 0) {
-    const provider = await loadDefaultProvider(opts.workspaceId);
+    const provider = takeProviderForWorkspace(
+      await loadDefaultProvider(opts.workspaceId),
+      opts.workspaceId,
+      false,
+    );
     if (provider) providers.push(provider);
   }
   if (providers.length === 0) {
@@ -283,6 +327,7 @@ const chatInput = z.object({
     tool_call_id: z.string().optional(),
   })),
   model: z.string().optional(),
+  workspaceId: z.string().uuid().optional(),
   providerId: z.string().uuid().optional(),
   feature: z.string().optional(),
   temperature: z.number().min(0).max(2).optional(),
@@ -304,20 +349,18 @@ export interface AIChatResult {
   toolCalls: string; // JSON-encoded array (unknown args aren't serializable directly)
 }
 
-async function getWorkspaceId(userId: string): Promise<string> {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data } = await supabaseAdmin.from("workspace_members")
-    .select("workspace_id").eq("user_id", userId).limit(1).maybeSingle();
-  if (!data) throw new Error("No workspace found for current user");
-  return (data as { workspace_id: string }).workspace_id;
-}
 
 export const aiChat = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((v: unknown) => chatInput.parse(v))
   .handler(async ({ data, context }): Promise<AIChatResult> => {
     const userId = context.userId;
-    const workspaceId = await getWorkspaceId(userId);
+    const workspaceId = await resolveCallerWorkspaceId({
+      supabase: context.supabase as unknown as AuthRpcClient,
+      userId,
+      requestedWorkspaceId: data.workspaceId,
+      headerWorkspaceId: readActiveWorkspaceHeader(),
+    });
     const variables = data.variables ?? {};
 
     const messages: AIMessage[] = [];
