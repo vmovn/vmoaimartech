@@ -11,6 +11,7 @@ Deployment opens `/setup` once → authorized operator initializes platform → 
 - `src/lib/setup/setup.functions.ts` — server functions for setup operations.
 - `src/lib/setup/setup-security.server.ts` — server-only Setup Secret session/security handling.
 - `src/lib/setup/environment-readiness.server.ts` — server-only environment/capability readiness evaluation.
+- `src/lib/setup/launch-guidance.ts` — Vietnam-first first-run/launch recommendations (no secrets).
 
 ## Source of Truth
 - platform setting `setup_complete` controls permanent completion state.
@@ -43,6 +44,15 @@ The verified Product setup is four steps:
 
 Step labels are presentation, but the secure server contract remains invariant.
 
+Vietnam-first operator guidance for the System step lives in
+`src/lib/setup/launch-guidance.ts`. Optional integrations stay non-blocking.
+Recommended first keys for a Vietnam launch are Gemini, Telegram Bot, and a
+Meta App (Messenger/Instagram). Local operator keys belong in
+`.env.integrations.local`, which START merges into `.env.local` and RESET does
+not delete.
+
+Business-step defaults are `vi`, `Asia/Ho_Chi_Minh`, `VND`, `DD/MM/YYYY`.
+
 ## Validation
 Presentation-only → setup route compile/typecheck + targeted browser view.
 Security/bootstrap logic → targeted setup-state/access tests; verify first admin and post-completion lock; use fresh reset only when the changed behavior requires it.
@@ -50,5 +60,5 @@ Security/bootstrap logic → targeted setup-state/access tests; verify first adm
 ## Last Verified
 - Runtime baseline: `v1.0.0-localhost-1.0.6.2`.
 - Memory installation checkpoint: `v1.0.0-localhost-1.0.7` / `0f401975274490d0201581325a932d7865f73208`.
-- Date: 2026-08-31.
-- Verification scope: Primary Entry Points and verified four-step setup presentation only; secure setup semantics were not re-audited here.
+- Date: 2026-09-02.
+- Verification scope: Primary Entry Points, Vietnam-first System-step launch guidance, and Business-step regional defaults. Secure setup semantics were not re-audited here.

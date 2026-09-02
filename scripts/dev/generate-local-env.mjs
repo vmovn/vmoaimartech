@@ -3,7 +3,7 @@ import { existsSync, readFileSync, renameSync, rmSync, writeFileSync } from "nod
 import { fileURLToPath } from "node:url";
 import process from "node:process";
 import pg from "pg";
-import { parseLocalEnv, resolveLocalSecrets } from "./local-env-secrets.mjs";
+import { parseLocalEnv, resolveLocalSecrets, LOCAL_SECRET_NAMES } from "./local-env-secrets.mjs";
 import { syncCronDispatcherConfig } from "../product/sync-cron-dispatcher-config.mjs";
 
 const { Client } = pg;
@@ -29,11 +29,44 @@ if (!status.API_URL || !publishableKey || !serverKey || !databaseUrl) {
 
 const envPath = ".env.local";
 const temporaryEnvPath = ".env.local.tmp";
+const integrationsPath = ".env.integrations.local";
 const existingValues = existsSync(envPath)
   ? parseLocalEnv(readFileSync(envPath, "utf8"))
   : new Map();
+const integrationValues = existsSync(integrationsPath)
+  ? parseLocalEnv(readFileSync(integrationsPath, "utf8"))
+  : new Map();
 const secrets = resolveLocalSecrets(existingValues);
 const appOrigin = "http://host.docker.internal:8080";
+
+const generatedKeys = new Set([
+  "VITE_SUPABASE_URL",
+  "VITE_SUPABASE_PUBLISHABLE_KEY",
+  "VITE_APP_ENV",
+  "DATABASE_URL",
+  "SUPABASE_URL",
+  "SUPABASE_PUBLISHABLE_KEY",
+  "SUPABASE_SERVICE_ROLE_KEY",
+  ...LOCAL_SECRET_NAMES,
+  "NODE_ENV",
+  "HOST",
+  "PORT",
+  "APP_ORIGIN",
+  "LOG_LEVEL",
+]);
+
+function preservedOperatorLines() {
+  const merged = new Map([...existingValues, ...integrationValues]);
+  const lines = [];
+  for (const [key, value] of merged) {
+    if (!value) continue;
+    if (generatedKeys.has(key)) continue;
+    if (key.startsWith("VITE_DEBUG") || key === "VITE_AUDIT_VERBOSE") continue;
+    lines.push(`${key}=${value}`);
+  }
+  lines.sort();
+  return lines;
+}
 
 const lines = [
   "# Generated for this isolated local environment. Never commit this file.",
@@ -67,10 +100,19 @@ const lines = [
   `APP_ORIGIN=${appOrigin}`,
   "LOG_LEVEL=debug",
   "",
-  "# Third-party integrations remain intentionally unconfigured.",
-  "# Add AI, WhatsApp, SMTP, Stripe, or other provider credentials manually when needed.",
+  "# Third-party integrations remain intentionally unconfigured by START-LOCAL.",
+  `# Put operator keys in ${integrationsPath} (GEMINI_API_KEY, TELEGRAM_BOT_TOKEN, META_APP_ID, …).`,
+  "# That file is gitignored and is not deleted by RESET-LOCAL.",
+  "# Add AI, WhatsApp, SMTP, Stripe, or other provider credentials there when needed.",
   "",
 ];
+
+const operatorLines = preservedOperatorLines();
+if (operatorLines.length > 0) {
+  lines.push("# Operator-supplied integration keys preserved from .env.local / .env.integrations.local.");
+  lines.push(...operatorLines);
+  lines.push("");
+}
 
 writeFileSync(temporaryEnvPath, lines.join("\n"), { encoding: "utf8", mode: 0o600 });
 rmSync(envPath, { force: true });

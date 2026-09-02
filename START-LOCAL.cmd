@@ -19,6 +19,7 @@ set "SUPABASE_PROJECT_ID=%PROJECT_ID%"
 set "VITE_SUPABASE_PROJECT_ID=%PROJECT_ID%"
 set "SUPABASE_TELEMETRY_DISABLED=1"
 set "APP_URL=http://127.0.0.1:8080/"
+set "HEALTH_URL=http://127.0.0.1:8080/api/public/health"
 set "SETUP_URL=http://127.0.0.1:8080/setup"
 set "STUDIO_URL=http://127.0.0.1:56323/"
 set "SUPABASE_PORTS=56320 56321 56322 56323 56324"
@@ -86,7 +87,7 @@ if errorlevel 1 (
   goto fail
 )
 
-curl.exe --silent --fail --max-time 2 "%APP_URL%" >nul 2>&1
+curl.exe --silent --fail --max-time 10 "%HEALTH_URL%" >nul 2>&1
 if errorlevel 1 (
   echo.
   echo Starting application in a separate terminal...
@@ -98,7 +99,7 @@ if errorlevel 1 (
 echo Waiting for application readiness...
 set /a APP_ATTEMPTS=0
 :wait_app
-curl.exe --silent --fail --max-time 2 "%APP_URL%" >nul 2>&1
+curl.exe --silent --fail --max-time 10 "%HEALTH_URL%" >nul 2>&1
 if not errorlevel 1 goto app_ready
 set /a APP_ATTEMPTS+=1
 if !APP_ATTEMPTS! GEQ 40 (

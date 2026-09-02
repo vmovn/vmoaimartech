@@ -212,11 +212,19 @@ async function probe(admin: SupabaseClient): Promise<Map<string, OperationalResu
 
   checks.set(
     "realtime",
-    result(
-      "UNAVAILABLE",
-      "No safe browser-independent Realtime handshake exists in setup; local verification tests it explicitly.",
-      "Setup chưa có phép bắt tay Realtime độc lập trình duyệt an toàn; quy trình kiểm tra local xác minh riêng.",
-    ),
+    schemaReady && !auth.error
+      ? result(
+          "READY",
+          "Realtime is provided by the same reachable Supabase stack; setup does not open a separate WebSocket.",
+          "Realtime đi cùng stack Supabase đang truy cập được; setup không mở WebSocket riêng.",
+          true,
+        )
+      : result(
+          "NEEDS_ATTENTION",
+          "Realtime cannot be assumed until the Supabase Data API and Auth administration are reachable.",
+          "Chưa thể coi Realtime sẵn sàng khi Data API và quản trị Auth Supabase chưa truy cập được.",
+          true,
+        ),
   );
   checks.set(
     "api-webhooks",

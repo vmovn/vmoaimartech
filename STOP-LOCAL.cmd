@@ -54,30 +54,18 @@ if "%NO_PAUSE%"=="0" pause
 exit /b 0
 
 :stop_app
-set "APP_STOPPED=0"
-set "PID_FILE=%REPO%.local-app-shell.pid"
-if exist "%PID_FILE%" (
-  set /p APP_PID=<"%PID_FILE%"
-  echo !APP_PID!| findstr /R "^[0-9][0-9]*$" >nul
-  if not errorlevel 1 (
-    powershell.exe -NoProfile -Command "$p=Get-CimInstance Win32_Process -Filter ('ProcessId=' + !APP_PID!) -ErrorAction SilentlyContinue; if($p -and $p.Name -eq 'cmd.exe' -and $p.CommandLine -like '*START-LOCAL.cmd*--run-app*'){exit 0}else{exit 1}" >nul 2>&1
-    if not errorlevel 1 (
-      echo Stopping launcher-managed application terminal...
-      taskkill /PID !APP_PID! /T /F >nul 2>&1
-      set "APP_STOPPED=1"
-    )
-  )
-  del /q "%PID_FILE%" >nul 2>&1
+if not exist "%REPO%scripts\dev\stop-local-app.ps1" (
+  echo ERROR: scripts\dev\stop-local-app.ps1 was not found.
+  exit /b 0
 )
-
-if "!APP_STOPPED!"=="0" (
-  tasklist /FI "WINDOWTITLE eq VMO AIMarTech App" /NH 2>nul | findstr /I "cmd.exe" >nul
-  if not errorlevel 1 (
-    echo Stopping launcher-managed application terminal...
-    taskkill /FI "WINDOWTITLE eq VMO AIMarTech App" /T /F >nul 2>&1
-    set "APP_STOPPED=1"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%REPO%scripts\dev\stop-local-app.ps1"
+if errorlevel 2 (
+  echo No launcher-managed application terminal was running.
+) else (
+  if errorlevel 1 (
+    echo WARNING: Could not inspect the local application process.
+  ) else (
+    echo Stopped launcher-managed application terminal.
   )
 )
-
-if "!APP_STOPPED!"=="0" echo No launcher-managed application terminal was running.
 exit /b 0

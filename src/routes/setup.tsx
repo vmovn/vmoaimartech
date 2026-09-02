@@ -3,7 +3,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState, type ReactNode } from "react";
 import {
-  AlertTriangle,
   ArrowLeft,
   ArrowRight,
   Building2,
@@ -44,6 +43,13 @@ import {
   type SetupEnvironmentReport,
 } from "@/lib/setup/setup.functions";
 import type { CapabilityReadiness } from "@/lib/setup/environment-readiness.server";
+import {
+  INTEGRATIONS_ENV_FILE,
+  LAUNCH_KEY_CHECKLIST,
+  PRODUCTION_ORIGIN,
+  getLaunchGuidance,
+  type LaunchPriority,
+} from "@/lib/setup/launch-guidance";
 import { BRAND_NAME } from "@/lib/branding/brand";
 
 export const Route = createFileRoute("/setup")({
@@ -94,20 +100,34 @@ const CATEGORY_LABELS: Record<
 };
 
 const TIMEZONES = [
-  "Asia/Ho_Chi_Minh",
-  "UTC",
-  "Asia/Singapore",
-  "Asia/Tokyo",
-  "Europe/London",
-  "America/New_York",
+  { value: "Asia/Ho_Chi_Minh", label: "Asia/Ho_Chi_Minh (Giờ Việt Nam, GMT+7)" },
+  { value: "UTC", label: "UTC" },
+  { value: "Asia/Singapore", label: "Asia/Singapore" },
+  { value: "Asia/Tokyo", label: "Asia/Tokyo" },
+  { value: "Europe/London", label: "Europe/London" },
+  { value: "America/New_York", label: "America/New_York" },
 ];
-const CURRENCIES = ["VND", "USD", "EUR", "GBP", "SGD", "JPY", "AUD", "CAD"];
+const CURRENCIES = [
+  { value: "VND", label: "VND — Đồng Việt Nam" },
+  { value: "USD", label: "USD" },
+  { value: "EUR", label: "EUR" },
+  { value: "GBP", label: "GBP" },
+  { value: "SGD", label: "SGD" },
+  { value: "JPY", label: "JPY" },
+  { value: "AUD", label: "AUD" },
+  { value: "CAD", label: "CAD" },
+];
 const LANGUAGES = [
   { code: "vi", label: "Tiếng Việt" },
   { code: "en", label: "English" },
   { code: "fr", label: "Français" },
   { code: "de", label: "Deutsch" },
 ];
+const DATE_FORMATS = [
+  { value: "DD/MM/YYYY", label: "DD/MM/YYYY (ngày/tháng/năm — Việt Nam)" },
+  { value: "YYYY-MM-DD", label: "YYYY-MM-DD (ISO)" },
+  { value: "MM/DD/YYYY", label: "MM/DD/YYYY (tháng/ngày/năm)" },
+] as const;
 
 function SecretGate() {
   const queryClient = useQueryClient();
@@ -250,27 +270,14 @@ function SetupWizard({
     },
   });
 
-  const detectedTimezone =
-    draft?.business.timezone ||
-    (typeof Intl !== "undefined"
-      ? Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC"
-      : "UTC");
-  const detectedLanguage =
-    draft?.business.language ||
-    (typeof navigator !== "undefined" && navigator.language.toLowerCase().startsWith("vi")
-      ? "vi"
-      : "en");
   const [businessName, setBusinessName] = useState(draft?.business.businessName ?? "");
   const [workspaceName, setWorkspaceName] = useState(draft?.business.workspaceName ?? "");
   const [appName, setAppName] = useState(draft?.business.appName || BRAND_NAME);
-  const [language, setLanguage] = useState(detectedLanguage);
-  const [timezone, setTimezone] = useState(detectedTimezone);
-  const [currency, setCurrency] = useState(
-    draft?.business.currency || (detectedTimezone === "Asia/Ho_Chi_Minh" ? "VND" : "USD"),
-  );
+  const [language, setLanguage] = useState(draft?.business.language || "vi");
+  const [timezone, setTimezone] = useState(draft?.business.timezone || "Asia/Ho_Chi_Minh");
+  const [currency, setCurrency] = useState(draft?.business.currency || "VND");
   const [dateFormat, setDateFormat] = useState<"MM/DD/YYYY" | "DD/MM/YYYY" | "YYYY-MM-DD">(
-    (draft?.business.dateFormat as "MM/DD/YYYY" | "DD/MM/YYYY" | "YYYY-MM-DD") ||
-      (detectedLanguage === "vi" ? "DD/MM/YYYY" : "YYYY-MM-DD"),
+    (draft?.business.dateFormat as "MM/DD/YYYY" | "DD/MM/YYYY" | "YYYY-MM-DD") || "DD/MM/YYYY",
   );
   const [businessReady, setBusinessReady] = useState(
     Boolean(
@@ -411,8 +418,8 @@ function SetupWizard({
                 <Building2 className="h-5 w-5" /> Business / Doanh nghiệp
               </CardTitle>
               <CardDescription>
-                Set only the identity and regional defaults needed for the first organization and
-                workspace.
+                Mặc định thị trường Việt Nam: tiếng Việt, GMT+7, VND, ngày/tháng/năm. / Vietnam-first
+                defaults: Vietnamese, GMT+7, VND, day/month/year.
               </CardDescription>
             </CardHeader>
             <CardContent className="grid gap-4 sm:grid-cols-2">
@@ -467,7 +474,7 @@ function SetupWizard({
                   setTimezone(value);
                   setBusinessReady(false);
                 }}
-                options={TIMEZONES.map((value) => ({ value, label: value }))}
+                options={TIMEZONES.map((item) => ({ value: item.value, label: item.label }))}
               />
               <SelectField
                 label="Currency / Tiền tệ"
@@ -476,7 +483,7 @@ function SetupWizard({
                   setCurrency(value);
                   setBusinessReady(false);
                 }}
-                options={CURRENCIES.map((value) => ({ value, label: value }))}
+                options={CURRENCIES.map((item) => ({ value: item.value, label: item.label }))}
               />
               <SelectField
                 label="Date format / Định dạng ngày"
@@ -485,10 +492,7 @@ function SetupWizard({
                   setDateFormat(value as typeof dateFormat);
                   setBusinessReady(false);
                 }}
-                options={["DD/MM/YYYY", "YYYY-MM-DD", "MM/DD/YYYY"].map((value) => ({
-                  value,
-                  label: value,
-                }))}
+                options={DATE_FORMATS.map((item) => ({ value: item.value, label: item.label }))}
               />
               <div className="sm:col-span-2">
                 <Button
@@ -522,13 +526,13 @@ function SetupWizard({
             <CardContent className="space-y-4">
               <ReviewSection title="System / Hệ thống">
                 <ReviewRow
-                  label="Core runtime"
+                  label="Hệ thống cốt lõi"
                   value={
-                    environment.data?.ready ? "READY / SẴN SÀNG" : "NEEDS ATTENTION / CẦN XỬ LÝ"
+                    environment.data?.ready ? "SẴN SÀNG / READY" : "CẦN XỬ LÝ / NEEDS ATTENTION"
                   }
                 />
                 <ReviewRow
-                  label="Optional integrations configured"
+                  label="Tích hợp đã cấu hình (Gemini/Telegram/Meta…)"
                   value={String(
                     environment.data?.categories.integration.filter(
                       (item) => item.status === "READY",
@@ -536,7 +540,7 @@ function SetupWizard({
                   )}
                 />
                 <ReviewRow
-                  label="Optional / not configured"
+                  label="Tích hợp chưa cấu hình (đúng nếu chưa có key)"
                   value={String(
                     environment.data?.categories.integration.filter((item) =>
                       ["NOT_CONFIGURED", "OPTIONAL"].includes(item.status),
@@ -625,13 +629,14 @@ function SystemStep({
           <ShieldCheck className="h-5 w-5" /> System / Hệ thống
         </CardTitle>
         <CardDescription>
-          Can this installation run safely? / Bản cài đặt này có thể vận hành an toàn không?
+          Hệ thống cốt lõi đã đủ thì được hoàn tất setup. Tích hợp tùy chọn không chặn lần chạy đầu.
+          / Core runtime is enough to finish setup. Optional integrations never block first-run.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-5">
         {loading && (
           <p className="text-sm text-muted-foreground">
-            Checking current code and services… / Đang kiểm tra mã nguồn và dịch vụ hiện tại…
+            Đang kiểm tra mã nguồn và dịch vụ hiện tại… / Checking current code and services…
           </p>
         )}
         {error && <p className="text-sm text-destructive">{error.message}</p>}
@@ -640,23 +645,26 @@ function SystemStep({
             <div className="flex flex-col gap-3 rounded-lg border p-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="font-medium">
-                  {report.ready ? "Core runtime is ready" : "Core runtime needs attention"}
+                  {report.ready
+                    ? "Hệ thống cốt lõi đã sẵn sàng / Core runtime is ready"
+                    : "Hệ thống cốt lõi cần xử lý / Core runtime needs attention"}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  Optional integrations never block first-run setup.
+                  CHƯA CẤU HÌNH là trạng thái đúng cho tích hợp chưa có key — không phải lỗi cài đặt.
                 </p>
               </div>
               <StatusBadge status={report.ready ? "READY" : "NEEDS_ATTENTION"} />
             </div>
+            <LaunchPlaybook />
             <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
-              <SummaryMetric label="Ready" value={report.summary.ready} />
-              <SummaryMetric label="Needs attention" value={report.summary.needsAttention} />
-              <SummaryMetric label="Not configured" value={report.summary.notConfigured} />
-              <SummaryMetric label="Development only" value={report.summary.developmentOnly} />
+              <SummaryMetric label="Sẵn sàng / Ready" value={report.summary.ready} />
+              <SummaryMetric label="Cần xử lý / Needs attention" value={report.summary.needsAttention} />
+              <SummaryMetric label="Chưa cấu hình / Not configured" value={report.summary.notConfigured} />
+              <SummaryMetric label="Chỉ local / Development only" value={report.summary.developmentOnly} />
             </div>
             <Accordion
               type="multiple"
-              defaultValue={["core", "platform"]}
+              defaultValue={["core", "platform", "integration"]}
               className="rounded-lg border px-4"
             >
               {(
@@ -665,9 +673,9 @@ function SystemStep({
                 <AccordionItem key={category} value={category}>
                   <AccordionTrigger>
                     <span>
-                      {CATEGORY_LABELS[category].en}{" "}
+                      {CATEGORY_LABELS[category].vi}{" "}
                       <span className="text-muted-foreground">
-                        / {CATEGORY_LABELS[category].vi}
+                        / {CATEGORY_LABELS[category].en}
                       </span>
                     </span>
                   </AccordionTrigger>
@@ -686,48 +694,114 @@ function SystemStep({
   );
 }
 
+function LaunchPlaybook() {
+  return (
+    <div className="space-y-3 rounded-lg border p-4">
+      <p className="font-medium">Hướng dẫn sẵn sàng cho {PRODUCTION_ORIGIN.replace("https://", "")}</p>
+      <p className="text-sm text-muted-foreground">
+        Mục tiêu lần này là cho platform chạy được với lựa chọn miễn phí/bền vững, định dạng Việt Nam.
+        Không copy <code>.env.local</code> lên Coolify. Production:{" "}
+        <code>APP_ORIGIN={PRODUCTION_ORIGIN}</code>, HTTPS.
+      </p>
+      <div className="space-y-2 text-sm">
+        <p className="font-medium">Nên lấy key ngay (ghi vào {INTEGRATIONS_ENV_FILE} rồi chạy lại START-LOCAL):</p>
+        <ul className="list-disc space-y-1 pl-5">
+          {LAUNCH_KEY_CHECKLIST.map((item) => (
+            <li key={item.key}>
+              <code>{item.key}</code>
+              <span className="text-muted-foreground"> — {item.whereVi}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <p className="text-sm text-muted-foreground">
+        Bỏ qua lần đầu: WhatsApp Cloud (phí Meta), Twilio SMS, Stripe/Paddle (không phải cổng VND).
+        Zalo chưa có trong mã nguồn — không cấu hình giả. File {INTEGRATIONS_ENV_FILE} không bị RESET xóa.
+      </p>
+    </div>
+  );
+}
+
+function PriorityBadge({ priority }: { priority: LaunchPriority }) {
+  const label =
+    priority === "required-core"
+      ? "Bắt buộc"
+      : priority === "recommended"
+        ? "Nên lấy ngay"
+        : priority === "skip-vn-first"
+          ? "Bỏ qua lần đầu"
+          : priority === "local-only"
+            ? "Chỉ local"
+            : "Sau khi chạy";
+  return (
+    <Badge variant="outline" className="w-fit whitespace-nowrap">
+      {label}
+    </Badge>
+  );
+}
+
 function CapabilityCheck({ capability }: { capability: CapabilityReadiness }) {
+  const guidance = getLaunchGuidance(capability.id);
+  const recommended = new Set(guidance?.keys ?? []);
+  const shownKeys =
+    recommended.size > 0
+      ? [
+          ...capability.environment.filter((item) => recommended.has(item.key)),
+          ...capability.environment.filter((item) => !recommended.has(item.key)),
+        ]
+      : capability.environment;
+
   return (
     <div className="rounded-lg border p-3">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <p className="font-medium">{capability.nameEn}</p>
-          <p className="text-sm text-muted-foreground">{capability.nameVi}</p>
+          <p className="font-medium">{capability.nameVi}</p>
+          <p className="text-sm text-muted-foreground">{capability.nameEn}</p>
         </div>
-        <StatusBadge status={capability.status} />
+        <div className="flex flex-wrap gap-2">
+          {guidance && <PriorityBadge priority={guidance.priority} />}
+          <StatusBadge status={capability.status} />
+        </div>
       </div>
-      <p className="mt-3 text-sm">{capability.descriptionEn}</p>
-      <p className="mt-1 text-sm text-muted-foreground">{capability.descriptionVi}</p>
-      <p className="mt-2 text-xs text-muted-foreground">{capability.detailEn}</p>
+      <p className="mt-3 text-sm">{capability.descriptionVi}</p>
+      <p className="mt-1 text-sm text-muted-foreground">{capability.descriptionEn}</p>
+      <p className="mt-2 text-xs text-muted-foreground">{capability.detailVi}</p>
+      {guidance && <p className="mt-2 text-sm">{guidance.howVi}</p>}
       {capability.features.length > 0 && (
         <p className="mt-2 text-xs text-muted-foreground">
-          Capabilities: {capability.features.join(" · ")}
+          Khả năng: {capability.features.join(" · ")}
         </p>
       )}
-      {capability.environment.length > 0 && (
+      {shownKeys.length > 0 && (
         <div className="mt-3 border-t pt-3">
           <p className="mb-2 text-xs font-medium">
-            Environment variable names only / Chỉ hiển thị tên biến
+            Tên biến môi trường / Environment variable names only
           </p>
           <div className="flex flex-wrap gap-2">
-            {capability.environment.map((variable) => (
-              <span
-                key={variable.key}
-                className="inline-flex items-center gap-1 rounded-control border px-2 py-1 text-xs"
-              >
-                <code>{variable.key}</code>
-                {variable.configured && variable.valid ? (
-                  <CheckCircle2 className="h-3 w-3 text-emerald-600" />
-                ) : variable.configured ? (
-                  <XCircle className="h-3 w-3 text-destructive" />
-                ) : (
-                  <span className="text-muted-foreground">—</span>
-                )}
-                <span className="sr-only">
-                  {variable.configured ? "Configured" : "Not configured"}
+            {shownKeys.map((variable) => {
+              const isRecommended = recommended.has(variable.key);
+              return (
+                <span
+                  key={variable.key}
+                  className="inline-flex items-center gap-1 rounded-control border px-2 py-1 text-xs"
+                >
+                  <code>{variable.key}</code>
+                  {isRecommended && (
+                    <span className="text-muted-foreground">nên lấy</span>
+                  )}
+                  {variable.configured && variable.valid ? (
+                    <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+                  ) : variable.configured ? (
+                    <XCircle className="h-3 w-3 text-destructive" />
+                  ) : (
+                    <span className="text-muted-foreground">—</span>
+                  )}
+                  <span className="sr-only">
+                    {variable.configured ? "Configured" : "Not configured"}
+                  </span>
                 </span>
-              </span>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
@@ -746,9 +820,18 @@ function StatusBadge({
       : status === "READY"
         ? "default"
         : "secondary";
+  const labels: Record<string, string> = {
+    READY: "SẴN SÀNG",
+    NOT_CONFIGURED: "CHƯA CẤU HÌNH",
+    OPTIONAL: "TÙY CHỌN",
+    INVALID: "KHÔNG HỢP LỆ",
+    UNAVAILABLE: "CHƯA ĐO ĐƯỢC",
+    DEVELOPMENT_ONLY: "CHỈ LOCAL",
+    NEEDS_ATTENTION: "CẦN XỬ LÝ",
+  };
   return (
     <Badge variant={variant} className="w-fit whitespace-nowrap">
-      {status.replaceAll("_", " ")}
+      {labels[status] ?? status.replaceAll("_", " ")}
     </Badge>
   );
 }
@@ -802,7 +885,7 @@ function SetupShell({
             First-run Setup / Thiết lập lần đầu
           </h1>
           <p className="text-muted-foreground">
-            Securely prepare the owner and first business workspace.
+            Chuẩn bị chủ sở hữu và Không gian làm việc đầu tiên theo mặc định Việt Nam.
           </p>
         </div>
         <Progress value={progress} className="mb-3" />
