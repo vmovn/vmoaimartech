@@ -10,8 +10,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 const SCRIPT = `(function(){
-  if (window.__SwifferChatLoaded) return;
-  window.__SwifferChatLoaded = true;
+  if (window.__PmaiChatLoaded) return;
+  window.__PmaiChatLoaded = true;
 
   function readConfig() {
     var scripts = document.getElementsByTagName('script');
@@ -22,11 +22,11 @@ const SCRIPT = `(function(){
         if (raw) { try { return JSON.parse(raw); } catch(e) {} }
       }
     }
-    return (window.SwifferChat && window.SwifferChat.config) || {};
+    return (window.PmaiChat && window.PmaiChat.config) || {};
   }
 
   var cfg = readConfig();
-  if (!cfg.botId) { console.warn('[Swiffer] missing botId'); return; }
+  if (!cfg.botId) { console.warn('[PM.ai.vn] missing botId'); return; }
 
   var host = cfg.host || (new URL(document.currentScript ? document.currentScript.src : location.href)).origin;
   var accent = cfg.color || '#a67c00';
@@ -125,14 +125,14 @@ const SCRIPT = `(function(){
 
   window.addEventListener('message', function(e){
     if (!e.data || typeof e.data !== 'object') return;
-    if (e.data.swiffer === 'close') close();
-    if (e.data.swiffer === 'unread' && !isOpen) {
-      btn.style.animation = 'swiffer-pulse 1.2s ease-out 2';
+    if (e.data.pmai === 'close') close();
+    if (e.data.pmai === 'unread' && !isOpen) {
+      btn.style.animation = 'pmai-pulse 1.2s ease-out 2';
     }
   });
 
   var style = document.createElement('style');
-  style.textContent = '@keyframes swiffer-pulse{0%{box-shadow:0 0 0 0 ' + accent + '80}70%{box-shadow:0 0 0 18px ' + accent + '00}100%{box-shadow:0 0 0 0 ' + accent + '00}}';
+  style.textContent = '@keyframes pmai-pulse{0%{box-shadow:0 0 0 0 ' + accent + '80}70%{box-shadow:0 0 0 18px ' + accent + '00}100%{box-shadow:0 0 0 0 ' + accent + '00}}';
   document.head.appendChild(style);
 
   function boot() {
@@ -145,7 +145,7 @@ const SCRIPT = `(function(){
     boot();
   }
 
-  window.SwifferChat = {
+  window.PmaiChat = {
     config: cfg,
     open: open,
     close: close,

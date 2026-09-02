@@ -24,7 +24,7 @@ export const googleWorkspace: IntegrationProvider = {
   configSchema: [],
   featured: true,
   recommended: true,
-  docsUrl: "https://docs.swiffer.io/integrations/google-workspace",
+  docsUrl: "https://docs.pm.ai.vn/integrations/google-workspace",
   capabilities: [
     { id: "list_files", label: "List Drive files", kind: "action" },
     { id: "send_email", label: "Send email via Gmail", kind: "action" },
@@ -44,7 +44,7 @@ export const microsoft365: IntegrationProvider = {
   scopes: ["openid", "profile", "email", "offline_access", "Mail.Read", "Files.Read.All", "Calendars.ReadWrite"],
   configSchema: [],
   featured: true,
-  docsUrl: "https://docs.swiffer.io/integrations/microsoft-365",
+  docsUrl: "https://docs.pm.ai.vn/integrations/microsoft-365",
   capabilities: [
     { id: "send_mail", label: "Send Outlook email", kind: "action" },
     { id: "list_files", label: "List OneDrive files", kind: "action" },
@@ -134,7 +134,7 @@ export const slack: IntegrationProvider = {
       { key: "channel", label: "Channel", type: "string", required: true },
       { key: "text", label: "Message", type: "string", required: true },
     ] },
-    { id: "slash_command", label: "Receive /swiffer command", kind: "trigger" },
+    { id: "slash_command", label: "Receive /pmai command", kind: "trigger" },
   ],
   hasServerRuntime: true,
 };

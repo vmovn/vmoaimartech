@@ -11,7 +11,7 @@ export const INBOX_VIEWS: InboxView[] = [
 ];
 
 /** Persisted inbox filter chip, scoped per workspace. */
-export const inboxViewKey = (workspaceId: string) => `swiffer.inbox.view.${workspaceId}`;
+export const inboxViewKey = (workspaceId: string) => `pmai.inbox.view.${workspaceId}`;
 
 export function readSavedInboxView(workspaceId: string | undefined | null): InboxView | null {
   if (typeof window === "undefined" || !workspaceId) return null;

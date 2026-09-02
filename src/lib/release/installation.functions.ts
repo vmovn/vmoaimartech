@@ -31,8 +31,8 @@ export type ProbeReport = {
   generated_at: string;
 };
 
-// Swiffer release channel manifest. Bumped on every published tag.
-export const SWIFFER_RELEASE = {
+// PM.ai.vn release channel manifest. Bumped on every published tag.
+export const PMAI_RELEASE = {
   product: BRAND_NAME,
   version: "4.4.6",
   build: "2026.08.07",
@@ -72,11 +72,11 @@ export type UpdateInfo = {
 export const checkForUpdates = createServerFn({ method: "GET" }).handler(async (): Promise<UpdateInfo> => {
   // Offline-safe: we treat the compiled manifest as the source of truth.
   return {
-    current: SWIFFER_RELEASE.version,
-    latest: SWIFFER_RELEASE.version,
-    channel: SWIFFER_RELEASE.channel,
+    current: PMAI_RELEASE.version,
+    latest: PMAI_RELEASE.version,
+    channel: PMAI_RELEASE.channel,
     update_available: false,
-    released_at: `${SWIFFER_RELEASE.build}T00:00:00.000Z`,
+    released_at: `${PMAI_RELEASE.build}T00:00:00.000Z`,
     changelog_url: "/docs/release-notes",
     highlights: [
       "Enterprise Security Center & Compliance Center",
@@ -127,7 +127,7 @@ export const getMigrationStatus = createServerFn({ method: "GET" })
     }
     return {
       applied_count: present,
-      latest_migration: SWIFFER_RELEASE.build,
+      latest_migration: PMAI_RELEASE.build,
       tables_present: present,
       required_tables_missing: missing,
       ready: missing.length === 0,
@@ -348,8 +348,8 @@ export const getDocumentationPackage = createServerFn({ method: "GET" }).handler
       { path: "docs/release-notes.md", title: "Release Notes", bytes: 8_192 },
     ];
     return {
-      package_name: `swiffer-docs-v${SWIFFER_RELEASE.version}.zip`,
-      version: SWIFFER_RELEASE.version,
+      package_name: `pmai-docs-v${PMAI_RELEASE.version}.zip`,
+      version: PMAI_RELEASE.version,
       generated_at: new Date().toISOString(),
       files,
     };

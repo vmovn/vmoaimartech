@@ -13,20 +13,20 @@ export const Route = createFileRoute("/_authenticated/developer-tools/cli")({
 });
 
 const COMMANDS = [
-  { cmd: "swiffer init <name>",       desc: "Scaffold a new plugin from a template." },
-  { cmd: "swiffer dev",               desc: "Hot-reload against your sandbox workspace." },
-  { cmd: "swiffer build",             desc: "Type-check and bundle to dist/." },
-  { cmd: "swiffer test [--watch]",    desc: "Run unit and integration tests." },
-  { cmd: "swiffer lint",              desc: `Lint manifest.json + source with the ${BRAND_NAME} ruleset.` },
-  { cmd: "swiffer login",             desc: `Authenticate the CLI with your ${BRAND_NAME} account.` },
-  { cmd: "swiffer link <workspace>",  desc: "Bind the CLI to a workspace and sandbox." },
-  { cmd: "swiffer publish",           desc: "Publish a new version to the Marketplace." },
-  { cmd: "swiffer versions",          desc: "List published versions for the current plugin." },
-  { cmd: "swiffer rollback <ver>",    desc: "Roll a published plugin back to a prior version." },
-  { cmd: "swiffer logs [--tail]",     desc: "Stream logs from an installed plugin." },
-  { cmd: "swiffer invoke <api>",      desc: "Invoke a REST endpoint against the API base URL." },
-  { cmd: "swiffer webhook replay",    desc: "Replay a captured webhook against your local plugin." },
-  { cmd: "swiffer theme <slug>",      desc: "Scaffold or preview a theme package." },
+  { cmd: "pmai init <name>",       desc: "Scaffold a new plugin from a template." },
+  { cmd: "pmai dev",               desc: "Hot-reload against your sandbox workspace." },
+  { cmd: "pmai build",             desc: "Type-check and bundle to dist/." },
+  { cmd: "pmai test [--watch]",    desc: "Run unit and integration tests." },
+  { cmd: "pmai lint",              desc: `Lint manifest.json + source with the ${BRAND_NAME} ruleset.` },
+  { cmd: "pmai login",             desc: `Authenticate the CLI with your ${BRAND_NAME} account.` },
+  { cmd: "pmai link <workspace>",  desc: "Bind the CLI to a workspace and sandbox." },
+  { cmd: "pmai publish",           desc: "Publish a new version to the Marketplace." },
+  { cmd: "pmai versions",          desc: "List published versions for the current plugin." },
+  { cmd: "pmai rollback <ver>",    desc: "Roll a published plugin back to a prior version." },
+  { cmd: "pmai logs [--tail]",     desc: "Stream logs from an installed plugin." },
+  { cmd: "pmai invoke <api>",      desc: "Invoke a REST endpoint against the API base URL." },
+  { cmd: "pmai webhook replay",    desc: "Replay a captured webhook against your local plugin." },
+  { cmd: "pmai theme <slug>",      desc: "Scaffold or preview a theme package." },
 ];
 
 function CliPage() {
@@ -38,7 +38,7 @@ function CliPage() {
             <TerminalIcon className="w-4 h-4" aria-hidden />
           </div>
           <h2 className="font-display text-xl font-semibold">CLI Tool</h2>
-          <Badge variant="secondary" className="text-[11px]">@swiffer/cli · v1.4.0</Badge>
+          <Badge variant="secondary" className="text-[11px]">@pmai/cli · v1.4.0</Badge>
         </div>
         <p className="text-sm text-muted-foreground mt-1">
           One tool for the whole plugin lifecycle — scaffold, run, test, publish, and roll back.
@@ -49,9 +49,9 @@ function CliPage() {
         <CardHeader><CardTitle className="text-base">Install</CardTitle></CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-3">
           {[
-            { label: "npm",  code: "npm i -g @swiffer/cli" },
-            { label: "pnpm", code: "pnpm add -g @swiffer/cli" },
-            { label: "bun",  code: "bun add -g @swiffer/cli" },
+            { label: "npm",  code: "npm i -g @pmai/cli" },
+            { label: "pnpm", code: "pnpm add -g @pmai/cli" },
+            { label: "bun",  code: "bun add -g @pmai/cli" },
           ].map((i) => (
             <div key={i.label}>
               <div className="text-xs text-muted-foreground mb-1">{i.label}</div>
@@ -82,7 +82,7 @@ function CliPage() {
         <CardHeader><CardTitle className="text-base">Configuration</CardTitle></CardHeader>
         <CardContent>
           <p className="text-xs text-muted-foreground mb-2">
-            Store per-project configuration in <code>swiffer.config.json</code>:
+            Store per-project configuration in <code>pmai.config.json</code>:
           </p>
           <pre className="rounded-md border border-border bg-muted/40 p-3 font-mono text-xs overflow-x-auto">{`{
   "workspace": "acme",

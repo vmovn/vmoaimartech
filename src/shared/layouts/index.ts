@@ -1,5 +1,5 @@
 /**
- * Reusable layouts for Swiffer v4.4.6.
+ * Reusable layouts for PM.ai.vn v4.4.6.
  *
  * Every layout is composed from tokens defined in `src/styles.css` — never
  * hardcode widths, gutters, heights, or z-index outside of a token.

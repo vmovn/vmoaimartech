@@ -16,14 +16,14 @@ export const config = {
   port: Number(process.env.PORT || 8787),
   host: process.env.HOST || '0.0.0.0',
 
-  /** Bearer token the Swiffer app must present on every inbound call. */
+  /** Bearer token the PM.ai.vn app must present on every inbound call. */
   workerToken: required('WA_QR_WORKER_TOKEN'),
   /** HMAC secret for app → worker request signing. */
   signingSecret: required('WA_QR_WORKER_SIGNING_SECRET'),
   /** HMAC secret for worker → app webhook signing. */
   webhookSecret: required('WA_QR_WEBHOOK_SECRET'),
-  /** Absolute URL of the Swiffer webhook endpoint. */
-  webhookUrl: required('SWIFFER_WEBHOOK_URL'),
+  /** Absolute URL of the PM.ai.vn webhook endpoint. */
+  webhookUrl: required('PMAI_WEBHOOK_URL'),
 
   /** Where Baileys auth state is persisted. MUST survive restarts. */
   authDir: process.env.WA_AUTH_DIR || './data/auth',

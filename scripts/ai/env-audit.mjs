@@ -50,8 +50,8 @@ const EXCLUDED = [
 // These are documentation snippets rendered by developer tools, not configuration
 // read by this application. Keeping the allowlist explicit prevents regex drift.
 const IGNORED_SNIPPET_REFERENCES = new Map([
-  ["SWIFFER_API_KEY", "src/routes/_authenticated/developer-portal.tsx"],
-  ["SWIFFER_WEBHOOK_SECRET", "src/routes/_authenticated/developer-tools.webhook-tester.tsx"],
+  ["PMAI_API_KEY", "src/routes/_authenticated/developer-portal.tsx"],
+  ["PMAI_WEBHOOK_SECRET", "src/routes/_authenticated/developer-tools.webhook-tester.tsx"],
 ]);
 const VITE_BUILT_INS = new Set(["DEV", "PROD", "MODE", "BASE_URL", "SSR"]);
 const CMD_EXPORTED_ENV = new Set([

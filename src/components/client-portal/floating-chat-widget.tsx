@@ -18,10 +18,10 @@ import { usePortalAttachments } from "@/hooks/use-portal-attachments";
 import { AttachmentPreviews, BubbleAttachments } from "@/components/client-portal/attachment-previews";
 import { useBrandName } from "@/hooks/use-brand-name";
 
-const STORAGE_KEY = "swiffer.portal.chat.open";
-const SEEN_KEY_PREFIX = "swiffer.portal.chat.lastSeen.";
-const BOOTSTRAPPED_KEY = "swiffer.portal.chat.bootstrapped";
-const SOUND_KEY = "swiffer.portal.chat.sound";
+const STORAGE_KEY = "pmai.portal.chat.open";
+const SEEN_KEY_PREFIX = "pmai.portal.chat.lastSeen.";
+const BOOTSTRAPPED_KEY = "pmai.portal.chat.bootstrapped";
+const SOUND_KEY = "pmai.portal.chat.sound";
 
 export function FloatingChatWidget() {
   const brandName = useBrandName();

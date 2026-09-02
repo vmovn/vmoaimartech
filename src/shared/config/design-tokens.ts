@@ -1,5 +1,5 @@
 /**
- * Swiffer Design Tokens — TypeScript mirror
+ * PM.ai.vn Design Tokens — TypeScript mirror
  * ----------------------------------------------------------------------------
  * Consumed by charts, canvas/SVG, and JS-driven visuals. Values are the
  * CSS custom property names in `src/styles.css`; read them with

@@ -9,7 +9,7 @@ import { readActiveOrgId, subscribeActiveTenant } from "@/lib/tenant/active-tena
  * so switching organizations restores that org's own sidebar shape.
  */
 
-const STORAGE_PREFIX = "swiffer.sidebar.groups.v1";
+const STORAGE_PREFIX = "pmai.sidebar.groups.v1";
 
 function storageKey(orgId: string | null) {
   return `${STORAGE_PREFIX}:${orgId ?? "global"}`;

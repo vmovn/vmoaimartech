@@ -311,7 +311,7 @@ function QuickStartSection() {
             Make a test request
           </h3>
           <div className="ml-8">
-            <CodeBlock lang="bash" code={`curl https://api.swiffer.io/v1/contacts \\
+            <CodeBlock lang="bash" code={`curl https://api.pm.ai.vn/v1/contacts \\
   -H "Authorization: Bearer wd_live_xxxxxxxxxxxxxxxx" \\
   -H "Accept: application/json"`} />
           </div>
@@ -322,7 +322,7 @@ function QuickStartSection() {
             Send a WhatsApp message
           </h3>
           <div className="ml-8">
-            <CodeBlock lang="bash" code={`curl https://api.swiffer.io/v1/messages \\
+            <CodeBlock lang="bash" code={`curl https://api.pm.ai.vn/v1/messages \\
   -X POST \\
   -H "Authorization: Bearer wd_live_xxxxxxxxxxxxxxxx" \\
   -H "Content-Type: application/json" \\
@@ -358,7 +358,7 @@ function AuthSection() {
         Keys are scoped, expirable, and can be locked to specific IP ranges.
       </p>
       <CodeBlock lang="http" code={`GET /v1/contacts HTTP/1.1
-Host: api.swiffer.io
+Host: api.pm.ai.vn
 Authorization: Bearer wd_live_xxxxxxxxxxxxxxxx
 Accept: application/json`} />
 
@@ -381,11 +381,11 @@ Accept: application/json`} />
       <p className="text-sm text-muted-foreground mb-3">
         For third-party apps acting on behalf of users. Standards-compliant with the Authorization Code Flow and PKCE.
       </p>
-      <CodeBlock lang="text" code={`Authorize:  GET  https://api.swiffer.io/oauth/authorize
-Token:      POST https://api.swiffer.io/oauth/token
-UserInfo:   GET  https://api.swiffer.io/oauth/userinfo
-Revoke:     POST https://api.swiffer.io/oauth/revoke
-Discovery:  GET  https://api.swiffer.io/.well-known/openid-configuration`} />
+      <CodeBlock lang="text" code={`Authorize:  GET  https://api.pm.ai.vn/oauth/authorize
+Token:      POST https://api.pm.ai.vn/oauth/token
+UserInfo:   GET  https://api.pm.ai.vn/oauth/userinfo
+Revoke:     POST https://api.pm.ai.vn/oauth/revoke
+Discovery:  GET  https://api.pm.ai.vn/.well-known/openid-configuration`} />
     </div>
   );
 }
@@ -446,7 +446,7 @@ function ExplorerSection() {
     setLoading(true);
     const t = Date.now();
     try {
-      const url = `https://api.swiffer.io${path}`;
+      const url = `https://api.pm.ai.vn${path}`;
       const res = await fetch(url, {
         method,
         headers: {
@@ -544,11 +544,11 @@ export function verify(rawBody: string, header: string, secret: string) {
 
 function SdksSection() {
   const sdks = [
-    { name: "JavaScript / TypeScript", version: "v1.4.0", install: "npm install @swiffer/sdk" },
-    { name: "Python", version: "v1.2.1", install: "pip install swiffer" },
-    { name: "Ruby", version: "v0.9.0", install: "gem install swiffer" },
-    { name: "PHP", version: "v1.0.0", install: "composer require swiffer/swiffer-php" },
-    { name: "Go", version: "v0.7.0", install: "go get github.com/swiffer/swiffer-go" },
+    { name: "JavaScript / TypeScript", version: "v1.4.0", install: "npm install @pmai/sdk" },
+    { name: "Python", version: "v1.2.1", install: "pip install pmai" },
+    { name: "Ruby", version: "v0.9.0", install: "gem install pmai" },
+    { name: "PHP", version: "v1.0.0", install: "composer require pmai/pmai-php" },
+    { name: "Go", version: "v0.7.0", install: "go get github.com/pmai/pmai-go" },
   ];
   return (
     <div>
@@ -607,8 +607,8 @@ function ExamplesSection() {
           <TabsTrigger value="php">PHP</TabsTrigger>
         </TabsList>
         <TabsContent value="node">
-          <CodeBlock lang="javascript" code={`import { ${BRAND_NAME} } from "@swiffer/sdk";
-const client = new Swiffer({ apiKey: process.env.SWIFFER_API_KEY });
+          <CodeBlock lang="javascript" code={`import { PmaiClient } from "@pmai/sdk";
+const client = new PmaiClient({ apiKey: process.env.PMAI_API_KEY });
 
 // Send a message
 const msg = await client.messages.send({
@@ -621,8 +621,8 @@ const msg = await client.messages.send({
 const contacts = await client.contacts.list({ limit: 25 });`} />
         </TabsContent>
         <TabsContent value="python">
-          <CodeBlock lang="python" code={`from swiffer import Swiffer
-client = Swiffer(api_key=os.environ["SWIFFER_API_KEY"])
+          <CodeBlock lang="python" code={`from pmai import Pmai
+client = Pmai(api_key=os.environ["PMAI_API_KEY"])
 
 msg = client.messages.send(
     to="+1234567890",
@@ -632,14 +632,14 @@ msg = client.messages.send(
 contacts = client.contacts.list(limit=25)`} />
         </TabsContent>
         <TabsContent value="curl">
-          <CodeBlock lang="bash" code={`curl https://api.swiffer.io/v1/messages \\
+          <CodeBlock lang="bash" code={`curl https://api.pm.ai.vn/v1/messages \\
   -X POST \\
-  -H "Authorization: Bearer $SWIFFER_API_KEY" \\
+  -H "Authorization: Bearer $PMAI_API_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{"to":"+1234567890","type":"text","text":{"body":"Hello!"}}'`} />
         </TabsContent>
         <TabsContent value="php">
-          <CodeBlock lang="php" code={`$client = new Swiffer\\Client(getenv('SWIFFER_API_KEY'));
+          <CodeBlock lang="php" code={`$client = new Pmai\\Client(getenv('PMAI_API_KEY'));
 
 $msg = $client->messages->send([
   'to' => '+1234567890',
@@ -810,7 +810,7 @@ function SupportSection() {
             <CardTitle className="text-base">Status Page</CardTitle>
             <CardDescription>Real-time uptime and incident history.</CardDescription>
           </CardHeader>
-          <CardContent><Button variant="outline" size="sm"><ExternalLink className="h-3.5 w-3.5 mr-1.5" />status.swiffer.io</Button></CardContent>
+          <CardContent><Button variant="outline" size="sm"><ExternalLink className="h-3.5 w-3.5 mr-1.5" />status.pm.ai.vn</Button></CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">

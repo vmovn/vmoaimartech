@@ -1,5 +1,5 @@
 /**
- * RFC 8414 discovery document for Swiffer's OAuth 2.0 server.
+ * RFC 8414 discovery document for PM.ai.vn's OAuth 2.0 server.
  */
 import { createFileRoute } from "@tanstack/react-router";
 

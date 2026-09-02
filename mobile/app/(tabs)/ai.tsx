@@ -1,5 +1,5 @@
 /**
- * Swiffer AI Assistant — mobile companion for the shared AI Provider Engine.
+ * PM.ai.vn AI Assistant — mobile companion for the shared AI Provider Engine.
  * Freeform chat, voice input (speech-to-text), voice output (text-to-speech),
  * and quick tools: reply, summary, CRM summary, insights, meeting summary,
  * task suggestions, lead qualification, AI search, and NL commands.

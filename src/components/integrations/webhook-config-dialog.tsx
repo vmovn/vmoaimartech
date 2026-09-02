@@ -147,7 +147,7 @@ export function WebhookConfigDialog({
                 id="wh-url"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
-                placeholder="https://your-app.example.com/hooks/swiffer"
+                placeholder="https://your-app.example.com/hooks/pmai"
               />
               {!urlValid && (
                 <p className="text-xs text-destructive flex items-center gap-1">
@@ -190,7 +190,7 @@ export function WebhookConfigDialog({
               )}
               <p className="text-[11px] text-muted-foreground">
                 Verify each request with an HMAC-SHA256 of the raw body using this secret, compared to the
-                <code className="mx-1 rounded bg-muted px-1">X-Swiffer-Signature</code> header.
+                <code className="mx-1 rounded bg-muted px-1">X-Pmai-Signature</code> header.
               </p>
             </div>
 

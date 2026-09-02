@@ -17,7 +17,7 @@ export type ConnectionMeta = {
   keyLast4?: string;
   /** Non-secret config values (dropdown selections, URLs, booleans). */
   config?: Record<string, string | boolean | undefined>;
-  /** Inbound webhook URL Swiffer exposes to the provider, if any. */
+  /** Inbound webhook URL PM.ai.vn exposes to the provider, if any. */
   callbackUrl?: string;
 };
 
@@ -68,8 +68,8 @@ export type InstalledIntegration = {
   webhook?: WebhookConfig;
 };
 
-const STORAGE_KEY = "swiffer.integrations.installed.v2";
-const LEGACY_KEY = "swiffer.integrations.installed.v1";
+const STORAGE_KEY = "pmai.integrations.installed.v2";
+const LEGACY_KEY = "pmai.integrations.installed.v1";
 
 function generateSecret(): string {
   const bytes = new Uint8Array(24);

@@ -85,8 +85,8 @@ export const attachSupabaseAuthFresh = createMiddleware({ type: "function" }).cl
       const wsId = readActiveWorkspaceId();
       
       const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
-      if (orgId) headers["x-swiffer-org-id"] = orgId;
-      if (wsId) headers["x-swiffer-workspace-id"] = wsId;
+      if (orgId) headers["x-pmai-org-id"] = orgId;
+      if (wsId) headers["x-pmai-workspace-id"] = wsId;
 
       return await next({
         headers,
@@ -106,8 +106,8 @@ export const attachSupabaseAuthFresh = createMiddleware({ type: "function" }).cl
           const orgId = readActiveOrgId();
           const wsId = readActiveWorkspaceId();
           const retryHeaders: Record<string, string> = { Authorization: `Bearer ${retryToken}` };
-          if (orgId) retryHeaders["x-swiffer-org-id"] = orgId;
-          if (wsId) retryHeaders["x-swiffer-workspace-id"] = wsId;
+          if (orgId) retryHeaders["x-pmai-org-id"] = orgId;
+          if (wsId) retryHeaders["x-pmai-workspace-id"] = wsId;
           
           return await next({ headers: retryHeaders });
         }

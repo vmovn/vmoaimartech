@@ -1,13 +1,13 @@
 /**
- * Baileys worker → Swiffer webhook endpoint.
+ * Baileys worker → PM.ai.vn webhook endpoint.
  *
  * Contract:
  *   POST /api/public/whatsapp/qr-webhook
  *   Headers:
  *     Content-Type: application/json
- *     X-Swiffer-Timestamp: <unix seconds>            (required, ±5 min skew)
- *     X-Swiffer-Signature: sha256=<hex hmac>         (HMAC of `${ts}.${rawBody}`)
- *     X-Swiffer-Event-Id: <string>                   (required, unique per event)
+ *     X-Pmai-Timestamp: <unix seconds>            (required, ±5 min skew)
+ *     X-Pmai-Signature: sha256=<hex hmac>         (HMAC of `${ts}.${rawBody}`)
+ *     X-Pmai-Event-Id: <string>                   (required, unique per event)
  *   Body:
  *     { session_id, workspace_id, event_type, data }
  *
@@ -26,7 +26,7 @@ const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
   "Access-Control-Allow-Headers":
-    "Content-Type, X-Swiffer-Timestamp, X-Swiffer-Signature, X-Swiffer-Event-Id",
+    "Content-Type, X-Pmai-Timestamp, X-Pmai-Signature, X-Pmai-Event-Id",
   "Access-Control-Max-Age": "86400",
 } as const;
 
@@ -64,11 +64,11 @@ export const Route = createFileRoute("/api/public/whatsapp/qr-webhook")({
         if (!secret) return json({ error: "Webhook secret not configured" }, 500);
 
         const rawBody = await request.text();
-        const timestamp = request.headers.get("x-swiffer-timestamp") ?? "";
-        const signature = request.headers.get("x-swiffer-signature") ?? "";
-        const eventId = request.headers.get("x-swiffer-event-id") ?? "";
+        const timestamp = request.headers.get("x-pmai-timestamp") ?? "";
+        const signature = request.headers.get("x-pmai-signature") ?? "";
+        const eventId = request.headers.get("x-pmai-event-id") ?? "";
 
-        if (!eventId) return json({ error: "Missing X-Swiffer-Event-Id" }, 400);
+        if (!eventId) return json({ error: "Missing X-Pmai-Event-Id" }, 400);
         if (!verifySignature(rawBody, timestamp, signature, secret)) {
           return json({ error: "Invalid signature" }, 401);
         }

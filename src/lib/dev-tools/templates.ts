@@ -20,10 +20,10 @@ const MANIFEST_JSON = (slug: string, name: string) => `{
   "entry": "dist/index.js",
   "permissions": ["contacts:read", "messages:read"],
   "extensionPoints": ["dashboard-widget", "sidebar-menu"],
-  "engines": { "swiffer": ">=1.0.0" }
+  "engines": { "pmai": ">=1.0.0" }
 }`;
 
-const PLUGIN_ENTRY = (slug: string) => `import { definePlugin } from "@swiffer/sdk";
+const PLUGIN_ENTRY = (slug: string) => `import { definePlugin } from "@pmai/sdk";
 
 export default definePlugin({
   slug: "${slug}",
@@ -59,10 +59,10 @@ A ${BRAND_NAME} plugin built with the Extension SDK.
 
 ## Develop
 \`\`\`bash
-swiffer dev          # hot-reload sandbox
-swiffer test         # run tests
-swiffer build        # bundle to dist/
-swiffer publish      # publish to Marketplace
+pmai dev          # hot-reload sandbox
+pmai test         # run tests
+pmai build        # bundle to dist/
+pmai publish      # publish to Marketplace
 \`\`\`
 
 See the SDK docs at /developer/tools/sdk.
@@ -98,7 +98,7 @@ export const TEMPLATES: Template[] = [
     files: [
       { path: "manifest.json", contents: MANIFEST_JSON("ai-summarizer", "AI Summarizer") },
       { path: "src/index.ts", contents:
-`import { definePlugin } from "@swiffer/sdk";
+`import { definePlugin } from "@pmai/sdk";
 import { z } from "zod";
 
 export default definePlugin({
@@ -126,7 +126,7 @@ export default definePlugin({
     files: [
       { path: "manifest.json", contents: MANIFEST_JSON("wf-slack", "Slack Notifier Node") },
       { path: "src/index.ts", contents:
-`import { definePlugin } from "@swiffer/sdk";
+`import { definePlugin } from "@pmai/sdk";
 
 export default definePlugin({
   slug: "wf-slack",
@@ -187,7 +187,7 @@ export default definePlugin({
     files: [
       { path: "manifest.json", contents: MANIFEST_JSON("stripe-sync", "Stripe Sync") },
       { path: "src/index.ts", contents:
-`import { definePlugin } from "@swiffer/sdk";
+`import { definePlugin } from "@pmai/sdk";
 
 export default definePlugin({
   slug: "stripe-sync",

@@ -4,7 +4,7 @@
  * Consumed by:
  *   - Monitoring / uptime probes on customer sites
  *   - The Live Chat Overview dashboard
- *   - `window.SwifferChat.health()` runtime API
+ *   - `window.PmaiChat.health()` runtime API
  *
  * Response is intentionally minimal — no PII, no workspace IDs — and cached
  * for 30s at the edge. Reports whether the widget can accept a specific bot

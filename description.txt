@@ -1,5 +1,5 @@
 
-Swiffer v4.4.6 — The Ultimate WhatsApp CRM SaaS Platform (Node.js Script)
+PM.ai.vn v4.4.6 — The Ultimate WhatsApp CRM SaaS Platform (Node.js Script)
 
 =========================================================================
 
@@ -22,15 +22,15 @@ ai chatbot, automation tool, crm software, flow builder, instagram automation, m
 
 <hr/>
 
-<h1>Swiffer v4.4.6 — All-in-One Enterprise Omnichannel CRM, WhatsApp Business &amp; AI Automation SaaS Platform</h1>
+<h1>PM.ai.vn v4.4.6 — All-in-One Enterprise Omnichannel CRM, WhatsApp Business &amp; AI Automation SaaS Platform</h1>
 
 <p align="center">
-  <img src="/marketing/hero-dashboard.jpg" alt="Swiffer Dashboard" style="max-width:100%; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.15);"/>
+  <img src="/marketing/hero-dashboard.jpg" alt="PM.ai.vn Dashboard" style="max-width:100%; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.15);"/>
 </p>
 
-<p><strong>Swiffer</strong> is a production-grade, multi-tenant SaaS platform that unifies the entire customer lifecycle — WhatsApp Business Cloud API, Omnichannel Inbox across 16+ channels, AI Assistants, Sales CRM, Marketing Automation, Helpdesk with SLA, Appointment Booking, Client Portal, WhatsApp Commerce, Business Intelligence, Chatbot Builder, Live Chat Widget, Plugin Marketplace and a full public REST API — inside one blazing-fast, installable, offline-capable Progressive Web App.</p>
+<p><strong>PM.ai.vn</strong> is a production-grade, multi-tenant SaaS platform that unifies the entire customer lifecycle — WhatsApp Business Cloud API, Omnichannel Inbox across 16+ channels, AI Assistants, Sales CRM, Marketing Automation, Helpdesk with SLA, Appointment Booking, Client Portal, WhatsApp Commerce, Business Intelligence, Chatbot Builder, Live Chat Widget, Plugin Marketplace and a full public REST API — inside one blazing-fast, installable, offline-capable Progressive Web App.</p>
 
-<p>Built with <strong>React 19, TanStack Start, TanStack Router, TanStack Query, Tailwind v4, shadcn/ui and Supabase</strong>, Swiffer ships with a bulletproof Setup Wizard, environment-controlled Demo Mode, enterprise RBAC, GDPR readiness, SAML SSO, audit logs, plan-to-gateway billing, and a fully documented Node.js / Docker / cPanel deployment path. Everything you need to launch a premium SaaS business — in one clean codebase.</p>
+<p>Built with <strong>React 19, TanStack Start, TanStack Router, TanStack Query, Tailwind v4, shadcn/ui and Supabase</strong>, PM.ai.vn ships with a bulletproof Setup Wizard, environment-controlled Demo Mode, enterprise RBAC, GDPR readiness, SAML SSO, audit logs, plan-to-gateway billing, and a fully documented Node.js / Docker / cPanel deployment path. Everything you need to launch a premium SaaS business — in one clean codebase.</p>
 
 <hr/>
 
@@ -300,7 +300,7 @@ ai chatbot, automation tool, crm software, flow builder, instagram automation, m
   <li>Workspace billing settings with invoice and subscription history.</li>
 </ul>
 <p align="center">
-  <img src="/marketing/why-after.jpg" alt="Swiffer After" style="max-width:100%; border-radius: 12px;"/>
+  <img src="/marketing/why-after.jpg" alt="PM.ai.vn After" style="max-width:100%; border-radius: 12px;"/>
 </p>
 
 <h2>Deployment Guide (Summary)</h2>
@@ -335,4 +335,4 @@ ai chatbot, automation tool, crm software, flow builder, instagram automation, m
   <img src="/marketing/tour-growth.jpg" alt="Growth Tools" style="max-width:100%; border-radius: 12px;"/>
 </p>
 
-<p><strong>Swiffer v4.4.6</strong> — Ship a premium, multi-tenant SaaS in days, not months.</p>
+<p><strong>PM.ai.vn v4.4.6</strong> — Ship a premium, multi-tenant SaaS in days, not months.</p>

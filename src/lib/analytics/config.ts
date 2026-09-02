@@ -49,7 +49,7 @@ export const ANALYTICS_KEY_HINTS: Record<AnalyticsProvider, string> = {
   ga4: "Measurement ID, e.g. G-XXXXXXXXXX.",
   gtm: "Container ID, e.g. GTM-XXXXXXX.",
   posthog: "Project token, e.g. phc_xxxxxxxx.",
-  plausible: "Site domain, e.g. swiffer.app.",
+  plausible: "Site domain, e.g. pm.ai.vn.",
   custom: "Optional label pushed with each event.",
 };
 

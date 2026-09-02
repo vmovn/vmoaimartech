@@ -86,7 +86,7 @@ export function contactFields(contact: ContactLike): Record<string, string> {
 
 /* ------------------------- last used values (local) ------------------------ */
 
-const LAST_USED_PREFIX = "swiffer:tpl-vars:";
+const LAST_USED_PREFIX = "pmai:tpl-vars:";
 
 export function loadLastUsedValues(templateId: string | undefined): Record<string, string> {
   if (!templateId || typeof window === "undefined") return {};

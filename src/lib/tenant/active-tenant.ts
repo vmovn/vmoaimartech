@@ -19,13 +19,13 @@ import { getCurrentUserId } from "@/lib/storage/active-user";
 
 // -------- Canonical storage keys --------
 
-export const ACTIVE_ORG_KEY = "swiffer.org.active.v1";
-export const ACTIVE_WS_KEY = "swiffer.workspace.active.v1";
+export const ACTIVE_ORG_KEY = "pmai.org.active.v1";
+export const ACTIVE_WS_KEY = "pmai.workspace.active.v1";
 
 // -------- Events --------
 
-export const ORG_CHANGED_EVENT = "swiffer:org-changed";
-export const WORKSPACE_CHANGED_EVENT = "swiffer:workspace-changed";
+export const ORG_CHANGED_EVENT = "pmai:org-changed";
+export const WORKSPACE_CHANGED_EVENT = "pmai:workspace-changed";
 
 // -------- Validation --------
 

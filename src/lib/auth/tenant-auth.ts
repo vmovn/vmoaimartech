@@ -16,8 +16,8 @@ export const requireTenantAccess = createMiddleware({ type: "function" })
     const headers = request?.headers;
     
     // We expect the client to send these headers via attachSupabaseAuthFresh
-    const orgId = headers?.get("x-swiffer-org-id");
-    const workspaceId = headers?.get("x-swiffer-workspace-id");
+    const orgId = headers?.get("x-pmai-org-id");
+    const workspaceId = headers?.get("x-pmai-workspace-id");
 
     if (!orgId && !workspaceId) {
       return next({

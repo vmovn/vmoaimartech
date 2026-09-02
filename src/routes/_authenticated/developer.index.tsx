@@ -255,13 +255,13 @@ function DocsTab() {
         <CardHeader><CardTitle className="text-base">Quick start</CardTitle></CardHeader>
         <CardContent className="space-y-3 text-sm">
           <p>Base URL</p>
-          <pre className="rounded-md bg-muted/60 p-3 text-xs font-mono overflow-x-auto">https://api.swiffer.io/v1</pre>
+          <pre className="rounded-md bg-muted/60 p-3 text-xs font-mono overflow-x-auto">https://api.pm.ai.vn/v1</pre>
           <p>Authenticate with a bearer token</p>
-          <pre className="rounded-md bg-muted/60 p-3 text-xs font-mono overflow-x-auto">{`curl https://api.swiffer.io/v1/contacts \\
+          <pre className="rounded-md bg-muted/60 p-3 text-xs font-mono overflow-x-auto">{`curl https://api.pm.ai.vn/v1/contacts \\
   -H "Authorization: Bearer wdf_live_..." \\
   -H "Content-Type: application/json"`}</pre>
           <p>Send a WhatsApp message</p>
-          <pre className="rounded-md bg-muted/60 p-3 text-xs font-mono overflow-x-auto">{`curl -X POST https://api.swiffer.io/v1/messages \\
+          <pre className="rounded-md bg-muted/60 p-3 text-xs font-mono overflow-x-auto">{`curl -X POST https://api.pm.ai.vn/v1/messages \\
   -H "Authorization: Bearer wdf_live_..." \\
   -H "Content-Type: application/json" \\
   -d '{"to":"+15551234567","template":"welcome_v1"}'`}</pre>

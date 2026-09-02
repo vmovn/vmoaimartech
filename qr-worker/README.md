@@ -1,14 +1,14 @@
-# Swiffer WhatsApp QR Worker
+# PM.ai.vn WhatsApp QR Worker
 
 Stateful companion service that holds the long-lived WhatsApp (Baileys) sockets
-Swiffer's serverless backend cannot host. It implements
+PM.ai.vn's serverless backend cannot host. It implements
 [`docs/whatsapp-qr-worker-contract.md`](../docs/whatsapp-qr-worker-contract.md)
 in both directions:
 
 - **App → worker**: `POST /sessions`, `GET /sessions/:id/qr`, `DELETE /sessions/:id`,
   `POST /sessions/:id/send` — all Bearer-token + HMAC authenticated.
 - **Worker → app**: signed webhooks to `/api/public/whatsapp/qr-webhook` with a
-  unique `X-Swiffer-Event-Id`, exponential-backoff retries and dead-lettering.
+  unique `X-Pmai-Event-Id`, exponential-backoff retries and dead-lettering.
 
 ## 1. Generate the three shared secrets
 
@@ -25,7 +25,7 @@ openssl rand -hex 32   # WA_QR_WEBHOOK_SECRET
 ```bash
 # on the server
 cd ~/apps
-git clone <your repo> swiffer && cd swiffer/qr-worker
+git clone <your repo> pmai && cd pmai/qr-worker
 npm install --omit=dev
 cp .env.example .env && nano .env      # paste the three secrets
 mkdir -p data/auth logs
@@ -57,14 +57,14 @@ without a valid token *and* signature.
 ### Docker alternative
 
 ```bash
-docker build -t swiffer-wa-qr-worker .
+docker build -t pmai-wa-qr-worker .
 docker run -d --name wa-qr --env-file .env -p 8787:8787 \
-  -v $PWD/data:/app/data --restart unless-stopped swiffer-wa-qr-worker
+  -v $PWD/data:/app/data --restart unless-stopped pmai-wa-qr-worker
 ```
 
-## 3. Configure Swiffer
+## 3. Configure PM.ai.vn
 
-Add these project secrets in Swiffer (Backend → Secrets):
+Add these project secrets in PM.ai.vn (Backend → Secrets):
 
 | Secret | Value |
 | --- | --- |
@@ -79,5 +79,5 @@ session from the WhatsApp panel — a QR code appears within a few seconds.
 ## Operations
 
 - `GET /status` (authenticated) lists live sessions and dead-letter count.
-- Logs: `npx pm2 logs swiffer-wa-qr-worker` (QR payloads and signatures are redacted).
+- Logs: `npx pm2 logs pmai-wa-qr-worker` (QR payloads and signatures are redacted).
 - Rotating a secret: add the new value on both sides, deploy, then remove the old.

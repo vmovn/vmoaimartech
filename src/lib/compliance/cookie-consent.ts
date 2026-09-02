@@ -10,8 +10,8 @@
 import { supabase } from "@/integrations/supabase/client";
 
 export const COOKIE_CONSENT_VERSION = "v1";
-export const COOKIE_CONSENT_STORAGE_KEY = "swiffer.cookie-consent";
-export const COOKIE_CONSENT_CHANGED_EVENT = "swiffer:cookie-consent-changed";
+export const COOKIE_CONSENT_STORAGE_KEY = "pmai.cookie-consent";
+export const COOKIE_CONSENT_CHANGED_EVENT = "pmai:cookie-consent-changed";
 
 export type CookieDecision = "accepted" | "declined" | "custom";
 
@@ -133,7 +133,7 @@ export function hasCookieConsentFor(category: CookieCategory): boolean {
 
 function getOrCreateVisitorId(): string {
   const store = safeLocalStorage();
-  const key = "swiffer.visitor-id";
+  const key = "pmai.visitor-id";
   const existing = store?.getItem(key);
   if (existing) return existing;
   const id =
@@ -203,7 +203,7 @@ export function resetCookieConsent() {
 }
 
 /** Open the preferences dialog from anywhere (footer link, policy page). */
-export const COOKIE_PREFERENCES_OPEN_EVENT = "swiffer:cookie-preferences-open";
+export const COOKIE_PREFERENCES_OPEN_EVENT = "pmai:cookie-preferences-open";
 
 export function openCookiePreferences() {
   if (typeof window !== "undefined") {

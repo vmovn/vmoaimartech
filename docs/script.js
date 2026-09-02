@@ -1,4 +1,4 @@
-/* Swiffer Documentation Portal — v4.4.6 */
+/* PM.ai.vn Documentation Portal — v4.4.6 */
 (function () {
   'use strict';
 
@@ -307,7 +307,7 @@
     pager.classList.remove('hidden');
     setActive(topics[idx].id);
     renderPager();
-    document.title = `${topics[idx].title} — Swiffer Docs v4.4.6`;
+    document.title = `${topics[idx].title} — PM.ai.vn Docs v4.4.6`;
     if (opts.scroll !== false) window.scrollTo({ top: 0, behavior: opts.smooth === false ? 'auto' : 'smooth' });
     prefetchNeighbours();
   };

@@ -3,8 +3,8 @@
  *
  * Every request must carry:
  *   Authorization:       Bearer <WA_QR_WORKER_TOKEN>
- *   X-Swiffer-Timestamp: unix seconds (rejected if skew > 300s)
- *   X-Swiffer-Signature: sha256=<hex HMAC(signingSecret, `${ts}.${rawBody}`)>
+ *   X-Pmai-Timestamp: unix seconds (rejected if skew > 300s)
+ *   X-Pmai-Signature: sha256=<hex HMAC(signingSecret, `${ts}.${rawBody}`)>
  */
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { config } from './config.js';
@@ -28,8 +28,8 @@ export function authenticate(req, res, next) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
-  const timestamp = req.get('x-swiffer-timestamp') || '';
-  const provided = (req.get('x-swiffer-signature') || '').replace(/^sha256=/, '');
+  const timestamp = req.get('x-pmai-timestamp') || '';
+  const provided = (req.get('x-pmai-signature') || '').replace(/^sha256=/, '');
   const ts = Number(timestamp);
   if (!Number.isFinite(ts)) return res.status(400).json({ error: 'Bad timestamp' });
   if (Math.abs(Math.floor(Date.now() / 1000) - ts) > config.maxSkewSeconds) {

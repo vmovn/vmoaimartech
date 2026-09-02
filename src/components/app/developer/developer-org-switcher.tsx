@@ -23,7 +23,7 @@ import { resetRealtimeForOrgSwitch } from "@/lib/realtime/org-realtime";
  *
  * Switching is fully in-app: realtime channels for the previous tenant are
  * torn down, every cached query is dropped, the active org id is written to
- * the shared tenant slot (which fires `swiffer:org-changed`), and channels
+ * the shared tenant slot (which fires `pmai:org-changed`), and channels
  * are re-opened for the new tenant. Mounted Developer Center queries refetch
  * on their own — no `window.location.reload()`, no route remount.
  */

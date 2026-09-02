@@ -107,7 +107,7 @@ function persistActiveOrgToProfile(id: string) {
 
 export function setActiveOrgId(id: string) {
   // Delegates key resolution to the shared helper and fires the local
-  // `swiffer:org-changed` event. We then layer on cross-tab broadcast and
+  // `pmai:org-changed` event. We then layer on cross-tab broadcast and
   // profile mirroring, which are org-specific concerns.
   writeActiveOrgId(id);
   broadcastOrgChange(id);
@@ -125,7 +125,7 @@ export function setActiveOrgId(id: string) {
  * is what allows the same user to sign back in and land on the same org.
  * Only the legacy shared slot and workspace scratch state are cleared.
  *
- * Also fires `swiffer:org-changed` locally and broadcasts a `null` org id
+ * Also fires `pmai:org-changed` locally and broadcasts a `null` org id
  * to sibling tabs so their switchers, realtime channels, and query caches
  * reset in lockstep — no stale org-A data can render after logout.
  */
@@ -136,12 +136,12 @@ export function clearActiveOrgState() {
     // next login for that user can restore their last active org.
     window.localStorage.removeItem(ORG_KEY_LEGACY);
     // Workspace selection is scoped inside an org; drop it too.
-    window.localStorage.removeItem("swiffer.workspace.active.v1");
+    window.localStorage.removeItem("pmai.workspace.active.v1");
   } catch {
     /* private-mode / disabled storage — nothing to clean */
   }
   try {
-    window.dispatchEvent(new CustomEvent("swiffer:org-changed"));
+    window.dispatchEvent(new CustomEvent("pmai:org-changed"));
   } catch {
     /* jsdom / very old runtimes */
   }
@@ -189,7 +189,7 @@ export async function hydrateActiveOrgFromProfile(userId: string): Promise<void>
       } catch {
         /* ignore */
       }
-      window.dispatchEvent(new CustomEvent("swiffer:org-changed"));
+      window.dispatchEvent(new CustomEvent("pmai:org-changed"));
       broadcastOrgChange(remote);
       return;
     }

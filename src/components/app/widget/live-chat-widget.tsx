@@ -63,8 +63,8 @@ interface Props {
 }
 
 
-const STORAGE_PREFIX = "swiffer.widget.";
-const OUTBOX_PREFIX = "swiffer.widget.outbox.";
+const STORAGE_PREFIX = "pmai.widget.";
+const OUTBOX_PREFIX = "pmai.widget.outbox.";
 const EMOJIS = [
   "😀","😁","😂","🤣","😊","😍","🥰","😘","😎","🤩","🤔","😴","🙄","😅","😉","🙂",
   "😢","😭","😡","👍","👎","🙏","👏","💪","🎉","🔥","❤️","💯","✅","❌","⭐","☕",
@@ -101,7 +101,7 @@ function formatBytes(n: number) {
 
 export interface VisitorIdentity { name: string; email: string; phone: string }
 
-const VISITOR_PREFIX = "swiffer.widget.visitor.";
+const VISITOR_PREFIX = "pmai.widget.visitor.";
 function visitorKey(chatbotId: string) { return `${VISITOR_PREFIX}${chatbotId}`; }
 
 function readVisitor(chatbotId: string): VisitorIdentity | null {
@@ -122,7 +122,7 @@ function writeVisitor(chatbotId: string, v: VisitorIdentity | null) {
 }
 
 /** Stable per-browser key so repeat visits map to a single visitor row. */
-const BROWSER_KEY = "swiffer.widget.browserKey";
+const BROWSER_KEY = "pmai.widget.browserKey";
 function readBrowserKey(): string | undefined {
   if (typeof window === "undefined") return undefined;
   try {
@@ -588,7 +588,7 @@ export function LiveChatWidget({ chatbotId, accent = "#a67c00", compact = false 
   }, [chatbotId, visitor]);
 
   const closeSelf = useCallback(() => {
-    try { window.parent?.postMessage({ swiffer: "close" }, "*"); } catch {}
+    try { window.parent?.postMessage({ pmai: "close" }, "*"); } catch {}
   }, []);
 
   const initials = useMemo(() => {
@@ -707,7 +707,7 @@ export function LiveChatWidget({ chatbotId, accent = "#a67c00", compact = false 
   return (
     <div
       className="relative flex h-full min-h-0 w-full flex-col bg-background text-foreground"
-      style={{ ["--swiffer-accent" as string]: accent }}
+      style={{ ["--pmai-accent" as string]: accent }}
       onDragEnter={onDragEnter}
       onDragOver={(e) => e.preventDefault()}
       onDragLeave={onDragLeave}
@@ -771,11 +771,11 @@ export function LiveChatWidget({ chatbotId, accent = "#a67c00", compact = false 
               { key: "phone" as const, label: "Phone", type: "tel", placeholder: "+1 555 000 1234", autoComplete: "tel" },
             ]).map((f) => (
               <div key={f.key}>
-                <label htmlFor={`swiffer-${f.key}`} className="mb-1 block text-xs font-medium">
+                <label htmlFor={`pmai-${f.key}`} className="mb-1 block text-xs font-medium">
                   {f.label} <span className="text-destructive">*</span>
                 </label>
                 <input
-                  id={`swiffer-${f.key}`}
+                  id={`pmai-${f.key}`}
                   type={f.type}
                   required
                   autoComplete={f.autoComplete}
@@ -1001,8 +1001,8 @@ export function LiveChatWidget({ chatbotId, accent = "#a67c00", compact = false 
                 </button>
               ))}
             </div>
-            <label htmlFor="swiffer-rating-comment" className="sr-only">Additional feedback</label>
-            <textarea id="swiffer-rating-comment" placeholder="Tell us more (optional)" rows={3}
+            <label htmlFor="pmai-rating-comment" className="sr-only">Additional feedback</label>
+            <textarea id="pmai-rating-comment" placeholder="Tell us more (optional)" rows={3}
               value={ratingComment}
               onChange={(e) => setRatingComment(e.target.value)}
               className="mt-4 w-full resize-none rounded-lg border border-border bg-surface px-3 py-2 text-sm outline-none focus-visible:border-foreground/30" />

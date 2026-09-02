@@ -8,7 +8,7 @@
  * (or an error report can attach it) right after the incident.
  */
 
-const STORAGE_KEY = "swiffer.tenant.breadcrumbs";
+const STORAGE_KEY = "pmai.tenant.breadcrumbs";
 const MAX_BREADCRUMBS = 50;
 
 export type TenantBreadcrumbKind =

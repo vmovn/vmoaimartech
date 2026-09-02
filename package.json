@@ -1,9 +1,9 @@
 {
-  "name": "swiffer",
+  "name": "pmai",
   "version": "4.4.6",
   "private": true,
-  "homepage": "https://swiffer.wrapcoders.com/",
-  "description": "Swiffer – A complete, production-grade guide to installing, configuring, deploying, and operating Swiffer — the multi-tenant WhatsApp CRM & Omnichannel platform.",
+  "homepage": "https://pm.ai.vn/",
+  "description": "PM.ai.vn – A complete, production-grade guide to installing, configuring, deploying, and operating PM.ai.vn — the multi-tenant WhatsApp CRM & Omnichannel platform.",
   "author": "WRAPCODERS",
   "type": "commonjs",
   "packageManager": "npm@11.6.2",

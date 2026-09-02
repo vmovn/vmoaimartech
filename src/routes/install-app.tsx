@@ -45,8 +45,8 @@ function InstallAppPage() {
   useEffect(() => {
     setPlatform(detectPlatform());
     setInstalled(isStandalone());
-    setPromptable(Boolean(window.__swifferInstallPrompt));
-    const refresh = () => setPromptable(Boolean(window.__swifferInstallPrompt));
+    setPromptable(Boolean(window.__pmaiInstallPrompt));
+    const refresh = () => setPromptable(Boolean(window.__pmaiInstallPrompt));
     const onInstalled = () => {
       setInstalled(true);
       setPromptable(false);
@@ -60,7 +60,7 @@ function InstallAppPage() {
   }, []);
 
   async function triggerInstall() {
-    const evt = window.__swifferInstallPrompt as BeforeInstallPromptEvent | null | undefined;
+    const evt = window.__pmaiInstallPrompt as BeforeInstallPromptEvent | null | undefined;
     if (!evt) {
       toast.info("Use your browser's Install / Add to Home Screen option to install.");
       return;
@@ -73,7 +73,7 @@ function InstallAppPage() {
       } else {
         toast("Install cancelled");
       }
-      window.__swifferInstallPrompt = null;
+      window.__pmaiInstallPrompt = null;
       setPromptable(false);
     } catch (e) {
       toast.error((e as Error).message || "Install prompt failed");

@@ -1,6 +1,6 @@
 /**
  * Embed snippet generator — produces a copy-pasteable `<script>` tag that
- * loads the Swiffer chat widget for a specific chatbot on any website.
+ * loads the PM.ai.vn chat widget for a specific chatbot on any website.
  *
  * The generated snippet is intentionally minimal (no runtime dependencies)
  * so it works on static sites, WordPress, Shopify themes, etc. It creates a
@@ -46,7 +46,7 @@ export function ChatbotEmbedSnippet({ chatbotId, botName }: Props) {
   s.src = cfg.host + "/api/public/widget.js";
   s.setAttribute("data-config", JSON.stringify(cfg));
   d.head.appendChild(s);
-  w.SwifferChat = w.SwifferChat || { config: cfg };
+  w.PmaiChat = w.PmaiChat || { config: cfg };
 })();
 </script>`,
     [chatbotId, origin, color, position, greeting],
@@ -66,7 +66,7 @@ export function ChatbotEmbedSnippet({ chatbotId, botName }: Props) {
   const reactSnippet = useMemo(
     () => `import { useEffect } from "react";
 
-export function SwifferChatWidget() {
+export function PmaiChatWidget() {
   useEffect(() => {
     const s = document.createElement("script");
     s.async = true;

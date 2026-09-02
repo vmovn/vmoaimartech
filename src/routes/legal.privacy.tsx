@@ -50,7 +50,7 @@ function PrivacyPage() {
       <h2>5. Your rights</h2>
       <p>
         Access, export, correction, and deletion — available from Settings → Data, or by emailing{" "}
-        <a href="mailto:privacy@swiffer.app">privacy@swiffer.app</a>.
+        <a href="mailto:privacy@pm.ai.vn">privacy@pm.ai.vn</a>.
       </p>
     </LegalPageShell>
   );

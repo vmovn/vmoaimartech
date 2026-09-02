@@ -2,9 +2,9 @@
 /**
  * CI guard: outbound branding.
  *
- * Fails when the legacy "Wadiff" brand name appears in user-facing outbound
- * content — anything a customer, prospect, or partner can read outside the
- * signed-in app shell:
+ * Fails when a legacy vendor brand name (Wadiff or Swiffer) appears in
+ * user-facing outbound content — anything a customer, prospect, or partner
+ * can read outside the signed-in app shell:
  *
  *   - Transactional / marketing email templates and their subjects/bodies
  *   - Notification bodies (in-app, push, SMS, WhatsApp) rendered to end users
@@ -21,25 +21,23 @@
  *   - Mobile app internals (scanned separately by the mobile pipeline)
  *
  * The check is case-insensitive. To exempt a specific line, append the marker
- *   //  swiffer-branding-ok: <reason>
+ *   //  pmai-branding-ok: <reason>
  * or the block marker
- *   /* swiffer-branding-ok: <reason> *\/
+ *   /* pmai-branding-ok: <reason> *\/
  * on the same line. Prefer fixing the copy over adding exemptions.
  */
 import { readFileSync, readdirSync, statSync, existsSync } from "node:fs";
 import { join, relative, sep } from "node:path";
 
 const ROOT = process.cwd();
-const NEEDLE = /wadiff/i;
-const EXEMPT_MARKER = /swiffer-branding-ok\b/i;
+const NEEDLE = /wadiff|\bswiffer\b/i;
+const EXEMPT_MARKER = /pmai-branding-ok\b/i;
 
 // Roots that ship user-facing outbound copy. Everything under these paths is
 // scanned unless excluded below.
 //
 // Deliberately NOT included:
-//   - src/routes/_authenticated/**  — signed-in developer/admin surfaces
-//     (CLI, SDK, sandbox, plugin generator) intentionally keep the legacy
-//     package/binary names and are covered by a separate rebrand pass.
+//   - src/routes/_authenticated/**  — signed-in developer/admin surfaces.
 //   - src/routes/api/**             — server route handlers, not rendered copy.
 const SCAN_ROOTS = [
   // Public marketing + legal + support routes rendered to visitors.
@@ -141,16 +139,16 @@ for (const { abs, rel } of files) {
 }
 
 if (failures.length === 0) {
-  console.log(`✓ outbound branding: no legacy 'Wadiff' strings in ${files.length} scanned files`);
+  console.log(`✓ outbound branding: no legacy Wadiff/Swiffer strings in ${files.length} scanned files`);
   process.exit(0);
 }
 
-console.error(`\n✗ outbound branding: ${failures.length} legacy 'Wadiff' reference(s) in user-facing content:\n`);
+console.error(`\n✗ outbound branding: ${failures.length} legacy Wadiff/Swiffer reference(s) in user-facing content:\n`);
 for (const f of failures) {
   console.error(`  ${f.rel}:${f.line}  ${f.text}`);
 }
 console.error(`
-Fix by replacing the copy with "Swiffer" (or the Swiffer domain).
-If a match is a false positive, append "// swiffer-branding-ok: <reason>" to that line.
+Fix by replacing the copy with "PM.ai.vn" (or the PM.ai.vn domain).
+If a match is a false positive, append "// pmai-branding-ok: <reason>" to that line.
 `);
 process.exit(1);

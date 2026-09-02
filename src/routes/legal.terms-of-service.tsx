@@ -135,7 +135,7 @@ function TermsOfServicePage() {
       <h2>13. Contact us</h2>
       <p>
         If you have questions about these Terms, please contact us at{" "}
-        <a href="mailto:legal@swiffer.app">legal@swiffer.app</a>.
+        <a href="mailto:legal@pm.ai.vn">legal@pm.ai.vn</a>.
       </p>
     </LegalPageShell>
   );

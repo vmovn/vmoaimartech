@@ -52,7 +52,7 @@ async function unregisterOwned(): Promise<void> {
     const controllerUrl = navigator.serviceWorker.controller?.scriptURL ?? "";
     const controlledByRetiredWorker =
       controllerUrl.endsWith("/sw.js") || controllerUrl.endsWith("/service-worker.js");
-    const reloadKey = "swiffer.retired-worker-reload";
+    const reloadKey = "pmai.retired-worker-reload";
     if (controlledByRetiredWorker && !window.sessionStorage.getItem(reloadKey)) {
       window.sessionStorage.setItem(reloadKey, "1");
       window.location.reload();

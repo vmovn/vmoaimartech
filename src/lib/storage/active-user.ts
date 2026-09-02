@@ -9,7 +9,7 @@
  * a credential; RLS on the server remains the source of truth.
  */
 
-const CURRENT_USER_KEY = "swiffer.auth.uid.v1";
+const CURRENT_USER_KEY = "pmai.auth.uid.v1";
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;

@@ -26,7 +26,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useLayout } from "@/shared/contexts/layout-context";
 import { OrganizationSwitcherConnected } from "./organization-switcher-connected";
 import { useTenantBrand } from "@/hooks/use-tenant-brand";
-import swifferLogo from "@/assets/swiffer-logo.png";
+import pmaiLogo from "@/assets/pmai-logo.png";
 import { NAV_ITEMS, NAV_GROUPS, API_CONFIG_CHILDREN, type NavItem } from "./nav-config";
 import { NestedNavItem, NestedNavGroup, type NestedNavNode } from "./nested-nav-item";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -129,7 +129,7 @@ export function AppSidebar() {
         )}>
           <div className="grid place-items-center w-9 h-9 shrink-0 overflow-hidden">
             <img
-              src={brand.logoUrl ?? swifferLogo}
+              src={brand.logoUrl ?? pmaiLogo}
               alt={`${brand.name} logo`}
               className="h-full w-full object-contain"
               onError={(e) => {
@@ -137,7 +137,7 @@ export function AppSidebar() {
                 // URL). Fall back to the bundled mark instead of rendering a
                 // broken-image icon in the rail.
                 const img = e.currentTarget;
-                if (img.src !== swifferLogo) img.src = swifferLogo;
+                if (img.src !== pmaiLogo) img.src = pmaiLogo;
               }}
             />
           </div>

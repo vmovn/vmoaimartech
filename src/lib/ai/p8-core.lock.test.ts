@@ -911,7 +911,7 @@ describe("P8 AI Core lock", () => {
     expect(cronSql).toMatch(/x-cron-token/);
     expect(cronSql).not.toMatch(/localhost/);
     expect(cronSql).not.toMatch(/lovable/i);
-    expect(scheduleSql).toMatch(/swiffer-analyze-conversations/);
+    expect(scheduleSql).toMatch(/pmai-analyze-conversations/);
     expect(scheduleSql).toMatch(/\/api\/public\/hooks\/analyze-conversations/);
     expect(hook).toMatch(/guardCronRequest/);
   });

@@ -30,7 +30,7 @@ export const Route = createFileRoute("/_authenticated/livechat/widget-sdk")({
 });
 
 const SDK_VERSION = "1.0.0";
-const CDN_BASE = "https://cdn.swiffer.app";
+const CDN_BASE = "https://cdn.pm.ai.vn";
 
 function CodeBlock({ code, lang = "html", label }: { code: string; lang?: string; label?: string }) {
   const [copied, setCopied] = useState(false);
@@ -97,22 +97,22 @@ function WidgetSdkPage() {
 
   const jsSnippet = `// Vanilla JS — programmatic install
 (function () {
-  window.SwifferChat = { config: ${cfgObj} };
+  window.PmaiChat = { config: ${cfgObj} };
   var s = document.createElement('script');
   s.src = '${scriptSrc}';
   s.async = true; s.defer = true;
   document.head.appendChild(s);
 })();`;
 
-  const reactSnippet = `// components/SwifferChat.tsx
+  const reactSnippet = `// components/PmaiChat.tsx
 import { useEffect } from "react";
 
-export function SwifferChat() {
+export function PmaiChat() {
   useEffect(() => {
-    if (document.getElementById("swiffer-chat")) return;
-    window.SwifferChat = { config: ${cfgObj} };
+    if (document.getElementById("pmai-chat")) return;
+    window.PmaiChat = { config: ${cfgObj} };
     const s = document.createElement("script");
-    s.id = "swiffer-chat";
+    s.id = "pmai-chat";
     s.src = "${scriptSrc}";
     s.async = true; s.defer = true;
     document.head.appendChild(s);
@@ -120,14 +120,14 @@ export function SwifferChat() {
   return null;
 }`;
 
-  const vueSnippet = `<!-- components/SwifferChat.vue -->
+  const vueSnippet = `<!-- components/PmaiChat.vue -->
 <script setup lang="ts">
 import { onMounted } from "vue";
 onMounted(() => {
-  if (document.getElementById("swiffer-chat")) return;
-  (window as any).SwifferChat = { config: ${cfgObj} };
+  if (document.getElementById("pmai-chat")) return;
+  (window as any).PmaiChat = { config: ${cfgObj} };
   const s = document.createElement("script");
-  s.id = "swiffer-chat";
+  s.id = "pmai-chat";
   s.src = "${scriptSrc}";
   s.async = true; s.defer = true;
   document.head.appendChild(s);
@@ -135,16 +135,16 @@ onMounted(() => {
 </script>
 <template><div hidden></div></template>`;
 
-  const angularSnippet = `// swiffer-chat.component.ts
+  const angularSnippet = `// pmai-chat.component.ts
 import { Component, OnInit } from "@angular/core";
 
-@Component({ selector: "swiffer-chat", standalone: true, template: "" })
-export class SwifferChatComponent implements OnInit {
+@Component({ selector: "pmai-chat", standalone: true, template: "" })
+export class PmaiChatComponent implements OnInit {
   ngOnInit() {
-    if (document.getElementById("swiffer-chat")) return;
-    (window as any).SwifferChat = { config: ${cfgObj} };
+    if (document.getElementById("pmai-chat")) return;
+    (window as any).PmaiChat = { config: ${cfgObj} };
     const s = document.createElement("script");
-    s.id = "swiffer-chat";
+    s.id = "pmai-chat";
     s.src = "${scriptSrc}";
     s.async = true; s.defer = true;
     document.head.appendChild(s);
@@ -160,7 +160,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         {children}
         <Script
-          id="swiffer-chat"
+          id="pmai-chat"
           src="${scriptSrc}"
           data-config='${cfg}'
           strategy="afterInteractive"
@@ -214,12 +214,12 @@ POST   ${host}/api/public/widget/upload       # upload attachments
 POST   ${host}/api/public/widget/rate         # submit CSAT rating
 
 # JS runtime API (after loader boots)
-window.SwifferChat.open()          // open the panel
-window.SwifferChat.close()         // close the panel
-window.SwifferChat.toggle()        // toggle open state
-window.SwifferChat.identify({ email, name, userId, metadata })
-window.SwifferChat.send("Hello")   // programmatic message
-window.SwifferChat.on("ready" | "message" | "open" | "close", handler)`;
+window.PmaiChat.open()          // open the panel
+window.PmaiChat.close()         // close the panel
+window.PmaiChat.toggle()        // toggle open state
+window.PmaiChat.identify({ email, name, userId, metadata })
+window.PmaiChat.send("Hello")   // programmatic message
+window.PmaiChat.on("ready" | "message" | "open" | "close", handler)`;
 
   return (
     <>

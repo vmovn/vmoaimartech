@@ -16,15 +16,15 @@ const CORS = {
 } as const;
 
 function loader(widgetId: string, origin: string): string {
-  return `/* Swiffer chat widget loader */
+  return `/* PM.ai.vn chat widget loader */
 (function(){
-  if (window.__swifferWidget && window.__swifferWidget.loaded) return;
-  window.__swifferWidget = { loaded: true, widgetId: ${JSON.stringify(widgetId)} };
+  if (window.__pmaiWidget && window.__pmaiWidget.loaded) return;
+  window.__pmaiWidget = { loaded: true, widgetId: ${JSON.stringify(widgetId)} };
   var origin = ${JSON.stringify(origin)};
   var wid = ${JSON.stringify(widgetId)};
   var src = origin + "/embed/w/" + wid + "?url=" + encodeURIComponent(location.href) + "&ref=" + encodeURIComponent(document.referrer||"");
   var wrap = document.createElement("div");
-  wrap.id = "swiffer-widget-root";
+  wrap.id = "pmai-widget-root";
   wrap.style.cssText = "position:fixed;inset:auto 0 0 auto;z-index:2147483000;pointer-events:none;";
   var iframe = document.createElement("iframe");
   iframe.title = "Chat widget";

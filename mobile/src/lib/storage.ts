@@ -6,7 +6,7 @@
 import * as SecureStore from 'expo-secure-store';
 import { MMKV } from 'react-native-mmkv';
 
-export const kv = new MMKV({ id: 'swiffer-cache' });
+export const kv = new MMKV({ id: 'pmai-cache' });
 
 export const secureStorage = {
   async getItem(key: string) {

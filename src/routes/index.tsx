@@ -169,7 +169,7 @@ function Nav() {
       <div className="container-marketing grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 h-16 md:flex md:justify-between">
         <div className="flex min-w-0 items-center gap-3">
           <PmAiLogo className="size-9 text-foreground" />
-          <span className="font-display font-bold text-2xl tracking-tight truncate"><Brand /></span>
+          <span className="font-display font-bold text-3xl tracking-tight truncate"><Brand /></span>
         </div>
         <nav className="hidden md:flex items-center gap-8 text-sm text-muted-foreground">
           {links.map((l) => (
@@ -1609,7 +1609,7 @@ function Pricing() {
                   >
                     {contactSales ? (
                       <a
-                        href="mailto:sales@swiffer.com?subject=Enterprise%20inquiry"
+                        href="mailto:sales@pm.ai.vn?subject=Enterprise%20inquiry"
                         {...ctaAttrs(`plan-${p.code}`, "home-pricing", "pricing_click", cta)}
                         data-analytics-plan={p.code}
                       >

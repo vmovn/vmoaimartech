@@ -341,8 +341,8 @@ function SigningPanel() {
         </CardHeader>
         <CardContent className="space-y-3 text-sm">
           <p>Attach these headers to each request:</p>
-          <CodeBlock text={`X-Swiffer-Timestamp: 1731523200
-X-Swiffer-Signature: sha256=<hex>
+          <CodeBlock text={`X-Pmai-Timestamp: 1731523200
+X-Pmai-Signature: sha256=<hex>
 
 signature = HMAC_SHA256(secret, "\${timestamp}.\${method}.\${path}.\${body}")`} />
           <p className="text-muted-foreground text-xs">Rejected if <code>|now − timestamp|</code> &gt; 300s (replay protection). Constant-time comparison.</p>
@@ -355,7 +355,7 @@ signature = HMAC_SHA256(secret, "\${timestamp}.\${method}.\${path}.\${body}")`} 
         </CardHeader>
         <CardContent className="space-y-3 text-sm">
           <CodeBlock text={`// Outbound (${BRAND_NAME} → your server)
-Header: X-Swiffer-Signature: t=<ts>,v1=<hex>
+Header: X-Pmai-Signature: t=<ts>,v1=<hex>
 
 expected = HMAC_SHA256(endpoint_secret, "\${t}.\${raw_body}")
 timingSafeEqual(v1, expected) === true`} />

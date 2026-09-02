@@ -23,7 +23,7 @@ type WebhookAutomation = {
   createdAt: string;
 };
 
-const STORAGE_PREFIX = "swiffer:webhook-automations:";
+const STORAGE_PREFIX = "pmai:webhook-automations:";
 const PUBLIC_BASE = "https://crm.oneoftheprojects.com/api/v1/webhook";
 
 function generateCode() {

@@ -23,7 +23,7 @@ export type HeaderMediaDraft = {
   savedAt: number;
 };
 
-const PREFIX = "swiffer:wa-header-media:";
+const PREFIX = "pmai:wa-header-media:";
 /** Keep well below the ~5MB localStorage budget shared with the rest of the app. */
 const MAX_PREVIEW_BYTES = 400_000;
 /** Drop stale create-drafts so abandoned uploads don't resurface weeks later. */

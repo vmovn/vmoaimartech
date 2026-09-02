@@ -4,7 +4,7 @@
  * • Short-term: rolling summary of the last N turns, kept per session.
  * • Long-term: durable facts about the contact (name, email, preferences),
  *   stored on `chatbot_sessions.metadata.long_memory` and merged across
- *   channels via the customer identity graph elsewhere in Swiffer.
+ *   channels via the customer identity graph elsewhere in PM.ai.vn.
  *
  * Kept storage-agnostic: takes a `store` adapter so it can run against
  * Supabase in production and an in-memory Map in tests.

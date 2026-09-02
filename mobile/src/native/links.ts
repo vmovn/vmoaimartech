@@ -3,8 +3,8 @@ import * as Linking from 'expo-linking';
 import { router } from 'expo-router';
 
 /**
- * Deep link handler. Custom scheme (`swiffer://`) and universal links
- * (`https://swiffer.app/*`, `https://app.swiffer.com/*`) are both routed
+ * Deep link handler. Custom scheme (`pmai://`) and universal links
+ * (`https://pm.ai.vn/*`, `https://app.pm.ai.vn/*`) are both routed
  * through the same handler and mapped onto expo-router paths.
  */
 export function parseDeepLink(url: string): string | null {
@@ -39,5 +39,5 @@ export function useDeepLinks() {
 
 export function createShareableLink(path: string): string {
   const clean = path.startsWith('/') ? path : `/${path}`;
-  return `https://swiffer.app${clean}`;
+  return `https://pm.ai.vn${clean}`;
 }

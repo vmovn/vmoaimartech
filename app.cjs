@@ -96,7 +96,7 @@ if (isPassenger && typeof passenger.configure === "function") {
 function startNodeServer(handler, source) {
   if (didStartServer) return;
   if (typeof handler !== "function") {
-    throw new TypeError(`[swiffer] ${source} did not provide a Node request handler.`);
+    throw new TypeError(`[pmai] ${source} did not provide a Node request handler.`);
   }
 
   didStartServer = true;
@@ -108,20 +108,20 @@ function startNodeServer(handler, source) {
       const result = handler(req, res);
       if (result && typeof result.then === "function") {
         result.catch((error) => {
-          console.error("[swiffer] Request handler failed:", error);
+          console.error("[pmai] Request handler failed:", error);
           if (!res.headersSent) res.statusCode = 500;
           if (!res.writableEnded) res.end("Internal Server Error");
         });
       }
     } catch (error) {
-      console.error("[swiffer] Request handler failed:", error);
+      console.error("[pmai] Request handler failed:", error);
       if (!res.headersSent) res.statusCode = 500;
       if (!res.writableEnded) res.end("Internal Server Error");
     }
   });
 
   server.on("error", (error) => {
-    console.error("[swiffer] HTTP server failed:", error);
+    console.error("[pmai] HTTP server failed:", error);
     process.exit(1);
   });
 
@@ -131,7 +131,7 @@ function startNodeServer(handler, source) {
       typeof address === "string"
         ? address
         : `http://${process.env.HOST}:${address?.port ?? process.env.PORT}`;
-    console.log(`[swiffer] Listening via ${source} on ${location}`);
+    console.log(`[pmai] Listening via ${source} on ${location}`);
   });
 
   if (isPassenger) {
@@ -221,7 +221,7 @@ function serveStaticAsset(req, res) {
 
   createReadStream(match.filePath)
     .on("error", (error) => {
-      console.error("[swiffer] Static asset failed:", error);
+      console.error("[pmai] Static asset failed:", error);
       if (!res.headersSent) res.statusCode = 500;
       if (!res.writableEnded) res.end("Internal Server Error");
     })
@@ -278,7 +278,7 @@ function createExecutionContext() {
   return {
     waitUntil(promise) {
       Promise.resolve(promise).catch((error) => {
-        console.error("[swiffer] Background task failed:", error);
+        console.error("[pmai] Background task failed:", error);
       });
     },
     passThroughOnException() {},
@@ -329,7 +329,7 @@ globalThis.__srvxLoader__ = ({ server }) => {
 
 if (!serverEntry) {
   const message =
-    "[swiffer] Could not find the built server entry.\n" +
+    "[pmai] Could not find the built server entry.\n" +
     "Looked in:\n  - " +
     candidates.join("\n  - ") +
     "\nBuild locally with `DEPLOY_TARGET=node npm run build` and upload the `.output/` folder.";
@@ -346,13 +346,13 @@ import(pathToFileURL(serverEntry).href)
     }
     if (!didStartServer) {
       throw new Error(
-        "[swiffer] Server entry loaded, but no HTTP listener or handler was created.",
+        "[pmai] Server entry loaded, but no HTTP listener or handler was created.",
       );
     }
-    console.log(`[swiffer] Server entry loaded: ${serverEntry}`);
+    console.log(`[pmai] Server entry loaded: ${serverEntry}`);
   })
   .catch((err) => {
-    console.error("[swiffer] Failed to start server entry:", serverEntry);
+    console.error("[pmai] Failed to start server entry:", serverEntry);
     console.error(err);
     process.exit(1);
   });

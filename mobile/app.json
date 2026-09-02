@@ -1,8 +1,8 @@
 {
   "expo": {
     "name": "PM.ai.vn",
-    "slug": "swiffer",
-    "scheme": "swiffer",
+    "slug": "pmai",
+    "scheme": "pmai",
     "version": "1.0.0",
     "orientation": "default",
     "icon": "./assets/icon.png",
@@ -15,10 +15,10 @@
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.swiffer.app",
+      "bundleIdentifier": "vn.pmai.app",
       "associatedDomains": [
-        "applinks:swiffer.app",
-        "applinks:app.swiffer.com"
+        "applinks:pm.ai.vn",
+        "applinks:app.pm.ai.vn"
       ],
       "infoPlist": {
         "NSCameraUsageDescription": "Take photos, scan documents, and read QR/barcodes.",
@@ -33,7 +33,7 @@
       }
     },
     "android": {
-      "package": "com.swiffer.app",
+      "package": "vn.pmai.app",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#a67c00"
@@ -56,8 +56,8 @@
           "action": "VIEW",
           "autoVerify": true,
           "data": [
-            { "scheme": "https", "host": "swiffer.app", "pathPrefix": "/" },
-            { "scheme": "https", "host": "app.swiffer.com", "pathPrefix": "/" }
+            { "scheme": "https", "host": "pm.ai.vn", "pathPrefix": "/" },
+            { "scheme": "https", "host": "app.pm.ai.vn", "pathPrefix": "/" }
           ],
           "category": ["BROWSABLE", "DEFAULT"]
         }

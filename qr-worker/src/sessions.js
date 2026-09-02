@@ -1,7 +1,7 @@
 /**
  * Baileys session manager.
  *
- * One long-lived WhatsApp socket per Swiffer session id. Auth credentials are
+ * One long-lived WhatsApp socket per PM.ai.vn session id. Auth credentials are
  * persisted per session under config.authDir so a worker restart reconnects
  * without a new QR scan.
  */
@@ -73,7 +73,7 @@ export async function startSession(sessionId, workspaceId) {
     version,
     auth: state,
     printQRInTerminal: false,
-    browser: ['Swiffer', 'Chrome', '1.0.0'],
+    browser: ['PM.ai.vn', 'Chrome', '1.0.0'],
     markOnlineOnConnect: false,
     syncFullHistory: false,
   });

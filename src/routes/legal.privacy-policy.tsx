@@ -83,7 +83,7 @@ function PrivacyPolicyPage() {
         Depending on your location, you may have rights to access, correct, delete, or restrict the
         use of your personal information. You may also have the right to object to processing or to
         data portability. To exercise these rights, contact us at{" "}
-        <a href="mailto:privacy@swiffer.app">privacy@swiffer.app</a>.
+        <a href="mailto:privacy@pm.ai.vn">privacy@pm.ai.vn</a>.
       </p>
 
       <h2>6. International transfers</h2>
@@ -116,7 +116,7 @@ function PrivacyPolicyPage() {
       <h2>10. Contact us</h2>
       <p>
         If you have questions or concerns about this Privacy Policy, please contact us at{" "}
-        <a href="mailto:privacy@swiffer.app">privacy@swiffer.app</a>.
+        <a href="mailto:privacy@pm.ai.vn">privacy@pm.ai.vn</a>.
       </p>
     </LegalPageShell>
   );

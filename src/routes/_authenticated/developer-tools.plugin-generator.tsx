@@ -41,7 +41,7 @@ function PluginGenerator() {
       slug, name, version: "1.0.0", description: desc, author: author || "Your Name",
       license: "MIT", entry: "dist/index.js",
       permissions: perms, extensionPoints: points,
-      engines: { swiffer: ">=1.0.0" },
+      engines: { pmai: ">=1.0.0" },
     }, null, 2);
   }, [slug, name, desc, author, points, perms]);
 
@@ -58,7 +58,7 @@ function PluginGenerator() {
       return "";
     }).filter(Boolean).join("\n");
     const usesZod = points.includes("ai-tool");
-    return `import { definePlugin } from "@swiffer/sdk";
+    return `import { definePlugin } from "@pmai/sdk";
 ${usesZod ? `import { z } from "zod";\n` : ""}
 export default definePlugin({
   slug: "${slug}",
@@ -87,13 +87,13 @@ ${builders}
       "README.md": `# ${name}\n\n${desc}\n`,
       "package.json": JSON.stringify({
         name: `@plugins/${slug}`, version: "1.0.0", private: true,
-        scripts: { dev: "swiffer dev", build: "swiffer build", publish: "swiffer publish" },
+        scripts: { dev: "pmai dev", build: "pmai build", publish: "pmai publish" },
       }, null, 2),
     };
     const blob = new Blob([Object.entries(files).map(([p, c]) => `// ==== ${p} ====\n${c}\n`).join("\n")], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    a.href = url; a.download = `${slug}.swiffer-plugin.txt`; a.click();
+    a.href = url; a.download = `${slug}.pmai-plugin.txt`; a.click();
     URL.revokeObjectURL(url);
     toast.success("Plugin package downloaded");
   }
@@ -182,7 +182,7 @@ ${builders}
 
       <div className="text-xs text-muted-foreground">
         <Badge variant="secondary" className="mr-2 text-[11px]">Tip</Badge>
-        Run <code>swiffer init {slug}</code> in your terminal to scaffold this configuration on disk.
+        Run <code>pmai init {slug}</code> in your terminal to scaffold this configuration on disk.
       </div>
     </div>
   );

@@ -2,11 +2,11 @@
 /**
  * Rebrand verification gate (database side).
  *
- * Confirms that the Wadiff -> Swiffer rebrand is fully applied in Postgres:
- *   1. Column defaults        — no `wadiff` literal left in any default expression.
- *   2. Cron schedule names    — no `wadiff-*` jobs; the expected `swiffer-*` jobs exist.
- *   3. Data rows              — no row in any `target_platform` column still says `wadiff`.
- *   4. Seeded platform text   — no `wadiff` in platform/app settings value payloads.
+ * Confirms that the Wadiff/Swiffer -> PM.ai.vn rebrand is fully applied in Postgres:
+ *   1. Column defaults        — no `wadiff` or `swiffer` literal left in any default expression.
+ *   2. Cron schedule names    — no `wadiff-*` / `swiffer-*` jobs; the expected `pmai-*` jobs exist.
+ *   3. Data rows              — no row in any `target_platform` column still says `wadiff` or `swiffer`.
+ *   4. Seeded platform text   — no `wadiff` / `swiffer` in platform/app settings value payloads.
  *
  * Requires the managed PG* env vars (PGHOST, PGUSER, ...). Checks that the
  * connected role is not allowed to read (e.g. the `cron` schema) are reported
@@ -19,8 +19,15 @@
 import { execFileSync } from "node:child_process";
 
 const JSON_OUT = process.argv.includes("--json");
-const OLD = "wadiff";
-const NEW = "swiffer";
+const OLD_ALIASES = ["wadiff", "swiffer"];
+const NEW = "pmai";
+const OLD_LABEL = OLD_ALIASES.join("/");
+const legacyDefaultSql = OLD_ALIASES.map((a) => `column_default ilike '%${a}%'`).join(" or ");
+const legacyValueSql = (expr) => OLD_ALIASES.map((a) => `${expr} ilike '%${a}%'`).join(" or ");
+const isLegacyName = (value) => {
+  const n = String(value || "").toLowerCase();
+  return OLD_ALIASES.some((a) => n.includes(a));
+};
 
 /** Cron jobs that must exist after the rename migration. */
 const EXPECTED_CRON_PREFIX = `${NEW}-`;
@@ -64,12 +71,12 @@ if (!ping.ok) {
     select table_schema||'.'||table_name||'.'||column_name, column_default
     from information_schema.columns
     where table_schema not in ('pg_catalog','information_schema')
-      and column_default ilike '%${OLD}%'
+      and (${legacyDefaultSql})
     order by 1`);
   if (!r.ok) add("column defaults", "SKIP", r.error);
   else if (r.rows.length)
-    add("column defaults", "FAIL", `${r.rows.length} default(s) still reference "${OLD}"`, r.rows);
-  else add("column defaults", "PASS", `no default expression contains "${OLD}"`);
+    add("column defaults", "FAIL", `${r.rows.length} default(s) still reference "${OLD_LABEL}"`, r.rows);
+  else add("column defaults", "PASS", `no default expression contains "${OLD_LABEL}"`);
 }
 
 // ── 2. cron schedule names ───────────────────────────────────────────────────
@@ -78,10 +85,10 @@ if (!ping.ok) {
   if (!r.ok) {
     add("cron schedule names", "SKIP", "cron.job not readable by this role (expected for the restricted app role)");
   } else {
-    const stale = r.rows.filter(([n]) => (n || "").toLowerCase().includes(OLD));
+    const stale = r.rows.filter(([n]) => isLegacyName(n));
     const renamed = r.rows.filter(([n]) => (n || "").startsWith(EXPECTED_CRON_PREFIX));
     if (stale.length)
-      add("cron schedule names", "FAIL", `${stale.length} job(s) still named "${OLD}-*"`, stale);
+      add("cron schedule names", "FAIL", `${stale.length} job(s) still named with a legacy vendor prefix`, stale);
     else if (!renamed.length)
       add("cron schedule names", "FAIL", `no job named "${EXPECTED_CRON_PREFIX}*" found`, r.rows);
     else
@@ -103,7 +110,7 @@ if (!ping.ok) {
     const union = cols.rows
       .map(
         ([s, t, c]) =>
-          `select '${s}.${t}' as src, count(*) as n from "${s}"."${t}" where "${c}" ilike '%${OLD}%'`,
+          `select '${s}.${t}' as src, count(*) as n from "${s}"."${t}" where ${legacyValueSql(`"${c}"`)}`,
       )
       .join(" union all ");
     const r = q(`select src, n from (${union}) x where n > 0 order by 1`);
@@ -134,13 +141,13 @@ if (!ping.ok) {
     const union = tables.rows
       .map(
         ([s, t, c]) =>
-          `select '${s}.${t}.${c}' as src, count(*) as n from "${s}"."${t}" where "${c}"::text ilike '%${OLD}%'`,
+          `select '${s}.${t}.${c}' as src, count(*) as n from "${s}"."${t}" where ${legacyValueSql(`"${c}"::text`)}`,
       )
       .join(" union all ");
     const r = q(`select src, n from (${union}) x where n > 0 order by 1`);
     if (!r.ok) add("settings payloads", "SKIP", r.error);
-    else if (r.rows.length) add("settings payloads", "FAIL", `legacy "${OLD}" text in settings`, r.rows);
-    else add("settings payloads", "PASS", `no "${OLD}" text in settings payloads`);
+    else if (r.rows.length) add("settings payloads", "FAIL", `legacy "${OLD_LABEL}" text in settings`, r.rows);
+    else add("settings payloads", "PASS", `no "${OLD_LABEL}" text in settings payloads`);
   }
 }
 
@@ -150,7 +157,7 @@ const failed = results.filter((r) => r.status === "FAIL");
 if (JSON_OUT) {
   console.log(JSON.stringify({ ok: failed.length === 0, results }, null, 2));
 } else {
-  console.log(`\nRebrand DB verification (${OLD} -> ${NEW})\n`);
+  console.log(`\nRebrand DB verification (${OLD_LABEL} -> ${NEW})\n`);
   for (const r of results) {
     const icon = r.status === "PASS" ? "✓" : r.status === "SKIP" ? "•" : "✗";
     console.log(`${icon} ${r.status.padEnd(4)} ${r.name} — ${r.detail}`);

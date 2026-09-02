@@ -37,9 +37,9 @@ export const DEFAULT_SYNC_SETTINGS: InboxSyncSettings = {
   realtimeEnabled: true,
 };
 
-const EVENT = "swiffer:inbox-sync-settings";
+const EVENT = "pmai:inbox-sync-settings";
 const keyFor = (workspaceId?: string | null) =>
-  `swiffer.inbox.sync.v1:${workspaceId ?? "none"}`;
+  `pmai.inbox.sync.v1:${workspaceId ?? "none"}`;
 
 function parse(raw: string | null): InboxSyncSettings {
   if (!raw) return DEFAULT_SYNC_SETTINGS;

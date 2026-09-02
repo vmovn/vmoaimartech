@@ -139,7 +139,7 @@ const examples: Record<ExampleKey, { label: string; description: string; body: u
 export function WhatsAppConversationalApiPanel() {
   const { data: ws } = useCurrentWorkspace();
   const wsId = ws?.id ?? "workspace";
-  const storageKey = `swiffer:whatsapp-conversational-token:${wsId}`;
+  const storageKey = `pmai:whatsapp-conversational-token:${wsId}`;
 
   const [token, setToken] = useState<string>("");
   const [reveal, setReveal] = useState(false);

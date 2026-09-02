@@ -182,7 +182,7 @@ export const Route = createFileRoute("/api/ai/conversation-stream")({
         return createUIMessageStreamResponse({
           stream,
           headers: {
-            "X-Swiffer-User-Message-Id": (userRow as { id?: string } | null)?.id ?? "",
+            "X-Pmai-User-Message-Id": (userRow as { id?: string } | null)?.id ?? "",
           },
         });
       },

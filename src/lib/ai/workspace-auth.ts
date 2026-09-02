@@ -1,7 +1,7 @@
 /**
  * AI tenant guards — reuses the product's existing workspace context.
  *
- * Active workspace on the wire: `x-swiffer-workspace-id`
+ * Active workspace on the wire: `x-pmai-workspace-id`
  * (set by attachSupabaseAuthFresh from readActiveWorkspaceId).
  *
  * Membership/role: existing RPCs `is_workspace_member` / `is_workspace_admin`
@@ -27,7 +27,7 @@ export function nonemptyWorkspaceId(value: string | null | undefined): string | 
 }
 
 /** Canonical header written by attachSupabaseAuthFresh / active-tenant. */
-export const ACTIVE_WORKSPACE_HEADER = "x-swiffer-workspace-id";
+export const ACTIVE_WORKSPACE_HEADER = "x-pmai-workspace-id";
 
 export function readActiveWorkspaceHeader(): string | null {
   try {

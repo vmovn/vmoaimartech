@@ -378,7 +378,7 @@ export interface ConnectionDiagnosis {
     | "unknown";
   /** Short label of the field as shown in the UI. */
   fieldLabel: string;
-  /** Where in Swiffer / Meta to fix it. */
+  /** Where in PM.ai.vn / Meta to fix it. */
   where: string;
   /** Step-by-step fix. */
   fix: string;

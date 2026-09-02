@@ -88,7 +88,7 @@ export function jsonError(
         ...JSON_HEADERS,
         ...corsHeaders(),
         ...(STATUS[code] === 401
-          ? { "WWW-Authenticate": 'Bearer realm="swiffer", charset="UTF-8"' }
+          ? { "WWW-Authenticate": 'Bearer realm="pmai", charset="UTF-8"' }
           : {}),
       },
     },

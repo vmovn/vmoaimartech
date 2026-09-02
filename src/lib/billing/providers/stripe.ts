@@ -1,5 +1,5 @@
 /**
- * Stripe adapter — default gateway for Swiffer billing.
+ * Stripe adapter — default gateway for PM.ai.vn billing.
  *
  * This adapter is written against the Stripe REST API directly (no SDK) so it
  * runs in the Cloudflare Worker SSR runtime. Wire STRIPE_SECRET_KEY and

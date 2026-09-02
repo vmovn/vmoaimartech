@@ -59,7 +59,7 @@ export function getUiExtensions(point: string) {
 }
 
 function makeAPI(slug: string, version: string, teardown: Array<() => void>): PluginAPI {
-  const namespace = `swiffer.plugin.${slug}.`;
+  const namespace = `pmai.plugin.${slug}.`;
   return {
     slug,
     version,

@@ -1498,7 +1498,7 @@ export const getAppointmentIcs = createServerFn({ method: "GET" })
     const fmt = (iso: string) => new Date(iso).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
     const esc = (s: string) => s.replace(/([,;\\])/g, "\\$1").replace(/\n/g, "\\n");
     const location = a.join_url ?? (a.location_kind ?? "");
-    const uid = `${a.id}@swiffer`;
+    const uid = `${a.id}@pmai`;
     const status = a.status === "cancelled" ? "CANCELLED" : a.status === "completed" ? "CONFIRMED" : "CONFIRMED";
     const lines = [
       "BEGIN:VCALENDAR",

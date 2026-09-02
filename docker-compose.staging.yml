@@ -2,7 +2,7 @@
 # Usage: docker compose -f docker-compose.yml -f docker-compose.staging.yml --env-file .env.staging up -d
 services:
   app:
-    image: swiffer/app:${SWIFFER_VERSION:-4.4.6-staging}
+    image: pmai/app:${PMAI_VERSION:-4.4.6-staging}
     env_file:
       - .env.staging
     environment:

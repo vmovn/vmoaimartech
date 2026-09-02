@@ -1,4 +1,4 @@
-# Swiffer — production compose stack.
+# PM.ai.vn — production compose stack.
 # Bring up with:  docker compose --env-file .env.production up -d
 # Scale app:      docker compose up -d --scale app=4
 # Requires: .env.production with VITE_*, SUPABASE_*, LOVABLE_API_KEY, session secret, etc.
@@ -22,7 +22,7 @@ x-app-env: &app-env
 
 services:
   app:
-    image: swiffer/app:${SWIFFER_VERSION:-4.4.6}
+    image: pmai/app:${PMAI_VERSION:-4.4.6}
     build:
       context: .
       dockerfile: Dockerfile
@@ -31,7 +31,7 @@ services:
         VITE_SUPABASE_PUBLISHABLE_KEY: ${VITE_SUPABASE_PUBLISHABLE_KEY}
         VITE_APP_ENV: production
         VITE_DOCS_BASE_URL: ${VITE_DOCS_BASE_URL:-}
-        APP_VERSION: ${SWIFFER_VERSION:-4.4.6}
+        APP_VERSION: ${PMAI_VERSION:-4.4.6}
     environment: *app-env
     env_file:
       - .env.production
@@ -57,7 +57,7 @@ services:
       start_period: 20s
       retries: 3
     networks:
-      - swiffer-net
+      - pmai-net
     logging:
       driver: json-file
       options:
@@ -83,10 +83,10 @@ services:
       timeout: 5s
       retries: 3
     networks:
-      - swiffer-net
+      - pmai-net
 
 networks:
-  swiffer-net:
+  pmai-net:
     driver: bridge
 
 volumes:

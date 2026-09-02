@@ -1,8 +1,8 @@
 /**
- * Worker → Swiffer webhook sender.
+ * Worker → PM.ai.vn webhook sender.
  *
- * At-least-once delivery: every event gets a stable X-Swiffer-Event-Id and is
- * retried with exponential backoff on 5xx/network failures. Swiffer dedupes by
+ * At-least-once delivery: every event gets a stable X-Pmai-Event-Id and is
+ * retried with exponential backoff on 5xx/network failures. PM.ai.vn dedupes by
  * event id, so retrying the *same* id is always safe. 4xx is terminal.
  */
 import { randomUUID } from 'node:crypto';
@@ -25,9 +25,9 @@ async function post(eventId, body) {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'X-Swiffer-Timestamp': timestamp,
-      'X-Swiffer-Signature': `sha256=${sign(config.webhookSecret, timestamp, rawBody)}`,
-      'X-Swiffer-Event-Id': eventId,
+      'X-Pmai-Timestamp': timestamp,
+      'X-Pmai-Signature': `sha256=${sign(config.webhookSecret, timestamp, rawBody)}`,
+      'X-Pmai-Event-Id': eventId,
     },
     body: rawBody,
   });

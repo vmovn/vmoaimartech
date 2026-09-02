@@ -8,7 +8,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useLayout } from "@/shared/contexts/layout-context";
 import { OrganizationSwitcherConnected } from "./organization-switcher-connected";
 import { useTenantBrand } from "@/hooks/use-tenant-brand";
-import swifferLogo from "@/assets/swiffer-logo.png";
+import pmaiLogo from "@/assets/pmai-logo.png";
 import { NAV_ITEMS, NAV_GROUPS, API_CONFIG_CHILDREN, type NavItem } from "./nav-config";
 import { usePlatformRuntime } from "@/hooks/use-platform-runtime";
 import { isRouteEnabled } from "@/lib/admin/platform-features";
@@ -69,7 +69,7 @@ export function MobileNav() {
           <div className="flex items-center gap-2">
             <div className="grid place-items-center w-8 h-8 rounded-lg overflow-hidden">
               <img
-                src={brand.logoUrl ?? swifferLogo}
+                src={brand.logoUrl ?? pmaiLogo}
                 alt={`${brand.name} logo`}
                 className="h-full w-full object-contain"
               />

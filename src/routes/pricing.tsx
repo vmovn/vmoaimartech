@@ -143,7 +143,7 @@ function PricingPage() {
 
                   {isCustom ? (
                     <a
-                      href="mailto:sales@swiffer.com?subject=Enterprise%20inquiry"
+                      href="mailto:sales@pm.ai.vn?subject=Enterprise%20inquiry"
                       {...ctaAttrs(`plan-${p.code}`, "pricing", "pricing_click", p.cta_label ?? "Contact sales")}
                       className="mt-6 w-full inline-flex justify-center px-4 py-2 rounded-md text-sm font-medium border border-border hover:bg-muted"
                     >
@@ -186,7 +186,7 @@ function PricingPage() {
 
 
         <p className="mt-10 text-center text-xs text-muted-foreground">
-          All prices in USD. Yearly plans billed annually. Need something bigger? <a href="mailto:sales@swiffer.com" className="text-accent hover:underline" {...ctaAttrs("talk-to-sales", "pricing-footer")}>Talk to sales</a>.
+          All prices in USD. Yearly plans billed annually. Need something bigger? <a href="mailto:sales@pm.ai.vn" className="text-accent hover:underline" {...ctaAttrs("talk-to-sales", "pricing-footer")}>Talk to sales</a>.
         </p>
       </section>
     </MarketingShell>

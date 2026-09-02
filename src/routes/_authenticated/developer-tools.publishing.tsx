@@ -12,12 +12,12 @@ export const Route = createFileRoute("/_authenticated/developer-tools/publishing
 });
 
 const STEPS: { title: string; body: string; code?: string }[] = [
-  { title: "1. Lint the manifest", body: "Ensure required fields (slug, name, version, permissions) are correct.", code: "swiffer lint" },
-  { title: "2. Bundle a production build", body: "Produce a tree-shaken, minified dist/ folder.", code: "swiffer build --minify" },
-  { title: "3. Run the review suite", body: "Automated checks for security, permissions, and compatibility.", code: "swiffer review" },
-  { title: "4. Bump the version", body: "Follow semver. Breaking → major, feature → minor, fix → patch.", code: "swiffer version minor" },
-  { title: "5. Publish", body: "Upload to the Marketplace. The first release is draft until you promote it.", code: "swiffer publish" },
-  { title: "6. Promote", body: "Move the release from draft to public, or invite beta testers.", code: "swiffer promote --stable" },
+  { title: "1. Lint the manifest", body: "Ensure required fields (slug, name, version, permissions) are correct.", code: "pmai lint" },
+  { title: "2. Bundle a production build", body: "Produce a tree-shaken, minified dist/ folder.", code: "pmai build --minify" },
+  { title: "3. Run the review suite", body: "Automated checks for security, permissions, and compatibility.", code: "pmai review" },
+  { title: "4. Bump the version", body: "Follow semver. Breaking → major, feature → minor, fix → patch.", code: "pmai version minor" },
+  { title: "5. Publish", body: "Upload to the Marketplace. The first release is draft until you promote it.", code: "pmai publish" },
+  { title: "6. Promote", body: "Move the release from draft to public, or invite beta testers.", code: "pmai promote --stable" },
 ];
 
 const CHECKLIST = [
@@ -83,7 +83,7 @@ function PublishingGuide() {
           <p><strong className="text-foreground">Security:</strong> No hardcoded credentials, respects declared permissions, all outbound URLs allowlisted.</p>
           <p><strong className="text-foreground">Performance:</strong> First render under 300 ms, no unnecessary polling, memory ≤ 50 MB.</p>
           <p><strong className="text-foreground">Quality:</strong> Handles error states, respects accessibility, follows <Brand /> design tokens.</p>
-          <p><strong className="text-foreground">Compatibility:</strong> Declares the correct <code>engines.swiffer</code> range.</p>
+          <p><strong className="text-foreground">Compatibility:</strong> Declares the correct <code>engines.pmai</code> range.</p>
         </CardContent>
       </Card>
     </div>

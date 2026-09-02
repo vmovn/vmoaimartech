@@ -221,12 +221,12 @@ export function definePlugin(options: DefinePluginOptions) {
 
   const notify = (opts: Parameters<ExtensionContext['notify']>[0]) => {
     // toast facade — resolved by host at runtime
-    const w = globalThis as unknown as { __swiffer_toast?: (o: unknown) => void };
-    w.__swiffer_toast?.(opts);
+    const w = globalThis as unknown as { __pmai_toast?: (o: unknown) => void };
+    w.__pmai_toast?.(opts);
   };
   const getUser: ExtensionContext['getUser'] = () => {
-    const w = globalThis as unknown as { __swiffer_auth?: () => { userId: string; workspaceId: string; role: string } | null };
-    return w.__swiffer_auth?.() ?? null;
+    const w = globalThis as unknown as { __pmai_auth?: () => { userId: string; workspaceId: string; role: string } | null };
+    return w.__pmai_auth?.() ?? null;
   };
 
   const ctx: ExtensionContext = {

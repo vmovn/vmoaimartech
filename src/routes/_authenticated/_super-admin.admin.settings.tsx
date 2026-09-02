@@ -225,7 +225,7 @@ function GeneralPanel() {
           <FieldError show={touched} message={errors["tagline"]} />
         </Field>
         <Field label="Primary URL" hint="Canonical app URL used in emails and links.">
-          <Input value={d.primary_url ?? ""} onChange={(e) => patch({ primary_url: e.target.value })} placeholder="https://app.swiffer.com" aria-invalid={touched && !!errors["primary_url"]} />
+          <Input value={d.primary_url ?? ""} onChange={(e) => patch({ primary_url: e.target.value })} placeholder="https://app.pm.ai.vn" aria-invalid={touched && !!errors["primary_url"]} />
           <FieldError show={touched} message={errors["primary_url"]} />
         </Field>
         <Field label="Support email" hint="Rendered as the Contact link in the app footer.">
@@ -776,7 +776,7 @@ function AnalyticsPanel() {
             <Input
               value={d.key ?? ""}
               onChange={(e) => patch({ key: e.target.value })}
-              placeholder={provider === "ga4" ? "G-XXXXXXXXXX" : provider === "gtm" ? "GTM-XXXXXXX" : provider === "posthog" ? "phc_..." : "swiffer.app"}
+              placeholder={provider === "ga4" ? "G-XXXXXXXXXX" : provider === "gtm" ? "GTM-XXXXXXX" : provider === "posthog" ? "phc_..." : "pm.ai.vn"}
               disabled={provider === "none"}
             />
           </Field>
@@ -888,7 +888,7 @@ function PaymentsPanel() {
             <Input value={d.webhook_base_url ?? ""} onChange={(e) => patch({ webhook_base_url: e.target.value })} placeholder="https://…/api/public/webhooks" />
           </Field>
           <Field label="Statement descriptor" hint="Shown on customer card statements.">
-            <Input value={d.statement_descriptor ?? ""} onChange={(e) => patch({ statement_descriptor: e.target.value })} placeholder="SWIFFER" />
+            <Input value={d.statement_descriptor ?? ""} onChange={(e) => patch({ statement_descriptor: e.target.value })} placeholder="PMAI" />
           </Field>
         </div>
         <div className="grid md:grid-cols-2 gap-3">

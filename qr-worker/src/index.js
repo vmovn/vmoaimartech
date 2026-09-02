@@ -1,5 +1,5 @@
 /**
- * Swiffer WhatsApp QR worker — HTTP surface.
+ * PM.ai.vn WhatsApp QR worker — HTTP surface.
  * Implements docs/whatsapp-qr-worker-contract.md (Direction 1).
  */
 import express from 'express';

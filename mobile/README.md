@@ -1,6 +1,6 @@
-# Swiffer Mobile (React Native + Expo)
+# PM.ai.vn Mobile (React Native + Expo)
 
-Production-ready architecture for the native Android/iOS companion apps to the Swiffer web platform. **This folder does not run inside Lovable's preview** — copy it into a standalone Expo project (or open it directly outside Lovable) and run it with the Expo CLI.
+Production-ready architecture for the native Android/iOS companion apps to the PM.ai.vn web platform. **This folder does not run inside Lovable's preview** — copy it into a standalone Expo project (or open it directly outside Lovable) and run it with the Expo CLI.
 
 ## Stack
 

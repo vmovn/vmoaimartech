@@ -33,7 +33,7 @@ const PARAMS: Array<{ name: string; required: boolean; type: string; desc: strin
 export function WhatsAppTemplateApiPanel() {
   const { data: ws } = useCurrentWorkspace();
   const wsId = ws?.id ?? "workspace";
-  const storageKey = `swiffer:whatsapp-template-token:${wsId}`;
+  const storageKey = `pmai:whatsapp-template-token:${wsId}`;
 
   const [token, setToken] = useState<string>("");
   const [reveal, setReveal] = useState(false);

@@ -1,6 +1,6 @@
 # VMO AIMarTech Audit Memory Pack
 
-Purpose: make Codex/Cursor consume durable repository memory before rediscovering Swiffer architecture on every task.
+Purpose: make Codex/Cursor consume durable repository memory before rediscovering PM.ai.vn architecture on every task.
 
 Memory installation checkpoint: `v1.0.0-localhost-1.0.7` / `0f401975274490d0201581325a932d7865f73208` (2026-08-31).
 

@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { usePlatformRuntime } from "@/hooks/use-platform-runtime";
 
-const IDLE_KEY = "swiffer.idle.minutes";
+const IDLE_KEY = "pmai.idle.minutes";
 const DEFAULT_IDLE_MINUTES = 30;
 
 export function getIdleMinutes(): number {
@@ -16,7 +16,7 @@ export function getIdleMinutes(): number {
 export function setIdleMinutes(m: number) {
   if (typeof window === "undefined") return;
   window.localStorage.setItem(IDLE_KEY, String(m));
-  window.dispatchEvent(new CustomEvent("swiffer:idle-changed"));
+  window.dispatchEvent(new CustomEvent("pmai:idle-changed"));
 }
 
 /**
@@ -76,7 +76,7 @@ export function IdleLogoutSentinel() {
       minutes.current = getIdleMinutes();
       schedule();
     };
-    window.addEventListener("swiffer:idle-changed", onIdleChanged);
+    window.addEventListener("pmai:idle-changed", onIdleChanged);
 
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
       // Only react to identity transitions; TOKEN_REFRESHED fires ~hourly.
@@ -89,7 +89,7 @@ export function IdleLogoutSentinel() {
       clear();
       events.forEach((e) => window.removeEventListener(e, schedule));
       document.removeEventListener("visibilitychange", schedule);
-      window.removeEventListener("swiffer:idle-changed", onIdleChanged);
+      window.removeEventListener("pmai:idle-changed", onIdleChanged);
       sub.subscription.unsubscribe();
     };
   }, [platformMax]);

@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS public.plugin_compatibility_checks (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   plugin_id uuid NOT NULL REFERENCES public.plugins(id) ON DELETE CASCADE,
   version_id uuid REFERENCES public.plugin_versions(id) ON DELETE SET NULL,
-  target_platform text NOT NULL DEFAULT 'swiffer',
+  target_platform text NOT NULL DEFAULT 'pmai',
   target_version text,
   status text NOT NULL DEFAULT 'pending',
   results jsonb NOT NULL DEFAULT '{}'::jsonb,

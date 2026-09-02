@@ -29,7 +29,7 @@ function TemplatesPage() {
     const bundle = selected.files.map((f) => `// ==== ${f.path} ====\n${f.contents}\n`).join("\n");
     const blob = new Blob([bundle], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a"); a.href = url; a.download = `${selected.id}.swiffer-template.txt`; a.click();
+    const a = document.createElement("a"); a.href = url; a.download = `${selected.id}.pmai-template.txt`; a.click();
     URL.revokeObjectURL(url);
     toast.success("Template downloaded");
   }

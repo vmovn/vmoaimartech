@@ -78,14 +78,14 @@ function SdkDocs() {
           <Badge variant="secondary" className="text-[11px]">v1.4 · stable</Badge>
         </div>
         <p className="text-sm text-muted-foreground mt-1">
-          Import from <code>@swiffer/sdk</code>. All builders are type-safe and hot-reloadable.
+          Import from <code>@pmai/sdk</code>. All builders are type-safe and hot-reloadable.
         </p>
       </header>
 
       <Card>
         <CardHeader><CardTitle className="text-base">Installation</CardTitle></CardHeader>
         <CardContent className="space-y-2">
-          <Snippet code="npm install @swiffer/sdk" />
+          <Snippet code="npm install @pmai/sdk" />
           <p className="text-xs text-muted-foreground">Peer deps: <code>react &gt;= 18</code>, <code>zod &gt;= 3</code>.</p>
         </CardContent>
       </Card>

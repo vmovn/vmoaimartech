@@ -82,7 +82,7 @@ const AnalyticsSchema = z
       ga4: { re: /^G-[A-Z0-9]{6,}$/i, msg: "Measurement ID looks like G-XXXXXXXXXX" },
       gtm: { re: /^GTM-[A-Z0-9]{5,}$/i, msg: "Container ID looks like GTM-XXXXXXX" },
       posthog: { re: /^phc_[A-Za-z0-9]{10,}$/, msg: "Project token looks like phc_..." },
-      plausible: { re: /^[a-z0-9.-]+\.[a-z]{2,}$/i, msg: "Enter the site domain, e.g. swiffer.app" },
+      plausible: { re: /^[a-z0-9.-]+\.[a-z]{2,}$/i, msg: "Enter the site domain, e.g. pm.ai.vn" },
     };
     const rule = patterns[provider];
     if (rule && !rule.re.test(key)) {

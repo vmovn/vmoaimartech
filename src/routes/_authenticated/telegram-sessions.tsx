@@ -25,7 +25,7 @@ type TgSession = {
   lastActiveAt?: string;
 };
 
-const STORAGE_PREFIX = "swiffer:telegram-sessions:";
+const STORAGE_PREFIX = "pmai:telegram-sessions:";
 
 function shortId(len = 8) {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";

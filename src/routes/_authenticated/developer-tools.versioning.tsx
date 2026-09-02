@@ -77,9 +77,9 @@ function VersioningGuide() {
       <Card>
         <CardHeader><CardTitle className="text-base">Compatibility ranges</CardTitle></CardHeader>
         <CardContent className="text-sm text-muted-foreground space-y-1.5">
-          <p><code>engines.swiffer: "^1.4.0"</code> — accepts 1.4.x through &lt; 2.0.0.</p>
-          <p><code>engines.swiffer: "~1.4.0"</code> — accepts 1.4.x only.</p>
-          <p><code>engines.swiffer: "&gt;=1.4.0 &lt;1.6.0"</code> — explicit window.</p>
+          <p><code>engines.pmai: "^1.4.0"</code> — accepts 1.4.x through &lt; 2.0.0.</p>
+          <p><code>engines.pmai: "~1.4.0"</code> — accepts 1.4.x only.</p>
+          <p><code>engines.pmai: "&gt;=1.4.0 &lt;1.6.0"</code> — explicit window.</p>
           <p>The Marketplace refuses installs that do not satisfy the range.</p>
         </CardContent>
       </Card>
@@ -88,7 +88,7 @@ function VersioningGuide() {
         <CardHeader><CardTitle className="text-base">Rollback</CardTitle></CardHeader>
         <CardContent className="text-sm text-muted-foreground space-y-2">
           <p>Every published version stores a signed bundle. Roll back with:</p>
-          <pre className="rounded-md border border-border bg-muted/40 p-3 font-mono text-xs">swiffer rollback 1.3.2</pre>
+          <pre className="rounded-md border border-border bg-muted/40 p-3 font-mono text-xs">pmai rollback 1.3.2</pre>
           <p>Or use one-click rollback in <em>Settings → Plugin Management</em>.</p>
         </CardContent>
       </Card>

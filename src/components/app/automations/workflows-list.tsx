@@ -51,7 +51,7 @@ type AutomationRow = {
 
 type StatusFilter = "all" | "active" | "paused" | "draft" | "archived";
 
-const EXPORT_FORMAT = "swiffer.workflow/v1" as const;
+const EXPORT_FORMAT = "pmai.workflow/v1" as const;
 
 type ExportedWorkflow = {
   format: typeof EXPORT_FORMAT;

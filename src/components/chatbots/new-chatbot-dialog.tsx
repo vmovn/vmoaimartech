@@ -333,7 +333,7 @@ export function NewChatbotDialog({
 
 
   const storageKey = useMemo(
-    () => (workspaceId ? `swiffer:new-chatbot-draft:${workspaceId}` : null),
+    () => (workspaceId ? `pmai:new-chatbot-draft:${workspaceId}` : null),
     [workspaceId],
   );
   const skipNextSave = useRef(false);

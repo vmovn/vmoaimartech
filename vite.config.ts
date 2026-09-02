@@ -10,7 +10,7 @@ const nodeDeploy =
   process.env.NITRO_PRESET === "node";
 
 // Public base URL for generated asset/script URLs. Must match the path the app is
-// mounted at on the production domain. Swiffer is served from the domain root
+// mounted at on the production domain. PM.ai.vn is served from the domain root
 // (https://pm.ai.vn/), so base is "/". Override with PUBLIC_BASE_URL
 // if the app is ever mounted under a sub-path (e.g. "/app/").
 const publicBase = process.env.PUBLIC_BASE_URL || "/";

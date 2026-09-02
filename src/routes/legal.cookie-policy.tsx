@@ -76,7 +76,7 @@ function CookiePolicyPage() {
       <h2>6. Contact us</h2>
       <p>
         If you have questions about this Cookie Policy, contact us at{" "}
-        <a href="mailto:privacy@swiffer.app">privacy@swiffer.app</a>.
+        <a href="mailto:privacy@pm.ai.vn">privacy@pm.ai.vn</a>.
       </p>
     </LegalPageShell>
   );

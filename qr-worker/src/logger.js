@@ -6,7 +6,7 @@ export const logger = pino({
   redact: {
     paths: [
       'req.headers.authorization',
-      'req.headers["x-swiffer-signature"]',
+      'req.headers["x-pmai-signature"]',
       'qr',
       '*.qr',
     ],

@@ -18,7 +18,7 @@
  * whose source id matches this tab's id).
  */
 import { ACTIVE_ORG_KEY as ORG_KEY } from "@/lib/tenant/active-tenant";
-const CHANNEL_NAME = "swiffer.org.sync.v1";
+const CHANNEL_NAME = "pmai.org.sync.v1";
 
 let tabId: string | null = null;
 

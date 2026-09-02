@@ -32,7 +32,7 @@ Validation: database URL must use `postgres://` or `postgresql://`; URLs must be
 | `VITE_DOCS_BASE_URL` | Operator-owned external documentation base URL | Conditional | No | Build public | Static documentation links | Conditional |
 | `DEPLOY_TARGET` | Selects Node-compatible build output | Conditional | No | Build public | Docker/Coolify Node build | Yes |
 | `NITRO_PRESET` | Alternative Nitro build selector | Conditional | No | Build public | Custom build pipeline | Conditional |
-| `SWIFFER_VERSION` | Inherited Compose image/build tag variable | Optional | No | Build public | Docker Compose | Conditional |
+| `PMAI_VERSION` | Compose image/build tag variable | Optional | No | Build public | Docker Compose | Conditional |
 
 `VITE_SUPABASE_PUBLISHABLE_KEY` is intentionally public. `SUPABASE_SERVICE_ROLE_KEY` must never be renamed into a `VITE_*` variable.
 
@@ -111,7 +111,7 @@ Per-account WhatsApp secret names may also be stored in database configuration. 
 | `WA_QR_WORKER_TOKEN` | App/worker bearer token | Conditional | Yes | Runtime server | QR WhatsApp Login | Conditional |
 | `WA_QR_WORKER_SIGNING_SECRET` | App-to-worker HMAC secret | Conditional | Yes | Runtime server | QR WhatsApp Login | Conditional |
 | `WA_QR_WEBHOOK_SECRET` | Worker-to-app HMAC secret | Conditional | Yes | Runtime server | QR WhatsApp Login | Conditional |
-| `SWIFFER_WEBHOOK_URL` | Inherited worker callback URL variable | Conditional | No | Runtime server | QR worker | Conditional |
+| `PMAI_WEBHOOK_URL` | QR worker callback URL | Conditional | No | Runtime server | QR worker | Conditional |
 | `WA_AUTH_DIR` | Persistent worker credential directory | Conditional | No | Runtime server | QR worker | Conditional |
 
 ### Telegram
@@ -152,7 +152,7 @@ The Integration Marketplace also contains database-configured providers (Google 
 
 ## 10. Optional Variables
 
-The following optional/current values have safe defaults and do not block setup: `NODE_ENV`, `HOST`, `PORT`, `LOG_LEVEL`, `APP_VERSION`, `APP_COMMIT`, `PUBLIC_BASE_URL`, `VITE_APP_ENV`, `VITE_BRAND_NAME`, `APP_REPLICAS`, `SWIFFER_VERSION`, `KB_VECTOR_STORE`, and `SMTP_HOST`.
+The following optional/current values have safe defaults and do not block setup: `NODE_ENV`, `HOST`, `PORT`, `LOG_LEVEL`, `APP_VERSION`, `APP_COMMIT`, `PUBLIC_BASE_URL`, `VITE_APP_ENV`, `VITE_BRAND_NAME`, `APP_REPLICAS`, `PMAI_VERSION`, `KB_VECTOR_STORE`, and `SMTP_HOST`.
 
 Conditional provider and platform variables remain **Not configured** until their capability is explicitly enabled. Missing conditional values are not a core-system failure.
 
@@ -195,7 +195,7 @@ These names were found in ignored local state, legacy documentation, obsolete te
 | `WHATSAPP_VERIFY_TOKEN` | Legacy environment alias; current account verify tokens are database-owned | Removed from canonical deployment template |
 | `WEBHOOK_SECRET` | Passed by inherited Compose but not read by application code | Removed from Compose/template |
 | `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM` | Previously documented, no executable reader | Removed from canonical template |
-| `SWIFFER_API_KEY`, `SWIFFER_WEBHOOK_SECRET` | Appear only inside developer-facing code snippets | Removed from deployment template |
+| `PMAI_API_KEY`, `PMAI_WEBHOOK_SECRET` | Appear only inside developer-facing code snippets | Removed from deployment template |
 | `RLS_HARNESS_BASE_URL` | Documentation-only name; current test config reads `E2E_BASE_URL` | Deprecated candidate |
 
 Mobile note: `mobile/src/lib/env.ts` reads `SUPABASE_URL`, `SUPABASE_ANON_KEY` and `API_BASE_URL` from Expo `app.json → extra`. Those are current mobile build configuration keys, not process environment variables and not Coolify server variables. Do not invent environment aliases without first changing the mobile build architecture.

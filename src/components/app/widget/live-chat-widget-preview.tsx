@@ -6,7 +6,7 @@
  * preview surface only, so we can update instantly as the builder controls
  * change without triggering rate limits or creating sessions.
  *
- * Custom CSS/JS is scoped: CSS is prefixed with `.swiffer-widget-preview`
+ * Custom CSS/JS is scoped: CSS is prefixed with `.pmai-widget-preview`
  * during injection, and JS runs inside a sandboxed <script> inside a shadow
  * DOM-like scoped div. For real production embed, custom JS runs inside the
  * widget iframe on the customer's site — this preview does a best-effort
@@ -77,7 +77,7 @@ export function LiveChatWidgetPreview({ config, forceOpen }: Props) {
   }, [config.bubbleStyle, config.radius]);
 
   // Inject scoped custom CSS
-  const cssId = "swiffer-widget-preview-css";
+  const cssId = "pmai-widget-preview-css";
   useEffect(() => {
     let style = document.getElementById(cssId) as HTMLStyleElement | null;
     if (!style) {
@@ -92,7 +92,7 @@ export function LiveChatWidgetPreview({ config, forceOpen }: Props) {
       .map((rule) => {
         const [sel, body] = rule.split("{");
         if (!sel || !body) return "";
-        return `.swiffer-widget-preview ${sel.trim()} { ${body} }`;
+        return `.pmai-widget-preview ${sel.trim()} { ${body} }`;
       })
       .join("\n");
     style.textContent = scoped;
@@ -119,7 +119,7 @@ export function LiveChatWidgetPreview({ config, forceOpen }: Props) {
   return (
     <div
       className={cn(
-        "swiffer-widget-preview absolute z-10 flex flex-col gap-3 pointer-events-none",
+        "pmai-widget-preview absolute z-10 flex flex-col gap-3 pointer-events-none",
         POS_CLASS[config.launcherPosition],
       )}
       style={{

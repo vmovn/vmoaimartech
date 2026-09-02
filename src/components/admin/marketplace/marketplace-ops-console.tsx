@@ -94,7 +94,7 @@ export function MarketplaceOpsConsole() {
   });
 
   const compatMut = useMutation({
-    mutationFn: (pluginId: string) => doCompat({ data: { pluginId, targetPlatform: 'swiffer' } }),
+    mutationFn: (pluginId: string) => doCompat({ data: { pluginId, targetPlatform: 'pmai' } }),
     onSuccess: (r: any) => {
       toast.success(`Compatibility ${r?.status}`);
       invalidateAll();

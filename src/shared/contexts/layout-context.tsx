@@ -27,7 +27,7 @@ type LayoutContextValue = {
 };
 
 const LayoutContext = createContext<LayoutContextValue | null>(null);
-const SIDEBAR_KEY = "swiffer.sidebar.collapsed";
+const SIDEBAR_KEY = "pmai.sidebar.collapsed";
 
 function computeNavMode(width: number): NavMode {
   if (width < 768) return "mobile";

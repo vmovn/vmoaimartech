@@ -7,7 +7,7 @@ import { z } from "zod";
 import { PasswordInput } from "@/components/auth/password-input";
 import { usePlatformRuntime } from "@/hooks/use-platform-runtime";
 import { usePlatformBranding } from "@/hooks/use-platform-branding";
-import swifferLogo from "@/assets/swiffer-logo.png";
+import pmaiLogo from "@/assets/pmai-logo.png";
 import { safeNext, safeNextFromSearch } from "@/lib/auth/next-path";
 import { APP_VERSION_LABEL } from "@/lib/app-version";
 import { getSetupStatus } from "@/lib/setup/setup.functions";
@@ -206,7 +206,7 @@ function AuthPage() {
         <div className="absolute -right-32 top-20 w-96 h-96 rounded-full bg-accent/20 blur-3xl" />
         <div className="absolute -left-24 bottom-10 w-80 h-80 rounded-full bg-primary-glow/20 blur-3xl" />
         <Link to="/" className="relative flex items-center gap-2 w-fit">
-          <img src={brand.logoUrl ?? swifferLogo} alt="" className="w-9 h-9" />
+          <img src={brand.logoUrl ?? pmaiLogo} alt="" className="w-9 h-9" />
           <span className="font-bold text-2xl">{brand.platformName}</span>
         </Link>
         <div className="relative max-w-md">
@@ -219,7 +219,7 @@ function AuthPage() {
       <div className="flex items-center justify-center p-6 lg:p-12">
         <div className="w-full max-w-sm">
           <div className="lg:hidden mb-8 flex items-center gap-2">
-            <img src={brand.logoUrl ?? swifferLogo} alt="" className="w-9 h-9" />
+            <img src={brand.logoUrl ?? pmaiLogo} alt="" className="w-9 h-9" />
             <span className="font-bold text-2xl">{brand.platformName}</span>
           </div>
 

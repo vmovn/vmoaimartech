@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.7
-# Swiffer — multi-stage production image.
+# PM.ai.vn — multi-stage production image.
 # TanStack Start SSR bundled with Vite; runs on Node 22.
 
 # ---------- 1. Dependencies ----------
@@ -37,24 +37,24 @@ RUN npm prune --omit=dev
 # ---------- 4. Runtime ----------
 FROM node:22-alpine AS runtime
 ARG APP_VERSION=4.4.6
-LABEL org.opencontainers.image.title="Swiffer" \
-      org.opencontainers.image.description="Swiffer omnichannel messaging platform" \
+LABEL org.opencontainers.image.title="PM.ai.vn" \
+      org.opencontainers.image.description="PM.ai.vn omnichannel messaging platform" \
       org.opencontainers.image.version="$APP_VERSION" \
-      org.opencontainers.image.vendor="Swiffer"
+      org.opencontainers.image.vendor="PM.ai.vn"
 WORKDIR /app
 ENV NODE_ENV=production \
     PORT=3000 \
     HOST=0.0.0.0 \
     APP_VERSION=$APP_VERSION
-RUN addgroup -S swiffer && adduser -S swiffer -G swiffer
-COPY --from=build --chown=swiffer:swiffer /app/.output ./.output
-COPY --from=production-deps --chown=swiffer:swiffer /app/node_modules ./node_modules
-COPY --from=build --chown=swiffer:swiffer /app/package.json ./package.json
-COPY --from=build --chown=swiffer:swiffer /app/app.js ./app.js
-COPY --from=build --chown=swiffer:swiffer /app/scripts/product ./scripts/product
-COPY --from=build --chown=swiffer:swiffer /app/supabase/migrations ./supabase/migrations
+RUN addgroup -S pmai && adduser -S pmai -G pmai
+COPY --from=build --chown=pmai:pmai /app/.output ./.output
+COPY --from=production-deps --chown=pmai:pmai /app/node_modules ./node_modules
+COPY --from=build --chown=pmai:pmai /app/package.json ./package.json
+COPY --from=build --chown=pmai:pmai /app/app.js ./app.js
+COPY --from=build --chown=pmai:pmai /app/scripts/product ./scripts/product
+COPY --from=build --chown=pmai:pmai /app/supabase/migrations ./supabase/migrations
 
-USER swiffer
+USER pmai
 EXPOSE 3000
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \

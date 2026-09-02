@@ -3,7 +3,7 @@
  */
 import { useEffect, useState } from "react";
 
-const THEME_KEY = "swiffer-booking-theme";
+const THEME_KEY = "pmai-booking-theme";
 
 export function useBookingTheme(defaultTheme: "light" | "dark" = "light") {
   const [theme, setThemeState] = useState<"light" | "dark">(defaultTheme);

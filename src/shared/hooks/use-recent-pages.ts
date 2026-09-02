@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useRouterState } from "@tanstack/react-router";
 
-const KEY = "swiffer.recent.v1";
+const KEY = "pmai.recent.v1";
 const MAX = 8;
 const IGNORE = ["/auth", "/maintenance", "/403"];
 

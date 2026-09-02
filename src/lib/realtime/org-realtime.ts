@@ -4,7 +4,7 @@
  *
  * Contract:
  *  - `resetRealtimeForOrgSwitch()` removes every channel currently open on
- *    the browser Supabase client and broadcasts a `swiffer:realtime-reset`
+ *    the browser Supabase client and broadcasts a `pmai:realtime-reset`
  *    event that hooks listen to via `useRealtimeGeneration()`.
  *  - Hooks that own a `supabase.channel(...)` subscription include the
  *    generation counter in their `useEffect` dependencies so the effect
@@ -21,7 +21,7 @@ import * as React from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { resetAllSubscriptions } from "@/lib/realtime/subscription-manager";
 
-const REALTIME_RESET_EVENT = "swiffer:realtime-reset";
+const REALTIME_RESET_EVENT = "pmai:realtime-reset";
 
 export type OrgRealtimeResetReason = "pre-switch" | "post-switch" | "manual";
 
@@ -59,12 +59,12 @@ export function useRealtimeGeneration(): number {
     if (typeof window === "undefined") return;
     const bump = () => setGeneration((n) => n + 1);
     window.addEventListener(REALTIME_RESET_EVENT, bump);
-    // Older call sites still emit `swiffer:org-changed`; treat both as a
+    // Older call sites still emit `pmai:org-changed`; treat both as a
     // resubscribe signal so hooks don't need to know which event fired.
-    window.addEventListener("swiffer:org-changed", bump);
+    window.addEventListener("pmai:org-changed", bump);
     return () => {
       window.removeEventListener(REALTIME_RESET_EVENT, bump);
-      window.removeEventListener("swiffer:org-changed", bump);
+      window.removeEventListener("pmai:org-changed", bump);
     };
   }, []);
   return generation;

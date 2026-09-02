@@ -3,7 +3,7 @@
  *
  * All model calls go through the AI Provider Engine (`runChat` in
  * `src/lib/ai/complete.functions.ts`) so provider/model/fallbacks/logging
- * are consistent with the rest of Swiffer.
+ * are consistent with the rest of PM.ai.vn.
  *
  * Features:
  *  - suggestBestTime
@@ -454,7 +454,7 @@ export const generateCalendarEvent = createServerFn({ method: "POST" })
     const title = b.title ?? et?.name ?? "Meeting";
     const desc = b.notes ?? et?.description ?? "";
     const loc = b.location ?? "";
-    const uid = `${b.id}@swiffer`;
+    const uid = `${b.id}@pmai`;
 
     const ics = [
       "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//PM.ai.vn//Booking//EN",

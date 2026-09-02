@@ -42,7 +42,7 @@ export async function extractFromUrl(url: string): Promise<UrlExtractResult> {
   const res = await fetch(parsed.toString(), {
     method: "GET",
     headers: {
-      "User-Agent": "SwifferKBBot/1.0 (+https://swiffer.app)",
+      "User-Agent": "PmaiKBBot/1.0 (+https://pm.ai.vn)",
       Accept: "text/html,application/xhtml+xml",
     },
     redirect: "follow",

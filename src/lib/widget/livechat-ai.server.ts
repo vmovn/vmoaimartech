@@ -1,7 +1,7 @@
 /**
  * Live Chat AI Assistant
  *
- * Enriches each visitor turn with the shared Swiffer AI Provider Engine:
+ * Enriches each visitor turn with the shared PM.ai.vn AI Provider Engine:
  *   • Language detection + optional translation
  *   • Intent classification (support / sales / faq / booking / other)
  *   • Sentiment analysis

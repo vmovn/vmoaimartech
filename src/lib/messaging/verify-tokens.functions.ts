@@ -2,7 +2,7 @@
  * Pending webhook verify tokens.
  *
  * Meta validates the callback URL (GET hub.challenge) BEFORE the WhatsApp
- * channel account exists in Swiffer, so the token has to be known server-side
+ * channel account exists in PM.ai.vn, so the token has to be known server-side
  * up front. The setup wizard registers it here; `handleVerify` falls back to
  * this table when no `channel_accounts` row matches yet.
  */

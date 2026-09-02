@@ -61,8 +61,8 @@ const SURFACE_META: Record<SurfaceStatus["status"], { label: string; className: 
   unprotected: { label: "Unprotected", className: "bg-destructive/10 text-destructive border-destructive/25" },
 };
 
-const ACK_KEY = "swiffer.security-issues.applied";
-const AUTO_KEY = "swiffer.security-issues.auto-rescan";
+const ACK_KEY = "pmai.security-issues.applied";
+const AUTO_KEY = "pmai.security-issues.auto-rescan";
 
 function readAck(): Record<string, string> {
   if (typeof window === "undefined") return {};

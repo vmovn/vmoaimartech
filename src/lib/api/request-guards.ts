@@ -78,7 +78,7 @@ export function securityDenied(
     ...(options.headers ?? {}),
   };
   if (status === 401) {
-    headers["WWW-Authenticate"] = options.challenge ?? 'Bearer realm="swiffer", charset="UTF-8"';
+    headers["WWW-Authenticate"] = options.challenge ?? 'Bearer realm="pmai", charset="UTF-8"';
   }
   if (requestId) headers["X-Request-Id"] = requestId;
 
@@ -161,7 +161,7 @@ export function guardCronRequest(request: Request, requestId?: string): Response
     return securityDenied("unauthorized", {
       requestId,
       message: "Invalid or missing cron token",
-      challenge: 'CronToken realm="swiffer"',
+      challenge: 'CronToken realm="pmai"',
     });
   }
   return null;

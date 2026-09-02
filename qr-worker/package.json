@@ -1,9 +1,9 @@
 {
-  "name": "swiffer-wa-qr-worker",
+  "name": "pmai-wa-qr-worker",
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Stateful WhatsApp (Baileys) QR worker for Swiffer. Implements docs/whatsapp-qr-worker-contract.md",
+  "description": "Stateful WhatsApp (Baileys) QR worker for PM.ai.vn. Implements docs/whatsapp-qr-worker-contract.md",
   "main": "src/index.js",
   "engines": {
     "node": ">=20"

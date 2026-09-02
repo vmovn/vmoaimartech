@@ -22,7 +22,7 @@ const persister = createAsyncStoragePersister({
     setItem: async (k, v) => kv.set(k, v),
     removeItem: async (k) => kv.delete(k),
   },
-  key: 'swiffer-query-cache',
+  key: 'pmai-query-cache',
   throttleTime: 1_000,
 });
 

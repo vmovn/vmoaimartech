@@ -3,7 +3,7 @@
  * UI. Resolves the active workspace white-label name, then the platform-wide
  * name from Platform Settings, and only then the shipped default.
  *
- * Never hardcode "Swiffer" in rendered copy — call this instead so white-label
+ * Never hardcode the product name in rendered copy — call this instead so white-label
  * deployments never leak the vendor brand.
  */
 import { useTenantBrand } from "@/hooks/use-tenant-brand";

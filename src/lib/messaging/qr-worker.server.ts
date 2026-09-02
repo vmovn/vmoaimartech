@@ -40,10 +40,10 @@ export async function callWorker<T = unknown>(
   const timestamp = Math.floor(Date.now() / 1000).toString();
   const headers: Record<string, string> = {
     "content-type": "application/json",
-    "x-swiffer-timestamp": timestamp,
+    "x-pmai-timestamp": timestamp,
     ...(token ? { authorization: `Bearer ${token}` } : {}),
     ...(signingSecret
-      ? { "x-swiffer-signature": `sha256=${sign(bodyStr, signingSecret, timestamp)}` }
+      ? { "x-pmai-signature": `sha256=${sign(bodyStr, signingSecret, timestamp)}` }
       : {}),
     ...(init.headers ?? {}),
   };

@@ -38,6 +38,6 @@ export const useAppStore = create<AppState>()(
       setThemeMode: (m) => set({ themeMode: m }),
       setLanguage: (l) => set({ language: l }),
     }),
-    { name: 'swiffer-app', storage: createJSONStorage(() => mmkvStorage) },
+    { name: 'pmai-app', storage: createJSONStorage(() => mmkvStorage) },
   ),
 );

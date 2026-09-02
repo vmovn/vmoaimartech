@@ -44,22 +44,22 @@ export function InstallSnippetGenerator({ widgetId, origin, widgetName }: Props)
 
   const htmlSnippet = useMemo(() => {
     const bootLine = hasCustomBoot
-      ? `\n<script>window.SwifferChatConfig = ${JSON.stringify(bootOptions, null, 2)};</script>`
+      ? `\n<script>window.PmaiChatConfig = ${JSON.stringify(bootOptions, null, 2)};</script>`
       : "";
     return `<!-- ${BRAND_NAME} Chat Widget${widgetName ? ` — ${widgetName}` : ""} -->${bootLine}
 <script${loadAttr} src="${embedUrl}"></script>`;
   }, [embedUrl, loadAttr, bootOptions, hasCustomBoot, widgetName]);
 
   const npmSnippet = useMemo(() =>
-    `import { initSwifferChat } from "@swiffer/chat-widget";
+    `import { initPmaiChat } from "@pmai/chat-widget";
 
-initSwifferChat(${JSON.stringify({ widgetId, ...(locale ? { locale } : {}), ...(pageSelector ? { mountSelector: pageSelector } : {}), ...(delayMs > 0 ? { delayMs } : {}) }, null, 2)});`,
+initPmaiChat(${JSON.stringify({ widgetId, ...(locale ? { locale } : {}), ...(pageSelector ? { mountSelector: pageSelector } : {}), ...(delayMs > 0 ? { delayMs } : {}) }, null, 2)});`,
   [widgetId, locale, pageSelector, delayMs]);
 
   const reactSnippet = useMemo(() =>
     `import { useEffect } from "react";
 
-export function SwifferChat() {
+export function PmaiChat() {
   useEffect(() => {
     const s = document.createElement("script");
     s.src = "${embedUrl}";

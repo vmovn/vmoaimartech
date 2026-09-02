@@ -279,9 +279,9 @@ function WebhookEditor({
           </div>
           <div className="space-y-1.5">
             <Label>Endpoint URL</Label>
-            <Input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://example.com/webhooks/swiffer" />
+            <Input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://example.com/webhooks/pmai" />
             <p className="text-xs text-muted-foreground">
-              We POST signed JSON. Verify <code>x-swiffer-signature</code> using HMAC-SHA256(secret, `${"{"}ts{"}"}.body).
+              We POST signed JSON. Verify <code>x-pmai-signature</code> using HMAC-SHA256(secret, `${"{"}ts{"}"}.body).
             </p>
           </div>
           <div className="flex items-center justify-between rounded border p-3">

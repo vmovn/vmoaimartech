@@ -118,10 +118,10 @@ const TABS: Tab[] = [
 ];
 
 /** Per-workspace localStorage key for the selected inbox account filter. */
-const accountKey = (workspaceId?: string) => `swiffer.inbox.account.${workspaceId ?? "none"}`;
+const accountKey = (workspaceId?: string) => `pmai.inbox.account.${workspaceId ?? "none"}`;
 
 /** Per-workspace localStorage key for the selected channel tile filters. */
-const channelsKey = (workspaceId?: string) => `swiffer.inbox.channels.${workspaceId ?? "none"}`;
+const channelsKey = (workspaceId?: string) => `pmai.inbox.channels.${workspaceId ?? "none"}`;
 
 function readSavedAccountId(workspaceId?: string): string | null {
   if (typeof window === "undefined" || !workspaceId) return null;
@@ -169,7 +169,7 @@ function writeSavedChannels(workspaceId: string | undefined, channels: InboxChan
 }
 
 /** Per-workspace localStorage key for the inbox search term. */
-const searchKey = (workspaceId?: string) => `swiffer.inbox.search.${workspaceId ?? "none"}`;
+const searchKey = (workspaceId?: string) => `pmai.inbox.search.${workspaceId ?? "none"}`;
 
 function readSavedSearch(workspaceId?: string): string {
   if (typeof window === "undefined" || !workspaceId) return "";

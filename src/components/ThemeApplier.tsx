@@ -9,9 +9,9 @@ import { getActiveTheme } from '@/lib/themes/themes.functions';
 import { getWhiteLabel } from '@/lib/white-label/white-label.functions';
 import { applyThemeTokens } from '@/lib/themes/apply';
 
-const CSS_ID = 'swiffer-white-label-css';
-const JS_ID = 'swiffer-white-label-js';
-const DARK_TOKENS_ID = 'swiffer-white-label-dark-tokens';
+const CSS_ID = 'pmai-white-label-css';
+const JS_ID = 'pmai-white-label-js';
+const DARK_TOKENS_ID = 'pmai-white-label-dark-tokens';
 
 export function ThemeApplier() {
   // Theme/branding is never cached: the saved values are the single source of

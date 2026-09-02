@@ -1,7 +1,7 @@
 /**
  * localStorage schema migration for org-scoped state.
  *
- * The stored active org key is versioned (`swiffer.org.active.v1`). When we
+ * The stored active org key is versioned (`pmai.org.active.v1`). When we
  * bump the schema — key rename, value shape change, new derived caches that
  * must be purged — increment `CURRENT_ORG_STORAGE_VERSION` and add a step in
  * `runOrgStorageMigrations()` that walks a stored version forward.
@@ -12,20 +12,34 @@
  *   is unknown, drop derived caches and keep only a validated UUID id.
  * - Idempotent and SSR-safe (no-op when `window` is undefined).
  */
-const VERSION_KEY = "swiffer.org.storage.version";
-export const CURRENT_ORG_STORAGE_VERSION = 3;
+const VERSION_KEY = "pmai.org.storage.version";
+const LEGACY_VERSION_KEY = "swiffer.org.storage.version";
+export const CURRENT_ORG_STORAGE_VERSION = 4;
 
-/** Pre-rebrand namespace (product was called "Wadiff" before v4). */
-const LEGACY_BRAND_PREFIXES = ["wadiff.", "wadiff:"];
-
-const ACTIVE_ORG_KEY = "swiffer.org.active.v1";
-const ACTIVE_WS_KEY = "swiffer.workspace.active.v1";
-const LEGACY_ACTIVE_ORG_KEYS = [
-  "swiffer.org.active", // pre-v1: unversioned
-  "swiffer.active.org", // very old alias
-  "activeOrgId", // pre-namespaced dev key
+/** Historical namespaces: Wadiff (v3) then Swiffer (v4) folded into pmai. */
+const LEGACY_BRAND_FOLDS: Array<{ from: string; to: string }> = [
+  { from: "wadiff.", to: "pmai." },
+  { from: "wadiff:", to: "pmai:" },
+  { from: "swiffer.", to: "pmai." },
+  { from: "swiffer:", to: "pmai:" },
 ];
-const LEGACY_ACTIVE_WS_KEYS = ["swiffer.workspace.active", "activeWorkspaceId"];
+
+const ACTIVE_ORG_KEY = "pmai.org.active.v1";
+const ACTIVE_WS_KEY = "pmai.workspace.active.v1";
+const LEGACY_ACTIVE_ORG_KEYS = [
+  "pmai.org.active",
+  "pmai.active.org",
+  "swiffer.org.active.v1",
+  "swiffer.org.active",
+  "swiffer.active.org",
+  "activeOrgId",
+];
+const LEGACY_ACTIVE_WS_KEYS = [
+  "pmai.workspace.active",
+  "swiffer.workspace.active.v1",
+  "swiffer.workspace.active",
+  "activeWorkspaceId",
+];
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -66,17 +80,17 @@ function purgeOrgScopedDerivedCaches() {
     for (let i = 0; i < window.localStorage.length; i++) {
       const k = window.localStorage.key(i);
       if (!k) continue;
-      // Anything under swiffer.org.* other than the active id/version is
+      // Anything under pmai.org.* other than the active id/version is
       // treated as an org-scoped derived cache and dropped on migration.
       if (
-        k.startsWith("swiffer.org.") &&
+        (k.startsWith("pmai.org.") || k.startsWith("swiffer.org.")) &&
         k !== ACTIVE_ORG_KEY &&
-        k !== VERSION_KEY
+        k !== VERSION_KEY &&
+        k !== LEGACY_VERSION_KEY
       ) {
         keys.push(k);
       }
-      // TanStack Query persisted cache, if ever mounted, is org-scoped.
-      if (k.startsWith("swiffer.query.")) keys.push(k);
+      if (k.startsWith("pmai.query.") || k.startsWith("swiffer.query.")) keys.push(k);
     }
     keys.forEach(safeRemove);
   } catch {
@@ -100,14 +114,9 @@ function readAnyLegacyWorkspaceId(): string | null {
 }
 
 /**
- * Advance the org-storage schema. Safe to call multiple times; only the
- * first call per version bump performs work. Returns the version reached.
- */
-/**
- * Rebrand fold-forward: copy any `wadiff.*` / `wadiff:*` entry to the
- * matching `swiffer.*` key (without clobbering an existing value) and drop
- * the old one. Runs before the version read so the stored schema version
- * itself survives the rename.
+ * Rebrand fold-forward: copy wadiff.* / swiffer.* entries to the matching
+ * pmai.* key (without clobbering an existing value) and drop the old one.
+ * Runs before the version read so the stored schema version survives the rename.
  */
 function migrateLegacyBrandNamespace() {
   try {
@@ -115,14 +124,19 @@ function migrateLegacyBrandNamespace() {
     for (let i = 0; i < window.localStorage.length; i++) {
       const k = window.localStorage.key(i);
       if (!k) continue;
-      const prefix = LEGACY_BRAND_PREFIXES.find((p) => k.startsWith(p));
-      if (!prefix) continue;
-      const next = `swiffer${k.slice("wadiff".length)}`;
+      const fold = LEGACY_BRAND_FOLDS.find((p) => k.startsWith(p.from));
+      if (!fold) continue;
+      const next = `${fold.to}${k.slice(fold.from.length)}`;
       const value = safeGet(k);
       if (value != null && safeGet(next) == null) safeSet(next, value);
       stale.push(k);
     }
     stale.forEach(safeRemove);
+    const legacyVersion = safeGet(LEGACY_VERSION_KEY);
+    if (legacyVersion != null && safeGet(VERSION_KEY) == null) {
+      safeSet(VERSION_KEY, legacyVersion);
+    }
+    safeRemove(LEGACY_VERSION_KEY);
   } catch {
     /* ignore */
   }
@@ -139,7 +153,7 @@ export function runOrgStorageMigrations(): number {
 
   if (version === CURRENT_ORG_STORAGE_VERSION) return version;
 
-  // v0 -> v1: adopt the versioned `swiffer.org.active.v1` key. Fold any
+  // v0 -> v1: adopt the versioned `pmai.org.active.v1` key. Fold any
   // pre-versioned legacy keys forward, then drop them. Purge unknown
   // shaped derived caches so nothing rehydrates against new readers.
   if (version < 1) {
@@ -169,12 +183,17 @@ export function runOrgStorageMigrations(): number {
     version = 2;
   }
 
-  // v2 -> v3: product rebrand Wadiff -> Swiffer. Storage keys moved from the
-  // `wadiff.*` namespace to `swiffer.*` (handled above); derived caches are
-  // dropped so nothing rehydrates under a half-renamed namespace.
+  // v2 -> v3: product rebrand Wadiff -> Swiffer (then folded to pmai above).
   if (version < 3) {
     purgeOrgScopedDerivedCaches();
     version = 3;
+  }
+
+  // v3 -> v4: product rebrand Swiffer -> PM.ai.vn. Storage keys moved from
+  // `swiffer.*` to `pmai.*` (handled above); drop leftover vendor-namespace caches.
+  if (version < 4) {
+    purgeOrgScopedDerivedCaches();
+    version = 4;
   }
 
   safeSet(VERSION_KEY, String(CURRENT_ORG_STORAGE_VERSION));

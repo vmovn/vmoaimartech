@@ -43,7 +43,7 @@ export function createOpenAICompatProvider(opts: FactoryOpts): AIProvider {
     if (opts.kind === "lovable" && creds.apiKey) {
       delete h.Authorization;
       h["Lovable-API-Key"] = creds.apiKey;
-      h["X-Lovable-AIG-SDK"] = "swiffer";
+      h["X-Lovable-AIG-SDK"] = "pmai";
     }
     return h;
   };

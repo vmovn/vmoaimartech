@@ -1,14 +1,14 @@
 /**
- * Swiffer JS SDK — thin fetch wrapper over the public REST API.
+ * PM.ai.vn JS SDK — thin fetch wrapper over the public REST API.
  * Works in browsers, Node 18+, Deno, and edge runtimes.
  *
  * Usage:
- *   const swiffer = new SwifferClient({ apiKey: "wdf_live_..." });
- *   await swiffer.contacts.list({ limit: 20 });
- *   await swiffer.messages.send({ to: "+123", body: "hi" });
+ *   const pmai = new PmaiClient({ apiKey: "wdf_live_..." });
+ *   await pmai.contacts.list({ limit: 20 });
+ *   await pmai.messages.send({ to: "+123", body: "hi" });
  */
 
-export interface SwifferClientOptions {
+export interface PmaiClientOptions {
   apiKey: string;
   baseUrl?: string;
   fetch?: typeof fetch;
@@ -20,19 +20,19 @@ export interface ApiEnvelope<T> {
   errors?: Array<{ status: string; code: string; title: string }>;
 }
 
-export class SwifferApiError extends Error {
+export class PmaiApiError extends Error {
   constructor(public status: number, public code: string, message: string, public requestId?: string) {
     super(message);
-    this.name = "SwifferApiError";
+    this.name = "PmaiApiError";
   }
 }
 
-export class SwifferClient {
+export class PmaiClient {
   private baseUrl: string;
   private apiKey: string;
   private fetchImpl: typeof fetch;
 
-  constructor(opts: SwifferClientOptions) {
+  constructor(opts: PmaiClientOptions) {
     this.apiKey = opts.apiKey;
     this.baseUrl = (opts.baseUrl ?? "/api/public/v1").replace(/\/$/, "");
     this.fetchImpl = opts.fetch ?? fetch;
@@ -56,7 +56,7 @@ export class SwifferClient {
     const json = (await res.json().catch(() => ({}))) as ApiEnvelope<T>;
     if (!res.ok) {
       const err = json.errors?.[0];
-      throw new SwifferApiError(res.status, err?.code ?? "unknown", err?.title ?? res.statusText, json.meta?.request_id);
+      throw new PmaiApiError(res.status, err?.code ?? "unknown", err?.title ?? res.statusText, json.meta?.request_id);
     }
     return json;
   }

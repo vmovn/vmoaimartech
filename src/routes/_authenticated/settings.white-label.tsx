@@ -287,7 +287,7 @@ function WhiteLabelSettings() {
                   <p className="font-medium flex items-center gap-2">DNS setup {verified ? <Badge className="gap-1"><CheckCircle2 className="size-3" />Verified</Badge> : <Badge variant="secondary">Pending</Badge>}</p>
                   <ul className="list-disc pl-5 text-muted-foreground space-y-1">
                     <li>Add an A record for <code className="font-mono">{form.custom_domain}</code> pointing to <code className="font-mono">185.158.133.1</code>.</li>
-                    <li>Add a TXT record <code className="font-mono">_swiffer</code> with a workspace verification token.</li>
+                    <li>Add a TXT record <code className="font-mono">_pmai</code> with a workspace verification token.</li>
                   </ul>
                   <Button size="sm" variant="outline" onClick={() => verify.mutate()} disabled={verify.isPending}>
                     <ShieldCheck className="size-4 mr-2" />{verify.isPending ? 'Verifying…' : 'Verify domain'}

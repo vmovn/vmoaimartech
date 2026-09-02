@@ -90,11 +90,11 @@ function SandboxPage() {
       <Card>
         <CardHeader><CardTitle className="text-base flex items-center gap-2"><Database className="w-4 h-4" /> Environment</CardTitle></CardHeader>
         <CardContent>
-          <pre className="rounded-md border border-border bg-muted/40 p-3 font-mono text-xs overflow-x-auto">{`SWIFFER_API_BASE=https://sandbox.swiffer.dev/api/v1
-SWIFFER_SANDBOX_ID=${sandboxId}
-SWIFFER_LOG_LEVEL=debug`}</pre>
+          <pre className="rounded-md border border-border bg-muted/40 p-3 font-mono text-xs overflow-x-auto">{`PMAI_API_BASE=https://sandbox.pm.ai.vn/api/v1
+PMAI_SANDBOX_ID=${sandboxId}
+PMAI_LOG_LEVEL=debug`}</pre>
           <p className="text-xs text-muted-foreground mt-2">
-            Bind your CLI to this sandbox with <code>swiffer link {sandboxId}</code>.
+            Bind your CLI to this sandbox with <code>pmai link {sandboxId}</code>.
           </p>
         </CardContent>
       </Card>

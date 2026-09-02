@@ -367,7 +367,7 @@ export const listSecurityScans = createServerFn({ method: 'GET' })
 const compatInput = z.object({
   pluginId: z.string().uuid(),
   versionId: z.string().uuid().optional(),
-  targetPlatform: z.string().default('swiffer'),
+  targetPlatform: z.string().default('pmai'),
   targetVersion: z.string().optional(),
 });
 

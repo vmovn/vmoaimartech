@@ -185,10 +185,10 @@ export function OrganizationSwitcherConnected({
     };
 
     const onLocal = () => setActiveId(readActiveId());
-    window.addEventListener("swiffer:org-changed", onLocal);
+    window.addEventListener("pmai:org-changed", onLocal);
     const unsubRemote = onRemoteOrgChange(applyRemote);
     return () => {
-      window.removeEventListener("swiffer:org-changed", onLocal);
+      window.removeEventListener("pmai:org-changed", onLocal);
       unsubRemote();
     };
   }, [qc]);

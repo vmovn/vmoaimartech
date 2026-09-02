@@ -454,7 +454,7 @@ function CreateEndpointDialog() {
               <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
             </div>
             <div><Label>URL (HTTPS required)</Label>
-              <Input placeholder="https://api.example.com/swiffer/webhook"
+              <Input placeholder="https://api.example.com/pmai/webhook"
                 value={form.url} onChange={(e) => setForm({ ...form, url: e.target.value })} />
             </div>
             <div><Label>Description</Label>

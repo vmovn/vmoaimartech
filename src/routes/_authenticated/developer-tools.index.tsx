@@ -70,10 +70,10 @@ function DevDashboard() {
         <CardHeader><CardTitle className="text-base">Quick start</CardTitle></CardHeader>
         <CardContent>
           <ol className="text-sm space-y-1.5 list-decimal ml-5 text-muted-foreground">
-            <li>Install the CLI: <code className="text-foreground">npm i -g @swiffer/cli</code></li>
-            <li>Scaffold: <code className="text-foreground">swiffer init my-plugin</code></li>
-            <li>Develop: <code className="text-foreground">swiffer dev</code> — hot-reloads against your sandbox.</li>
-            <li>Publish: <code className="text-foreground">swiffer publish</code>.</li>
+            <li>Install the CLI: <code className="text-foreground">npm i -g @pmai/cli</code></li>
+            <li>Scaffold: <code className="text-foreground">pmai init my-plugin</code></li>
+            <li>Develop: <code className="text-foreground">pmai dev</code> — hot-reloads against your sandbox.</li>
+            <li>Publish: <code className="text-foreground">pmai publish</code>.</li>
           </ol>
         </CardContent>
       </Card>

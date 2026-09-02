@@ -5,7 +5,7 @@ import {
   type WaTriggerType,
 } from "@/lib/messaging/wa-trigger-matching";
 
-export const WA_RULESET_KIND = "swiffer.wa-chatbot.ruleset";
+export const WA_RULESET_KIND = "pmai.wa-chatbot.ruleset";
 export const WA_RULESET_VERSION = 1;
 
 const triggerTypes = Object.keys(WA_TRIGGER_LABEL) as [WaTriggerType, ...WaTriggerType[]];

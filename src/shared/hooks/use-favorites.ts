@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 
-const KEY = "swiffer.favorites.v1";
+const KEY = "pmai.favorites.v1";
 const MAX = 12;
 
 /**

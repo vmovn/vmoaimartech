@@ -33,7 +33,7 @@ const STATUS_ICON: Record<ApiLog["status"], typeof CheckCircle2> = {
 };
 
 export function apiLogsStorageKey(wsId: string) {
-  return `swiffer:whatsapp-api-logs:${wsId}`;
+  return `pmai:whatsapp-api-logs:${wsId}`;
 }
 
 export function appendApiLog(wsId: string, log: Omit<ApiLog, "id" | "createdAt"> & { id?: string; createdAt?: string }) {

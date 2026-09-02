@@ -81,7 +81,7 @@ type SidePanel = "customer" | "team" | "sla" | "intel" | null;
 
 
 /** Persisted last-open conversation, scoped per workspace. */
-const conversationKey = (workspaceId: string) => `swiffer.inbox.conversation.${workspaceId}`;
+const conversationKey = (workspaceId: string) => `pmai.inbox.conversation.${workspaceId}`;
 
 function clearAllSavedConversationIds() {
   if (typeof window === "undefined") return;
@@ -89,7 +89,7 @@ function clearAllSavedConversationIds() {
     const keys: string[] = [];
     for (let i = 0; i < window.localStorage.length; i++) {
       const k = window.localStorage.key(i);
-      if (k && k.startsWith("swiffer.inbox.conversation.")) keys.push(k);
+      if (k && k.startsWith("pmai.inbox.conversation.")) keys.push(k);
     }
     keys.forEach((k) => window.localStorage.removeItem(k));
   } catch {

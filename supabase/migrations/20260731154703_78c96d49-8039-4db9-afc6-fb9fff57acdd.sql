@@ -107,12 +107,12 @@ $fn$;
 
 -- 6. Re-point the remaining direct http_post cron jobs at the token helper
 SELECT cron.schedule('flush-scheduled-messages', '* * * * *', $$SELECT public._wa_cron_post('/api/public/hooks/flush-scheduled-messages');$$);
-SELECT cron.schedule('swiffer-run-scheduled-syncs', '*/2 * * * *', $$SELECT public._wa_cron_post('/api/public/hooks/run-scheduled-syncs');$$);
-SELECT cron.schedule('swiffer-workflow-queue', '* * * * *', $$SELECT public._wa_cron_post('/api/public/hooks/workflow-queue');$$);
+SELECT cron.schedule('pmai-run-scheduled-syncs', '*/2 * * * *', $$SELECT public._wa_cron_post('/api/public/hooks/run-scheduled-syncs');$$);
+SELECT cron.schedule('pmai-workflow-queue', '* * * * *', $$SELECT public._wa_cron_post('/api/public/hooks/workflow-queue');$$);
 SELECT cron.schedule('export-jobs-dispatch', '* * * * *', $$SELECT public._wa_cron_post('/api/public/hooks/process-exports', '{"source":"pg_cron"}'::jsonb);$$);
 SELECT cron.schedule('billing-daily-revenue-rollup', '15 0 * * *', $$SELECT public._wa_cron_post('/api/public/hooks/billing/rollup');$$);
 SELECT cron.schedule('billing-automation-15min', '*/15 * * * *', $$SELECT public._wa_cron_post('/api/public/hooks/billing/automation');$$);
 SELECT cron.schedule('sla-breach-scanner', '*/5 * * * *', $$SELECT public._wa_cron_post('/api/public/hooks/sla-scan');$$);
 SELECT cron.schedule('birthday-reminders-daily', '0 8 * * *', $$SELECT public._wa_cron_post('/api/public/hooks/birthday-reminders');$$);
 SELECT cron.schedule('task-reminders-every-5min', '*/5 * * * *', $$SELECT public._wa_cron_post('/api/public/hooks/task-reminders');$$);
-SELECT cron.schedule('swiffer-analyze-conversations', '* * * * *', $$SELECT public._wa_cron_post('/api/public/hooks/analyze-conversations');$$);
+SELECT cron.schedule('pmai-analyze-conversations', '* * * * *', $$SELECT public._wa_cron_post('/api/public/hooks/analyze-conversations');$$);

@@ -13,7 +13,7 @@ export type TemplatePreset = {
   updatedAt: number;
 };
 
-const PRESET_PREFIX = "swiffer:tpl-presets:";
+const PRESET_PREFIX = "pmai:tpl-presets:";
 const MAX_PRESETS = 20;
 
 const key = (templateId: string) => PRESET_PREFIX + templateId;

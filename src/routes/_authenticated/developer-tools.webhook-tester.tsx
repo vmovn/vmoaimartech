@@ -24,7 +24,7 @@ const EVENTS = [
 ] as const;
 
 function WebhookTester() {
-  const [url, setUrl] = useState("https://your-app.example.com/hooks/swiffer");
+  const [url, setUrl] = useState("https://your-app.example.com/hooks/pmai");
   const [secret, setSecret] = useState("whsec_" + Math.random().toString(36).slice(2, 12));
   const [evt, setEvt] = useState<typeof EVENTS[number]["id"]>(EVENTS[0].id);
   const body = useMemo(() => JSON.stringify(EVENTS.find((e) => e.id === evt)!.body, null, 2), [evt]);
@@ -120,7 +120,7 @@ function WebhookTester() {
               <pre className="rounded-md border border-border bg-muted/40 p-3 font-mono text-[11px] leading-relaxed overflow-x-auto">{`import crypto from "crypto";
 
 export function verify(rawBody: string, header: string) {
-  const expected = crypto.createHmac("sha256", process.env.SWIFFER_WEBHOOK_SECRET!)
+  const expected = crypto.createHmac("sha256", process.env.PMAI_WEBHOOK_SECRET!)
     .update(rawBody).digest("hex");
   return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(header));
 }`}</pre>

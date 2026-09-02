@@ -1,9 +1,9 @@
-// PM2 process definition for the Swiffer WhatsApp QR worker.
+// PM2 process definition for the PM.ai.vn WhatsApp QR worker.
 //   pm2 start ecosystem.config.cjs && pm2 save
 module.exports = {
   apps: [
     {
-      name: 'swiffer-wa-qr-worker',
+      name: 'pmai-wa-qr-worker',
       script: 'src/index.js',
       cwd: __dirname,
       instances: 1, // MUST stay 1 — Baileys sockets are stateful, not clusterable.

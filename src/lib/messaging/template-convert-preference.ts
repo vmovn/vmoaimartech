@@ -6,7 +6,7 @@
  * Stored per browser (localStorage). Client-safe: guards for SSR.
  */
 
-const STORAGE_KEY = "swiffer.wa.template.auto-convert-on-import";
+const STORAGE_KEY = "pmai.wa.template.auto-convert-on-import";
 
 /** Default is off: conversion stays explicit until the operator opts in. */
 export function getAutoConvertOnImport(): boolean {

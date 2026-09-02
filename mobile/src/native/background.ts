@@ -2,7 +2,7 @@ import * as BackgroundFetch from 'expo-background-fetch';
 import * as TaskManager from 'expo-task-manager';
 import { flush as flushOutbox } from '@/offline/outbox';
 
-export const BACKGROUND_SYNC_TASK = 'swiffer.background-sync';
+export const BACKGROUND_SYNC_TASK = 'pmai.background-sync';
 
 if (!TaskManager.isTaskDefined(BACKGROUND_SYNC_TASK)) {
   TaskManager.defineTask(BACKGROUND_SYNC_TASK, async () => {

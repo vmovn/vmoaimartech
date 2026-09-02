@@ -542,7 +542,7 @@ export function MessageComposer({
     setDupeDismissed(false);
   };
 
-  const contactDraftKey = `swiffer:contact-draft:${conversationId}`;
+  const contactDraftKey = `pmai:contact-draft:${conversationId}`;
 
   const readContactDraft = (): {
     name: string;

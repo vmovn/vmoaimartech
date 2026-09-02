@@ -10,22 +10,22 @@ export interface BeforeInstallPromptEvent extends Event {
 
 declare global {
   interface Window {
-    __swifferInstallPrompt?: BeforeInstallPromptEvent | null;
+    __pmaiInstallPrompt?: BeforeInstallPromptEvent | null;
   }
 }
 
-export const INSTALL_PROMPT_EVENT = "swiffer:install-prompt-available";
-export const INSTALLED_EVENT = "swiffer:app-installed";
+export const INSTALL_PROMPT_EVENT = "pmai:install-prompt-available";
+export const INSTALLED_EVENT = "pmai:app-installed";
 
 export function initInstallPromptCapture(): () => void {
   if (typeof window === "undefined") return () => undefined;
   const onPrompt = (e: Event) => {
     e.preventDefault();
-    window.__swifferInstallPrompt = e as BeforeInstallPromptEvent;
+    window.__pmaiInstallPrompt = e as BeforeInstallPromptEvent;
     window.dispatchEvent(new Event(INSTALL_PROMPT_EVENT));
   };
   const onInstalled = () => {
-    window.__swifferInstallPrompt = null;
+    window.__pmaiInstallPrompt = null;
     window.dispatchEvent(new Event(INSTALLED_EVENT));
   };
   window.addEventListener("beforeinstallprompt", onPrompt);

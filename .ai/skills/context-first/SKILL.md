@@ -1,7 +1,7 @@
 # Context-First Skill
 
 ## Purpose
-Execute a scoped engineering task using repository memory instead of rediscovering Swiffer architecture.
+Execute a scoped engineering task using repository memory instead of rediscovering PM.ai.vn architecture.
 
 ## Procedure
 1. Read `CONTEXT-MAP.md`.

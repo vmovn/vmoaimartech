@@ -26,7 +26,7 @@ function generateToken(workspaceId: string) {
 export function WhatsAppRestApiPanel() {
   const { data: ws } = useCurrentWorkspace();
   const wsId = ws?.id ?? "workspace";
-  const storageKey = `swiffer:whatsapp-rest-token:${wsId}`;
+  const storageKey = `pmai:whatsapp-rest-token:${wsId}`;
 
   const [token, setToken] = useState<string>("");
   const [reveal, setReveal] = useState(false);

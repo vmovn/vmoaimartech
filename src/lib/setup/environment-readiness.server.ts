@@ -66,7 +66,7 @@ function validateValue(key: string, value: string): boolean {
       "VITE_SUPABASE_URL",
       "APP_ORIGIN",
       "WA_QR_WORKER_URL",
-      "SWIFFER_WEBHOOK_URL",
+      "PMAI_WEBHOOK_URL",
       "E2E_BASE_URL",
     ].includes(key)
   ) {

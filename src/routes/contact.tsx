@@ -24,9 +24,9 @@ function ContactPage() {
         <p className="mt-4 text-muted-foreground max-w-xl">Pick the channel that fits — we reply within one business day.</p>
         <div className="mt-10 grid md:grid-cols-3 gap-4">
           {[
-            { icon: MessageCircle, title: "Support", desc: "Existing customer? File a ticket.", cta: "support@swiffer.app" },
-            { icon: Building2, title: "Sales", desc: "10+ agents or enterprise use case.", cta: "sales@swiffer.app" },
-            { icon: Mail, title: "General", desc: "Everything else.", cta: "hello@swiffer.app" },
+            { icon: MessageCircle, title: "Support", desc: "Existing customer? File a ticket.", cta: "support@pm.ai.vn" },
+            { icon: Building2, title: "Sales", desc: "10+ agents or enterprise use case.", cta: "sales@pm.ai.vn" },
+            { icon: Mail, title: "General", desc: "Everything else.", cta: "hello@pm.ai.vn" },
           ].map((c) => (
             <a key={c.title} href={`mailto:${c.cta}`} className="rounded-xl border border-border bg-surface p-6 hover:shadow-md transition">
               <div className="w-10 h-10 rounded-lg bg-accent/10 text-accent grid place-items-center"><c.icon className="w-4 h-4" /></div>

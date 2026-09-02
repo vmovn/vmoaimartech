@@ -7,7 +7,7 @@
  * - Workspace Owner/Admin: mutate providers, models, feature routing, prompts.
  * - Workspace member: list providers/usage/logs for the active workspace.
  * - Never infer workspace from the first membership row; use the active
- *   workspace header (`x-swiffer-workspace-id`) plus membership RPCs.
+ *   workspace header (`x-pmai-workspace-id`) plus membership RPCs.
  * - Service role writes run only after that tenant guard.
  */
 
