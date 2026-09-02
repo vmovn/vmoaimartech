@@ -498,7 +498,7 @@ export const generateKbAnswer = createServerFn({ method: "POST" })
       userId: context.userId,
       feature: "kb_answer",
       request: {
-        model: "google/gemini-3-flash-preview",
+        model: "",
         temperature: 0.3,
         max_tokens: 600,
         messages: [

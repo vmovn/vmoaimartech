@@ -68,7 +68,7 @@ async function askAI<T = string>(workspaceId: string, userId: string, opts: AIOp
     userId,
     feature: opts.feature ?? "ai_scheduling",
     request: {
-      model: opts.model ?? "google/gemini-3-flash-preview",
+      model: opts.model ?? "",
       messages: [
         { role: "system", content: opts.system },
         { role: "user", content: opts.user },

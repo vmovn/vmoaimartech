@@ -3,6 +3,7 @@
  * Application code depends only on these types, never on provider SDKs.
  */
 
+/** Includes inert DB compatibility values `lovable` and `grok` (not executable). */
 export type AIProviderKind =
   | "lovable"
   | "openai"

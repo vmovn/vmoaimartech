@@ -426,7 +426,7 @@ function PromptTestingPanel({ bot }: { bot: Chatbot }) {
   const selected = prompts.data?.find((p) => p.id === selectedId);
   const [content, setContent] = useState("");
   const [userInput, setUserInput] = useState("What are your business hours?");
-  const [model, setModel] = useState(bot.model ?? "google/gemini-2.5-flash");
+  const [model, setModel] = useState(bot.model ?? "");
 
   const run = useMutation({
     mutationFn: () => runPromptTest({

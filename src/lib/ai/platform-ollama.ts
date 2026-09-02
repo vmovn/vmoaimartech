@@ -12,7 +12,15 @@ export const LOCAL_OLLAMA_BASE_URL = "http://localhost:11434/v1";
 export const PLATFORM_OLLAMA_PROVIDER_NAME = "Platform Local AI";
 export const PLATFORM_MANAGED_BY = "platform";
 export const PLATFORM_PURPOSE_UTILITY = "utility";
-export const PLATFORM_UTILITY_FEATURE = "conversation_intelligence";
+/** Must match `PLATFORM_LOCAL_TASK_IDS` in task-policy.ts. */
+export const PLATFORM_UTILITY_FEATURES = [
+  "conversation_intelligence",
+  "tag_suggestions",
+  "helpdesk.analyze",
+  "helpdesk.priority",
+  "helpdesk.tags",
+] as const;
+export const PLATFORM_UTILITY_FEATURE = PLATFORM_UTILITY_FEATURES[0];
 export const PLATFORM_OLLAMA_RATE_LIMIT_PER_MIN = 20;
 export const DEFAULT_AI_RATE_LIMIT_PER_MIN = 120;
 

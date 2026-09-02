@@ -153,7 +153,7 @@ export async function runChatbotTurn({ bot, request, deps }: RunTurnInput): Prom
   });
 
   // 8. AI (skipped if flow already produced a reply)
-  let model = bot.model ?? "google/gemini-2.5-flash";
+  let model = bot.model ?? "";
   let providerKind = "";
   if (!reply) {
     try {

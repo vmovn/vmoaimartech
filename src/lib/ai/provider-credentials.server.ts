@@ -14,7 +14,7 @@ import { credentialLast4, decryptAiCredential, encryptAiCredential } from "./cre
 import { stripCredentialShapes } from "./log-privacy";
 
 export const BYOK_PROVIDER_KINDS: AIProviderKind[] = [
-  "gemini", "openai", "anthropic", "deepseek", "grok", "openrouter", "lovable", "custom_openai",
+  "gemini", "openai", "anthropic", "deepseek", "openrouter", "custom_openai",
 ];
 
 export type CredentialSource = "workspace_encrypted" | "platform_env" | "keyless";

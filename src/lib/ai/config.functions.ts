@@ -15,7 +15,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 import type { AIProviderKind } from "./types";
-import { getAIProvider, listProviderKinds } from "./registry.server";
+import { getAIProvider, isActiveAiProviderKind, listProviderKinds } from "./registry.server";
 import { AIError } from "./errors";
 import {
   readActiveWorkspaceHeader,
@@ -354,6 +354,9 @@ export const upsertAIProvider = createServerFn({ method: "POST" })
     const workspaceId = await requireAiWorkspace(context, { admin: true });
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const incomingKey = data.apiKey?.trim() ? data.apiKey.trim() : undefined;
+    if (!isActiveAiProviderKind(data.kind)) {
+      throw new AIError("validation", "This AI provider is not available in the PM.ai.vn AI stack");
+    }
     if (incomingKey && (isKeylessProviderKind(data.kind) || !isByokProviderKind(data.kind))) {
       throw new AIError("validation", "This provider kind does not accept an API key");
     }

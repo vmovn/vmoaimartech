@@ -49,6 +49,6 @@ Prefer deterministic env-drift audit when present, plus build/public-bundle secr
 `npm run env:audit` verifies the completed catalog/example/executable-key contract. Do not re-scan environment implementation merely to re-establish this completed checkpoint.
 
 ## Last Verified
-- Runtime baseline: `v1.0.0-Freedom-v1.0.3.5` / `f62da5a4899a2f6134589e0d5afdea27d3842e5b`.
+- Runtime baseline: `v1.0.0-Freedom-v1.0.4` / `64fbd57dbcc4c76c293c6d793fa236e19e0fe029`.
 - Date: 2026-09-02.
-- Verification scope: added `AI_CREDENTIAL_ENCRYPTION_KEY` for workspace BYOK; catalog/example/docs remain synchronized.
+- Verification scope: removed `XAI_API_KEY` (AI-only). `LOVABLE_API_KEY` remains for managed email events and App User Connector, not AI inference.

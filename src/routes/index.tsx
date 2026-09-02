@@ -1270,8 +1270,8 @@ function Integrations() {
       icon: Bot,
       title: "AI providers",
       image: integrationsAiImg,
-      alt: "AI provider routing across Gemini, OpenAI, Anthropic, Groq and Lovable AI",
-      items: ["Gemini", "OpenAI", "Anthropic", "Groq", "Lovable AI"],
+      alt: "AI provider routing across Gemini, OpenAI, Anthropic and DeepSeek",
+      items: ["Gemini", "OpenAI", "Anthropic", "DeepSeek", "OpenRouter"],
     },
     {
       icon: Workflow,

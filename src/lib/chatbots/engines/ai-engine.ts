@@ -61,7 +61,7 @@ export const AIEngine = {
     messages.push({ role: "user", content: prompt });
     const res = await AIEngine.complete({
       workspaceId,
-      model: opts?.model ?? "google/gemini-2.5-flash",
+      model: opts?.model ?? "",
       temperature: 0.1,
       maxTokens: opts?.maxTokens ?? 256,
       messages: messages.map((m) => ({

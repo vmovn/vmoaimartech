@@ -15,7 +15,7 @@ import type {
   AIMessage, AIProviderRecord, AIModelRecord, AIFeatureConfig, ChatRequest, ChatResponse,
   EmbedResponse,
 } from "./types";
-import { getAIProvider } from "./registry.server";
+import { getAIProvider, isActiveAiProviderKind } from "./registry.server";
 import { resolveProviderCredentials } from "./provider-credentials.server";
 import { AIError } from "./errors";
 import { computeCost } from "./cost";
@@ -31,6 +31,13 @@ import {
 import { assertProviderTenant, modelBelongsToProvider } from "./provider-tenant";
 import { readActiveWorkspaceHeader, resolveCallerWorkspaceId, type AuthRpcClient } from "./workspace-auth";
 import { platformOllamaRateLimitPerMin } from "./platform-ollama";
+import { getTaskPolicy } from "./task-policy";
+import {
+  buildAiAccountingMetadata,
+  missingProviderForTaskError,
+  pickProviderForTask,
+  providerAllowedForTask,
+} from "./execution-mode";
 
 // ---------- Record loaders ----------
 
@@ -40,13 +47,12 @@ async function loadProvider(providerId: string): Promise<AIProviderRecord | null
   return data ? mapProvider(data as never) : null;
 }
 
-async function loadDefaultProvider(workspaceId: string): Promise<AIProviderRecord | null> {
+async function loadEnabledProviders(workspaceId: string): Promise<AIProviderRecord[]> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data } = await supabaseAdmin.from("ai_providers" as never)
     .select("*").eq("workspace_id", workspaceId).eq("enabled", true)
-    .order("is_default", { ascending: false }).order("priority", { ascending: true })
-    .limit(1).maybeSingle();
-  return data ? mapProvider(data as never) : null;
+    .order("is_default", { ascending: false }).order("priority", { ascending: true });
+  return ((data ?? []) as Record<string, unknown>[]).map((row) => mapProvider(row));
 }
 
 async function loadModel(providerId: string, modelId: string): Promise<AIModelRecord | null> {
@@ -186,14 +192,17 @@ export async function runChat(opts: RunOpts): Promise<ChatResponse & { providerI
   for (const id of chainIds.fallbackProviderIds) if (!chain.includes(id)) chain.push(id);
   const explicitIds = explicitProviderIds(opts);
 
+  const policy = getTaskPolicy(opts.feature);
+
   // Workspace default only when the feature has no explicit routing.
   if (chain.length === 0) {
-    const def = await loadDefaultProvider(opts.workspaceId);
-    if (!def) throw new AIError("not_found", "No AI provider configured for this workspace");
-    chain.push(def.id);
+    const picked = pickProviderForTask(await loadEnabledProviders(opts.workspaceId), policy);
+    if (!picked) throw missingProviderForTaskError(policy);
+    chain.push(picked.id);
   }
 
   let lastError: AIError | Error | null = null;
+  let skippedDisallowed = false;
   for (const providerId of chain) {
     const loaded = await loadProvider(providerId);
     const provider = takeProviderForWorkspace(
@@ -202,6 +211,10 @@ export async function runChat(opts: RunOpts): Promise<ChatResponse & { providerI
       explicitIds.has(providerId),
     );
     if (!provider) continue;
+    if (!isActiveAiProviderKind(provider.kind) || !providerAllowedForTask(provider, policy)) {
+      skippedDisallowed = true;
+      continue;
+    }
 
     await enforceAIRateLimit({
       workspaceId: opts.workspaceId, userId: opts.userId ?? null,
@@ -210,6 +223,7 @@ export async function runChat(opts: RunOpts): Promise<ChatResponse & { providerI
     });
 
     const start = Date.now();
+    const accounting = buildAiAccountingMetadata(provider, opts.feature);
     try {
       const modelId = request.model || await loadDefaultModelId(provider.id);
       if (!modelId) {
@@ -236,6 +250,7 @@ export async function runChat(opts: RunOpts): Promise<ChatResponse & { providerI
         feature: opts.feature, status: "success", latencyMs: Date.now() - start,
         usage, costUsd: cost, requestPreview: { messages: request.messages.slice(-3) },
         responsePreview: { content: res.content?.slice(0, 800) },
+        metadata: accounting,
       });
       return { ...res, usage, providerId: provider.id, providerKind: provider.kind };
     } catch (e) {
@@ -250,11 +265,13 @@ export async function runChat(opts: RunOpts): Promise<ChatResponse & { providerI
           : aiErr?.type === "timeout" ? "timeout" : "error",
         httpStatus: aiErr?.httpStatus, latencyMs: Date.now() - start,
         errorType: aiErr?.type, errorMessage: err.message,
+        metadata: accounting,
       });
       // Only fall through for retryable errors.
       if (aiErr && !aiErr.retryable) throw aiErr;
     }
   }
+  if (skippedDisallowed && !lastError) throw missingProviderForTaskError(policy);
   throw lastError ?? new AIError("unknown", "All providers failed");
 }
 
@@ -283,20 +300,18 @@ export async function runEmbed(opts: RunEmbedOpts): Promise<EmbedResponse & {
     );
     if (provider) providers.push(provider);
   }
+  const policy = getTaskPolicy(opts.feature);
   if (providers.length === 0) {
-    const provider = takeProviderForWorkspace(
-      await loadDefaultProvider(opts.workspaceId),
-      opts.workspaceId,
-      false,
-    );
-    if (provider) providers.push(provider);
+    const picked = pickProviderForTask(await loadEnabledProviders(opts.workspaceId), policy);
+    if (picked) providers.push(picked);
   }
-  if (providers.length === 0) {
-    throw new AIError("not_found", "No AI provider configured for this workspace");
+  const allowedProviders = providers.filter((p) => isActiveAiProviderKind(p.kind) && providerAllowedForTask(p, policy));
+  if (allowedProviders.length === 0) {
+    throw missingProviderForTaskError(policy);
   }
 
   let lastError: Error | null = null;
-  for (const provider of providers) {
+  for (const provider of allowedProviders) {
     const impl = getAIProvider(provider.kind);
     if (!impl.embed || !impl.capabilities().embed) {
       lastError = new AIError("validation", `Provider "${provider.name}" does not support embeddings`, {

@@ -1,6 +1,7 @@
 /**
  * Application-side provisioning for a workspace-scoped platform Ollama row.
- * Does not edit SQL triggers. Lovable remains the seeded workspace default.
+ * Does not edit SQL triggers. Fresh workspaces do not auto-seed a vendor AI
+ * provider. Platform Local AI is provisioned here as a non-default utility row.
  */
 
 import { createServerFn } from "@tanstack/react-start";
@@ -13,7 +14,7 @@ import {
 } from "./workspace-auth";
 import {
   PLATFORM_OLLAMA_PROVIDER_NAME,
-  PLATFORM_UTILITY_FEATURE,
+  PLATFORM_UTILITY_FEATURES,
   isPlatformManagedProvider,
   platformManagedProviderConfig,
   readOperatorOllamaUtilityModel,
@@ -86,27 +87,29 @@ export async function ensurePlatformOllamaForWorkspace(
     providerId = (inserted as { id: string }).id;
   }
 
-  const { data: featureRow } = await supabaseAdmin
-    .from("ai_feature_config")
-    .select("id")
-    .eq("workspace_id", workspaceId)
-    .eq("feature", PLATFORM_UTILITY_FEATURE)
-    .maybeSingle();
-
-  if (!featureRow) {
-    const model = readOperatorOllamaUtilityModel();
-    const { error } = await supabaseAdmin
+  const model = readOperatorOllamaUtilityModel();
+  for (const feature of PLATFORM_UTILITY_FEATURES) {
+    const { data: featureRow } = await supabaseAdmin
       .from("ai_feature_config")
-      .insert({
-        workspace_id: workspaceId,
-        feature: PLATFORM_UTILITY_FEATURE,
-        provider_id: providerId,
-        fallback_provider_ids: [],
-        model,
-        enabled: true,
-        config: { purpose: "utility" },
-      } as never);
-    if (error) throw new Error(error.message);
+      .select("id")
+      .eq("workspace_id", workspaceId)
+      .eq("feature", feature)
+      .maybeSingle();
+
+    if (!featureRow) {
+      const { error } = await supabaseAdmin
+        .from("ai_feature_config")
+        .insert({
+          workspace_id: workspaceId,
+          feature,
+          provider_id: providerId,
+          fallback_provider_ids: [],
+          model,
+          enabled: true,
+          config: { purpose: "utility", execution_mode: "platform_local" },
+        } as never);
+      if (error) throw new Error(error.message);
+    }
   }
 
   return { ok: true, providerId };

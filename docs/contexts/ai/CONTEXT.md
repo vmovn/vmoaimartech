@@ -16,21 +16,26 @@ Owns AI provider configuration, completion/orchestration helpers, AI analytics/c
 - `src/lib/ai/credential-crypto.server.ts`, `src/lib/ai/provider-credentials.server.ts`
 - `src/lib/ai/providers/**`, `src/lib/admin/ai-providers.functions.ts`
 - `src/lib/ai/platform-ollama.ts`, `src/lib/ai/platform-ollama.functions.ts`
+- `src/lib/ai/task-policy.ts`, `src/lib/ai/execution-mode.ts`
 
 ## Source of Truth
 AI owns suggestions/generation/orchestration metadata; domain services own canonical business state.
+`src/lib/ai/task-policy.ts` is product policy metadata (task class + allowed execution modes). It is not a second router.
 
 ## Invariants
 - AI does not become an alternate source of truth for Customer, Deal, Ticket, Order or Workflow state.
 - provider keys remain server-side according to environment boundary.
 - scores/suggestions should remain explainable enough for business use when they influence customer actions.
 - adding an AI provider should reuse provider configuration abstractions before adding bespoke branching.
-- `runChat` owns `ai_feature_config` routing. Lookup is always `workspace_id` + `feature`. Explicit `primaryProviderId` / `request.model` win over config. Missing config uses the workspace default provider. Disabled config fails before provider transport.
-- Platform-managed Ollama is a workspace-scoped `ai_providers` row (`config.managed_by = "platform"`, `purpose = "utility"`), not a global provider table. Production requires operator `OLLAMA_BASE_URL`; localhost is never a production fallback. Utility routing (currently `conversation_intelligence`) is seeded via `ai_feature_config` with no vendor fallback. Ollama is not the workspace customer-facing default.
+- `runChat` owns `ai_feature_config` routing. Lookup is always `workspace_id` + `feature`. Explicit `primaryProviderId` / `request.model` win over config. Missing config uses the first policy-allowed provider (not an implicit vendor). Disabled config fails before provider transport.
+- Three economic execution modes are derived from the selected provider's credential ownership, not vendor kind: `platform_local` (platform-managed Ollama, no Premium Credits), `premium_credits` (operator ENV keys such as `GEMINI_API_KEY`), `workspace_byok` (encrypted workspace key, conceptual `creditsToCharge = 0`). BYOK is optional. Premium features work without it when a platform ENV provider exists.
+- Platform-managed Ollama is a workspace-scoped `ai_providers` row (`config.managed_by = "platform"`, `purpose = "utility"`), not a global provider table. Production requires operator `OLLAMA_BASE_URL`; localhost is never a production fallback. P0 utility allowlist is seeded via `ai_feature_config`. Ollama is not a customer-facing default or silent generative fallback.
 - AI workspace resolution uses the product active-workspace header (`x-swiffer-workspace-id` from `readActiveWorkspaceId`) or an explicit `workspaceId`, then `is_workspace_member` / `is_workspace_admin`. Domain-entity AI uses `entity.workspace_id` plus the same membership check. Never the first membership row.
 - A provider may execute only when `ai_providers.workspace_id` equals the execution workspace. Explicit cross-tenant provider IDs fail closed.
 - Workspace BYOK API keys live in server-only `ai_provider_secrets` (ciphertext), never on `ai_providers`. Decrypt uses operator `AI_CREDENTIAL_ENCRYPTION_KEY`. Credential sources are `workspace_encrypted` | `platform_env` | `keyless` and are never mixed. Platform Ollama remains keyless.
 - `runChat`/`runEmbed` resolve credentials through `resolveProviderCredentials` after the tenant check. Ciphertext and plaintext never return to the browser.
+- Accounting metadata (`executionMode`, `costOwner`, `creditsToCharge`) is written to existing `ai_request_logs.metadata`. No credit ledger in this phase.
+- `lovable` and `grok` remain inert DB/type compatibility values. They are not executable, not selectable, and not auto-seeded. `LOVABLE_API_KEY` remains for non-AI Lovable email/connector services.
 
 ## Validation
 Provider/config change → provider/config tests and secret boundary. Domain assistant change → targeted domain behavior, not whole-repo AI audit.
@@ -38,8 +43,9 @@ Feature-routing change → `src/lib/ai/feature-routing.test.ts`.
 Tenant-boundary change → `src/lib/ai/tenant-boundary.test.ts`.
 Platform Ollama URL/policy → `src/lib/ai/platform-ollama.test.ts`.
 Workspace BYOK crypto/credentials → `src/lib/ai/credential-crypto.test.ts`, `src/lib/ai/provider-credentials.test.ts`.
+Task policy / execution mode → `src/lib/ai/task-policy.test.ts`.
 
 ## Last Verified
-- Runtime baseline: `v1.0.0-Freedom-v1.0.3.5` / `f62da5a4899a2f6134589e0d5afdea27d3842e5b`.
+- Runtime baseline: `v1.0.0-Freedom-v1.0.4` / `64fbd57dbcc4c76c293c6d793fa236e19e0fe029`.
 - Date: 2026-09-02.
-- Verification scope: workspace BYOK (`ai_provider_secrets`, AES-256-GCM, centralized credential resolution).
+- Verification scope: three-layer AI economic policy, Lovable/xAI AI-runtime removal, preserved platform premium providers and optional BYOK.

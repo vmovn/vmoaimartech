@@ -99,7 +99,7 @@ function LivechatOverviewPage() {
     return [
       { label: "Widget loader reachable", ok: health.data?.status === "ok", detail: health.data ? `${health.data.rtt}ms round-trip` : "checking…" },
       { label: "Realtime WebSocket connected", ok: rtStatus === "connected", detail: rtStatus },
-      { label: "AI provider gateway configured", ok: true, detail: "Lovable AI Gateway · multi-provider" },
+      { label: "AI provider gateway configured", ok: true, detail: "Workspace AI providers · Premium Credits or BYOK" },
       { label: "At least one active chatbot", ok: (kpi?.activeBots ?? 0) > 0, detail: kpi ? `${kpi.activeBots}/${kpi.totalBots} active` : "…" },
       { label: "Routing rules enabled", ok: (kpi?.activeRules ?? 0) > 0, severity: (kpi?.activeRules ?? 0) === 0 ? "warn" : "info", detail: kpi ? `${kpi.activeRules}/${kpi.totalRules} active` : "…" },
       { label: "At least one agent online", ok: (kpi?.onlineAgents ?? 0) > 0, severity: (kpi?.onlineAgents ?? 0) === 0 ? "warn" : "info", detail: kpi ? `${kpi.onlineAgents}/${kpi.totalAgents} online` : "…" },

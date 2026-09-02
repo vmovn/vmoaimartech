@@ -1,6 +1,9 @@
 /**
  * Provider Manager — the single map from kind → adapter implementation.
  * Adding a new provider means adding an entry here.
+ *
+ * `lovable` and `grok` remain inert DB/type compatibility values. They are
+ * not executable and must not appear in create-provider catalogs.
  */
 
 import type { AIProvider, AIProviderKind, AIProviderRecord, ProviderCredentials } from "./types";
@@ -10,22 +13,11 @@ import { geminiProvider } from "./providers/gemini.server";
 import { AIError } from "./errors";
 import { resolveOllamaBaseUrl } from "./platform-ollama";
 
-const lovable = createOpenAICompatProvider({
-  kind: "lovable",
-  defaultBaseUrl: "https://ai.gateway.lovable.dev/v1",
-  authHeader: (key) => ({
-    "Lovable-API-Key": key,
-    "X-Lovable-AIG-SDK": "swiffer",
-  }),
-});
 const openai = createOpenAICompatProvider({
   kind: "openai", defaultBaseUrl: "https://api.openai.com/v1", supportsEmbeddings: true,
 });
 const deepseek = createOpenAICompatProvider({
   kind: "deepseek", defaultBaseUrl: "https://api.deepseek.com/v1",
-});
-const grok = createOpenAICompatProvider({
-  kind: "grok", defaultBaseUrl: "https://api.x.ai/v1",
 });
 const openrouter = createOpenAICompatProvider({
   kind: "openrouter", defaultBaseUrl: "https://openrouter.ai/api/v1",
@@ -41,17 +33,21 @@ const customOpenai = createOpenAICompatProvider({
 });
 
 const REGISTRY: Partial<Record<AIProviderKind, AIProvider>> = {
-  lovable,
   openai,
   gemini: geminiProvider,
   anthropic: anthropicProvider,
   deepseek,
-  grok,
   openrouter,
   ollama,
   lmstudio,
   custom_openai: customOpenai,
 };
+
+export const RETIRED_AI_PROVIDER_KINDS: readonly AIProviderKind[] = ["lovable", "grok"];
+
+export function isActiveAiProviderKind(kind: string): kind is AIProviderKind {
+  return Object.prototype.hasOwnProperty.call(REGISTRY, kind);
+}
 
 export function getAIProvider(kind: AIProviderKind): AIProvider {
   const p = REGISTRY[kind];

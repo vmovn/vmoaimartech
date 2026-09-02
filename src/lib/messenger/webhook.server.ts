@@ -553,7 +553,7 @@ async function runMessengerChatbot(args: RunBotArgs) {
     .join("\n\n");
 
   let reply = bot.fallback_message ?? "Thanks for your message! We'll get back to you shortly.";
-  let model = bot.model ?? "google/gemini-2.5-flash";
+  let model = bot.model ?? "";
   let providerKind = "";
   try {
     const { runChat } = await import("@/lib/ai/complete.functions");
@@ -562,7 +562,7 @@ async function runMessengerChatbot(args: RunBotArgs) {
       feature: "chatbot:messenger",
       primaryProviderId: bot.provider_id,
       request: {
-        model: bot.model || "google/gemini-2.5-flash",
+        model: bot.model || "",
         temperature: bot.temperature ?? 0.4,
         max_tokens: bot.max_tokens ?? 500,
         messages: [

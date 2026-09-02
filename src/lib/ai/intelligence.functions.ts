@@ -501,7 +501,7 @@ Conversation summaries:
 ${digest}`;
 
     const req: ChatRequest = {
-      model: "google/gemini-3-flash-preview",
+      model: "",
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt },

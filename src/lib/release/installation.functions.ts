@@ -180,7 +180,7 @@ export const runHealthReport = createServerFn({ method: "GET" })
       key: "ai",
       label: "AI providers",
       status: "pass",
-      detail: "Workspace-configured providers. LOVABLE_API_KEY is optional and used only when a Lovable provider is selected.",
+      detail: "Workspace-configured providers. Platform premium ENV keys and optional workspace BYOK are independent. LOVABLE_API_KEY is not used for AI inference.",
     });
 
     // Messaging

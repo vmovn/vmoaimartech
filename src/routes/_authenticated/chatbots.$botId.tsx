@@ -362,7 +362,7 @@ function GeneralTab({ bot, onSaved }: { bot: Chatbot; onSaved: () => void }) {
 
 function AITab({ bot, onSaved }: { bot: Chatbot; onSaved: () => void }) {
   const [systemPrompt, setSystemPrompt] = useState(bot.system_prompt);
-  const [model, setModel] = useState(bot.model ?? "google/gemini-2.5-flash");
+  const [model, setModel] = useState(bot.model ?? "");
   const [temperature, setTemperature] = useState(Number(bot.temperature));
   const [maxTokens, setMaxTokens] = useState(bot.max_tokens);
   const [ragEnabled, setRagEnabled] = useState(bot.rag_enabled);

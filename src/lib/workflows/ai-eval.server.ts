@@ -2,7 +2,7 @@
  * AI workflow node evaluators.
  *
  * Every AI-powered node routes through `runChat` from the AI Provider Engine,
- * so users can pick provider (OpenAI, Gemini, Claude, Lovable, …) and model
+ * so users can pick provider (OpenAI, Gemini, Claude, …) and model
  * per node. The workflow-level `provider_id` / `model` inputs override the
  * workspace default; leaving them blank uses the workspace default provider.
  */
@@ -73,7 +73,7 @@ async function callAI(
 
   const request: ChatRequest = {
     messages,
-    model: common.model || "google/gemini-2.5-flash",
+    model: common.model || "",
     temperature: common.temperature ?? 0.4,
     max_tokens: common.max_tokens ?? 1024,
     response_format: jsonMode ? "json_object" : "text",

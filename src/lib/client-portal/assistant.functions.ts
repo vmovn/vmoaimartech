@@ -253,7 +253,7 @@ export const assistantChat = createServerFn({ method: "POST" })
       workspaceId: c.workspaceId, userId: c.userId,
       feature: "portal_assistant",
       request: {
-        model: "google/gemini-3-flash-preview",
+        model: "",
         messages: [{ role: "system", content: system }, ...messages],
         temperature: 0.3, max_tokens: 900,
       },

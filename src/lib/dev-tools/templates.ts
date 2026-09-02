@@ -280,12 +280,12 @@ config.syncedAt = Date.now();
 await ctx.storage.set("config", config);`,
   },
   {
-    title: "Call the AI Gateway",
+    title: "Call the AI provider",
     language: "typescript",
-    description: "Invoke Lovable AI with the built-in provider abstraction.",
+    description: "Invoke the workspace AI provider through the built-in abstraction. Leave model empty so feature routing decides.",
     code:
 `const reply = await ctx.api.ai.chat({
-  model: "google/gemini-2.5-flash",
+  model: "",
   messages: [{ role: "user", content: "Draft a follow-up." }],
 });`,
   },

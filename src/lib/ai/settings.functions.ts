@@ -52,7 +52,7 @@ export interface AiSettingsQuotaUsage {
 
 const DEFAULTS: Omit<AiSettings, "workspace_id" | "created_at" | "updated_at"> = {
   default_provider_id: null,
-  default_model: "google/gemini-3-flash-preview",
+  default_model: null,
   temperature: 0.7,
   max_tokens: 1024,
   organization_prompt: null,

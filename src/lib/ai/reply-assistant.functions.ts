@@ -252,7 +252,7 @@ export const aiReplyAssistant = createServerFn({ method: "POST" })
     ];
 
     const req: ChatRequest = {
-      model: "google/gemini-3-flash-preview",
+      model: "",
       messages: aiMessages,
       temperature: data.regenerate ? 0.9 : 0.6,
       max_tokens: data.action === "expand" ? 800 : 400,

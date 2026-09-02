@@ -60,27 +60,7 @@ export type ProviderKindInfo = {
   models: { modelId: string; displayName: string }[];
 };
 
-const LOVABLE_MODELS = [
-  ["google/gemini-3.6-flash", "Gemini 3.6 Flash"],
-  ["google/gemini-3.5-flash", "Gemini 3.5 Flash"],
-  ["google/gemini-3.1-flash-lite", "Gemini 3.1 Flash Lite"],
-  ["google/gemini-3.1-pro-preview", "Gemini 3.1 Pro (preview)"],
-  ["google/gemini-2.5-pro", "Gemini 2.5 Pro"],
-  ["google/gemini-2.5-flash", "Gemini 2.5 Flash"],
-  ["openai/gpt-5.5", "GPT-5.5"],
-  ["openai/gpt-5.4-mini", "GPT-5.4 Mini"],
-  ["openai/gpt-5.6-terra", "GPT-5.6 Terra"],
-] as const;
-
 export const PROVIDER_KINDS: ProviderKindInfo[] = [
-  {
-    kind: "lovable",
-    label: "Lovable AI Gateway",
-    defaultBaseUrl: "https://ai.gateway.lovable.dev/v1",
-    requiresKey: true,
-    suggestedSecretName: "LOVABLE_API_KEY",
-    models: LOVABLE_MODELS.map(([modelId, displayName]) => ({ modelId, displayName })),
-  },
   {
     kind: "openai",
     label: "OpenAI",
@@ -111,14 +91,6 @@ export const PROVIDER_KINDS: ProviderKindInfo[] = [
     defaultBaseUrl: "https://api.deepseek.com/v1",
     requiresKey: true,
     suggestedSecretName: "DEEPSEEK_API_KEY",
-    models: [],
-  },
-  {
-    kind: "grok",
-    label: "xAI Grok",
-    defaultBaseUrl: "https://api.x.ai/v1",
-    requiresKey: true,
-    suggestedSecretName: "XAI_API_KEY",
     models: [],
   },
   {
@@ -523,8 +495,7 @@ export const testPlatformAiProvider = createServerFn({ method: "POST" })
         .limit(1)
         .maybeSingle();
       model =
-        (m as { model_id?: string } | null)?.model_id ??
-        (p.kind === "lovable" ? "google/gemini-3.5-flash" : "");
+        (m as { model_id?: string } | null)?.model_id ?? "";
     }
     if (!model) {
       return {

@@ -18,7 +18,7 @@ function AIStudioPage() {
   const brandName = useBrandName();
   return (
     <>
-      <AppTopbar title="AI Studio" subtitle={`${brandName} AI · powered by Lovable AI Gateway`} />
+      <AppTopbar title="AI Studio" subtitle={`${brandName} AI · Premium Credits or workspace BYOK`} />
       <main className="p-6 space-y-6 max-w-7xl w-full mx-auto">
         <div className="rounded-2xl border border-accent/30 bg-gradient-hero text-primary-foreground p-8 shadow-elegant relative overflow-hidden">
           <div className="max-w-2xl relative z-10">
@@ -26,7 +26,7 @@ function AIStudioPage() {
               <Sparkles className="w-3 h-3" /> {brandName} AI
             </span>
             <h2 className="mt-4 font-bold text-white">Automate replies, summarize threads, and generate campaigns — all inside your CRM.</h2>
-            <p className="mt-3 text-sm text-primary-foreground/80 max-w-lg">Four production-ready AI features, tuned for WhatsApp conversations. Bring your own model or use the built-in Lovable AI Gateway.</p>
+            <p className="mt-3 text-sm text-primary-foreground/80 max-w-lg">Four production-ready AI features, tuned for WhatsApp conversations. Use PM.ai.vn Premium Credits or connect your own provider.</p>
           </div>
           <div className="absolute -right-16 -bottom-16 w-72 h-72 rounded-full bg-accent/40 blur-3xl" />
         </div>

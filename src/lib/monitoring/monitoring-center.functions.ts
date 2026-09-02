@@ -178,7 +178,7 @@ function synthChecks(): HealthCheck[] {
       uptimePct: 99.9,
       latencyMs: 1_140,
       errorRate: 0.008,
-      detail: "OpenAI, Gemini, Claude, Lovable AI — all reachable.",
+      detail: "OpenAI, Gemini, Claude — reachable when configured.",
       metrics: [
         { label: "Active providers", value: "4/4" },
         { label: "Tokens 24h", value: "12.4M" },

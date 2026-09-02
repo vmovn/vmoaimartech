@@ -254,16 +254,11 @@ create trigger ai_providers_single_default
   before insert or update of is_default on public.ai_providers
   for each row when (new.is_default) execute function public.enforce_single_default_ai_provider();
 
-insert into public.ai_providers (workspace_id, kind, name, api_key_secret_name, is_default, priority)
-select id, 'lovable', 'Lovable AI', 'LOVABLE_API_KEY', true, 10 from public.workspaces
-on conflict (workspace_id, name) do nothing;
-
+-- Fresh workspaces do not auto-seed a historical vendor AI provider.
+-- Platform Local AI and platform premium providers are provisioned by application policy.
 create or replace function public.seed_default_ai_provider()
 returns trigger language plpgsql security definer set search_path = public as $$
 begin
-  insert into public.ai_providers (workspace_id, kind, name, api_key_secret_name, is_default, priority)
-  values (new.id, 'lovable', 'Lovable AI', 'LOVABLE_API_KEY', true, 10)
-  on conflict (workspace_id, name) do nothing;
   return new;
 end $$;
 create trigger workspaces_seed_ai_provider

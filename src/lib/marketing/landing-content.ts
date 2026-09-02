@@ -74,7 +74,7 @@ export const LANDING_FAQS: Faq[] = [
     id: "ai-providers",
     category: "ai",
     q: "Which AI providers are supported?",
-    a: "Gemini, OpenAI, Anthropic, Groq and the Lovable AI Gateway — behind a single abstraction you can swap at any time.",
+    a: "Gemini, OpenAI, Anthropic, DeepSeek and OpenRouter — behind a single abstraction you can swap at any time. Workspace BYOK is optional.",
   },
   {
     id: "white-label",

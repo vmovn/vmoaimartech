@@ -417,7 +417,7 @@ ${typesBlock}`;
     ];
 
     const req: ChatRequest = {
-      model: "google/gemini-3-flash-preview",
+      model: "",
       messages,
       temperature: 0.3,
       max_tokens: 1600,

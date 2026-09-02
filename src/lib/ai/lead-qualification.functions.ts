@@ -409,7 +409,7 @@ Base every field on evidence in the lead card, activity and transcript. Prefer c
     ];
 
     const req: ChatRequest = {
-      model: "google/gemini-3-flash-preview",
+      model: "",
       messages: aiMessages,
       temperature: 0.2,
       max_tokens: 1400,

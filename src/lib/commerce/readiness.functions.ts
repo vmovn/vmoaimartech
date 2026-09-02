@@ -238,7 +238,7 @@ export const getCommerceReadiness = createServerFn({ method: "POST" })
       detail:
         aiFeatures > 0
           ? `${aiFeatures} commerce AI features configured (recs, upsell, cart recovery)`
-          : "Recommendations use default Lovable AI Gateway model",
+          : "Recommendations use the workspace AI provider",
     });
 
     const aiRuns = await count(supabase, "ai_request_logs", (q) => q.ilike("feature", "commerce%"));

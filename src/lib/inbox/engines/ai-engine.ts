@@ -2,7 +2,7 @@
  * AI Engine — provider-abstracted intelligence layer.
  *
  * Uses the existing `src/lib/ai/providers/*` gateway (OpenAI / Gemini /
- * Claude / Lovable AI) so the Inbox never talks to a specific LLM.
+ * Claude / DeepSeek) so the Inbox never talks to a specific LLM.
  *
  * Features exposed to the Inbox:
  *   - Reply drafting (channel-aware tone)

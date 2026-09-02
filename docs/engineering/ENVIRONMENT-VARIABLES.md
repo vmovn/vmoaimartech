@@ -63,12 +63,11 @@ The local Supabase CLI additionally receives `SUPABASE_PROJECT_ID` and `SUPABASE
 
 | Variable | Purpose | Requiredness | Secret | Scope | Feature dependency | Coolify |
 |---|---|---|---|---|---|---|
-| `LOVABLE_API_KEY` | Lovable AI Gateway and managed email-event key | Conditional | Yes | Runtime server | Lovable AI / managed email | Conditional |
+| `LOVABLE_API_KEY` | Lovable managed email-event and App User Connector key. Not used for AI inference. | Conditional | Yes | Runtime server | Managed email / calendar connector | Conditional |
 | `OPENAI_API_KEY` | OpenAI provider credential | Conditional | Yes | Runtime server | OpenAI | Conditional |
 | `ANTHROPIC_API_KEY` | Anthropic provider credential | Conditional | Yes | Runtime server | Anthropic | Conditional |
 | `GEMINI_API_KEY` | Gemini provider credential | Conditional | Yes | Runtime server | Gemini | Conditional |
 | `DEEPSEEK_API_KEY` | DeepSeek-compatible provider credential | Conditional | Yes | Runtime server | DeepSeek | Conditional |
-| `XAI_API_KEY` | xAI Grok-compatible provider credential | Conditional | Yes | Runtime server | xAI Grok | Conditional |
 | `OPENROUTER_API_KEY` | OpenRouter-compatible provider credential | Conditional | Yes | Runtime server | OpenRouter | Conditional |
 | `CUSTOM_AI_API_KEY` | Default custom OpenAI-compatible credential name | Conditional | Yes | Runtime server | Custom AI provider | Conditional |
 | `OLLAMA_BASE_URL` | Internal OpenAI-compatible URL for the shared platform Ollama utility service | Conditional | No | Runtime server | Platform-managed Ollama | Conditional |

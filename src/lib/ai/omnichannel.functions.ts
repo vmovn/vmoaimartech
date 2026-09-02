@@ -231,7 +231,7 @@ async function ask(
     userId,
     feature,
     request: {
-      model: "google/gemini-3-flash-preview",
+      model: "",
       messages,
       temperature: 0.3,
       max_tokens: 1200,
@@ -355,7 +355,7 @@ export const analyzeOmnichannel = createServerFn({ method: "POST" })
       crmNote: parsed.crmNote ?? "",
       channelsUsed: channels,
       eventsAnalyzed: events.length,
-      model: "google/gemini-3-flash-preview",
+      model: "",
     };
   });
 

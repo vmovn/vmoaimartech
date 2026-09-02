@@ -31,9 +31,7 @@ const BYOK_KINDS: { id: AIProviderKind; label: string }[] = [
   { id: "openai", label: "OpenAI" },
   { id: "anthropic", label: "Anthropic" },
   { id: "deepseek", label: "DeepSeek" },
-  { id: "grok", label: "xAI Grok" },
   { id: "openrouter", label: "OpenRouter" },
-  { id: "lovable", label: "Lovable" },
   { id: "custom_openai", label: "Custom OpenAI-compatible" },
 ];
 

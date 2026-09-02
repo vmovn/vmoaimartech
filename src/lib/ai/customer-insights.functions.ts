@@ -115,7 +115,7 @@ export const generateCustomerInsight = createServerFn({ method: "POST" })
           messageCount: 0,
           conversationCount: conversations.length,
           lastMessageAt,
-          model: "google/gemini-3.6-flash",
+          model: "",
           generatedAt: new Date().toISOString(),
         },
       };

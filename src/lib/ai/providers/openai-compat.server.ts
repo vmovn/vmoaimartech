@@ -1,7 +1,7 @@
 /**
- * OpenAI-compatible adapter. Powers OpenAI, DeepSeek, Grok, OpenRouter,
- * Ollama, LM Studio, Lovable AI Gateway, and any custom endpoint that
- * speaks `POST /chat/completions`.
+ * OpenAI-compatible adapter. Powers OpenAI, DeepSeek, OpenRouter,
+ * Ollama, LM Studio, custom endpoints, and inert leftover gateway kinds
+ * that speak `POST /chat/completions`.
  */
 
 import type {

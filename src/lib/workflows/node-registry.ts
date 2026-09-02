@@ -854,7 +854,7 @@ export const NODE_REGISTRY: NodeDefinition[] = [
     kind: "ai",
     category: "AI",
     label: "AI classify",
-    description: "Classify text into labels via Lovable AI.",
+    description: "Classify text into labels via the workspace AI provider.",
     icon: "Bot",
     inputs: [
       { key: "text", label: "Text expression", type: "textarea", required: true },
@@ -990,7 +990,7 @@ export const NODE_REGISTRY: NodeDefinition[] = [
 
   // ─── AI Nodes ────────────────────────────────────────────────
   // Every AI node accepts an optional `provider_id` + `model` so users can
-  // pick between OpenAI, Gemini, Claude, Lovable AI, etc. via the AI Provider
+  // pick between OpenAI, Gemini, Claude, etc. via the AI Provider
   // Engine. Leave blank to use the workspace default provider.
   {
     type: "ai.reply.generate",
