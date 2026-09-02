@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 import { runChat } from "@/lib/ai/complete.functions";
+import { requireActiveAiWorkspace } from "@/lib/ai/workspace-auth";
 
 const InputSchema = z.object({
   entityType: z.enum(["contact", "company", "lead", "customer", "deal", "task"]),
@@ -17,14 +18,7 @@ export const suggestTags = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((input: unknown) => InputSchema.parse(input))
   .handler(async ({ data, context }) => {
-    const { data: membership } = await context.supabase
-      .from("workspace_members")
-      .select("workspace_id")
-      .eq("user_id", context.userId)
-      .limit(1)
-      .maybeSingle();
-    const workspaceId = (membership as { workspace_id?: string } | null)?.workspace_id;
-    if (!workspaceId) throw new Error("No workspace found for current user");
+    const workspaceId = await requireActiveAiWorkspace(context);
 
     const prompt = `You classify CRM records with short, reusable tags.
 

@@ -16,19 +16,17 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { runChat } from "@/lib/ai/complete.functions";
+import { requireActiveAiWorkspace, requireEntityAiWorkspace } from "@/lib/ai/workspace-auth";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-async function getWorkspaceId(userId: string): Promise<string> {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data } = await supabaseAdmin.from("workspace_members")
-    .select("workspace_id").eq("user_id", userId).limit(1).maybeSingle();
-  if (!data) throw new Error("No workspace found for current user");
-  return (data as { workspace_id: string }).workspace_id;
-}
-
-async function callAiJson<T = unknown>(userId: string, system: string, user: string, fallback: T): Promise<T> {
-  const workspaceId = await getWorkspaceId(userId);
+async function callAiJson<T = unknown>(
+  workspaceId: string,
+  userId: string,
+  system: string,
+  user: string,
+  fallback: T,
+): Promise<T> {
   const res = await runChat({
     workspaceId,
     userId,
@@ -59,6 +57,16 @@ async function loadCampaign(supabase: any, id: string) {
   if (error) throw new Error(error.message);
   if (!data) throw new Error("Campaign not found");
   return data;
+}
+
+async function resolveMarketingWorkspace(
+  context: { supabase: unknown; userId: string },
+  campaign?: { workspace_id?: string } | null,
+): Promise<string> {
+  if (campaign?.workspace_id) {
+    return requireEntityAiWorkspace(context, campaign.workspace_id);
+  }
+  return requireActiveAiWorkspace(context);
 }
 
 /* ---------- Copy generation ---------- */
@@ -110,7 +118,9 @@ export const generateCampaignCopy = createServerFn({ method: "POST" })
       existing_message: campaign?.message_body?.slice(0, 400),
       variants_wanted: data.count,
     });
+    const workspaceId = await resolveMarketingWorkspace(context, campaign);
     const out = await callAiJson<{ variants: CopyVariant[]; notes?: string }>(
+      workspaceId,
       context.userId,
       system,
       user,
@@ -137,7 +147,9 @@ export const rewriteMessage = createServerFn({ method: "POST" })
       "You are a marketing copy editor. Rewrite the given message following the instructions. " +
       "Return strict JSON: { rewritten: string, changes: string[], reasoning: string }.";
     const user = JSON.stringify(data);
+    const workspaceId = await requireActiveAiWorkspace(context);
     return callAiJson<{ rewritten: string; changes: string[]; reasoning: string }>(
+      workspaceId,
       context.userId,
       system,
       user,
@@ -172,7 +184,9 @@ export const scoreContent = createServerFn({ method: "POST" })
       "You are a messaging compliance and marketing quality analyst. Score the message for a WhatsApp/SMS-class marketing channel. " +
       "Return strict JSON with keys: overall_score (0-100), clarity (0-100), persuasiveness (0-100), brand_safety (0-100), spam_risk (0-100), " +
       "spam_signals (string[]), strengths (string[]), weaknesses (string[]), suggestions (string[]). Be strict about ALL CAPS, false urgency, misleading claims, unsolicited-sounding phrasing.";
+    const workspaceId = await requireActiveAiWorkspace(context);
     return callAiJson<ContentScore>(
+      workspaceId,
       context.userId,
       system,
       JSON.stringify(data),
@@ -238,7 +252,7 @@ export const recommendAudience = createServerFn({ method: "POST" })
       }>;
       suggested_lists: Array<{ list_id: string; reason: string }>;
       notes: string;
-    }>(context.userId, system, user, { segments: [], suggested_lists: [], notes: "" });
+    }>(await requireActiveAiWorkspace(context), context.userId, system, user, { segments: [], suggested_lists: [], notes: "" });
   });
 
 /* ---------- Best send time ---------- */
@@ -281,7 +295,11 @@ export const suggestSendTime = createServerFn({ method: "POST" })
       goal: data.goal,
       heatmap_utc: heat.sort((a, b) => b.engagements - a.engagements).slice(0, 30),
     });
-    return callAiJson(context.userId, system, user, {
+    const campaign = data.campaignId
+      ? await loadCampaign(context.supabase, data.campaignId).catch(() => null)
+      : null;
+    const workspaceId = await resolveMarketingWorkspace(context, campaign);
+    return callAiJson(workspaceId, context.userId, system, user, {
       best_windows: [],
       next_recommended_iso: null,
       avoid_windows: [],
@@ -328,7 +346,8 @@ export const analyzeCampaignPerformance = createServerFn({ method: "POST" })
       message: (campaign.message_body ?? "").slice(0, 800),
     });
 
-    return callAiJson(context.userId, system, user, {
+    const workspaceId = await resolveMarketingWorkspace(context, campaign);
+    return callAiJson(workspaceId, context.userId, system, user, {
       summary: "",
       health: "fair",
       insights: [],
@@ -360,7 +379,8 @@ export const generateFollowUp = createServerFn({ method: "POST" })
       },
       segment: data.segment,
     });
-    return callAiJson(context.userId, system, user, {
+    const workspaceId = await resolveMarketingWorkspace(context, campaign);
+    return callAiJson(workspaceId, context.userId, system, user, {
       name: `${campaign.name} — follow-up`,
       goal: "re-engagement",
       segment_description: data.segment,

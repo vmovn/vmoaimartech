@@ -9,13 +9,10 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 import { runChat } from "@/lib/ai/complete.functions";
+import { requireActiveAiWorkspace, requireEntityAiWorkspace } from "@/lib/ai/workspace-auth";
 
-async function getWorkspaceId(userId: string): Promise<string> {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data } = await supabaseAdmin.from("workspace_members")
-    .select("workspace_id").eq("user_id", userId).limit(1).maybeSingle();
-  if (!data) throw new Error("No workspace found");
-  return (data as { workspace_id: string }).workspace_id;
+async function getWorkspaceId(context: { supabase: unknown; userId: string }): Promise<string> {
+  return requireActiveAiWorkspace(context);
 }
 
 async function logActivity(
@@ -43,7 +40,7 @@ export const listNotes = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .validator((i: unknown) => z.object({ ticketId: z.string().uuid() }).parse(i))
   .handler(async ({ data, context }) => {
-    const workspaceId = await getWorkspaceId(context.userId);
+    const workspaceId = await getWorkspaceId(context);
     const { data: notes } = await context.supabase
       .from("conversation_notes")
       .select("id, body, author_id, mentions, is_pinned, pinned_at, edited_at, created_at, updated_at")
@@ -62,7 +59,7 @@ export const createNote = createServerFn({ method: "POST" })
     isPinned: z.boolean().optional(),
   }).parse(i))
   .handler(async ({ data, context }) => {
-    const workspaceId = await getWorkspaceId(context.userId);
+    const workspaceId = await getWorkspaceId(context);
     const mentions = parseMentions(data.body);
     const { data: note, error } = await context.supabase
       .from("conversation_notes")
@@ -140,7 +137,7 @@ export const listNoteAttachments = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .validator((i: unknown) => z.object({ ticketId: z.string().uuid() }).parse(i))
   .handler(async ({ data, context }) => {
-    const workspaceId = await getWorkspaceId(context.userId);
+    const workspaceId = await getWorkspaceId(context);
     const { data: rows } = await context.supabase.from("attachments")
       .select("id, file_id, entity_type, entity_id, attached_by, created_at, files(name, size_bytes, mime_type, bucket, path)")
       .eq("workspace_id", workspaceId)
@@ -157,7 +154,7 @@ export const attachFileToTicket = createServerFn({ method: "POST" })
     fileId: z.string().uuid(),
   }).parse(i))
   .handler(async ({ data, context }) => {
-    const workspaceId = await getWorkspaceId(context.userId);
+    const workspaceId = await getWorkspaceId(context);
     const { error } = await context.supabase.from("attachments").insert({
       workspace_id: workspaceId,
       file_id: data.fileId,
@@ -176,7 +173,7 @@ export const listTicketTasks = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .validator((i: unknown) => z.object({ ticketId: z.string().uuid() }).parse(i))
   .handler(async ({ data, context }) => {
-    const workspaceId = await getWorkspaceId(context.userId);
+    const workspaceId = await getWorkspaceId(context);
     const { data: tasks } = await context.supabase.from("tasks")
       .select("id, parent_task_id, title, description, status, priority, due_at, assigned_to, created_by, completed_at, created_at")
       .eq("workspace_id", workspaceId)
@@ -198,7 +195,7 @@ export const createTicketTask = createServerFn({ method: "POST" })
     parentTaskId: z.string().uuid().optional(),
   }).parse(i))
   .handler(async ({ data, context }) => {
-    const workspaceId = await getWorkspaceId(context.userId);
+    const workspaceId = await getWorkspaceId(context);
     const { data: row, error } = await context.supabase.from("tasks").insert({
       workspace_id: workspaceId,
       title: data.title,
@@ -237,7 +234,7 @@ export const listTicketLinks = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .validator((i: unknown) => z.object({ ticketId: z.string().uuid() }).parse(i))
   .handler(async ({ data, context }) => {
-    const workspaceId = await getWorkspaceId(context.userId);
+    const workspaceId = await getWorkspaceId(context);
     const { data: rows } = await context.supabase
       .from("ticket_links")
       .select("id, ticket_id, linked_ticket_id, link_type, created_at, linked:conversations!ticket_links_linked_ticket_id_fkey(id, subject, status, priority, ticket_number)")
@@ -256,7 +253,7 @@ export const linkTickets = createServerFn({ method: "POST" })
   }).parse(i))
   .handler(async ({ data, context }) => {
     if (data.ticketId === data.linkedTicketId) throw new Error("Cannot link a ticket to itself");
-    const workspaceId = await getWorkspaceId(context.userId);
+    const workspaceId = await getWorkspaceId(context);
     const { error } = await context.supabase.from("ticket_links").insert({
       workspace_id: workspaceId,
       ticket_id: data.ticketId,
@@ -285,7 +282,7 @@ export const listCrmLinks = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .validator((i: unknown) => z.object({ ticketId: z.string().uuid() }).parse(i))
   .handler(async ({ data, context }) => {
-    const workspaceId = await getWorkspaceId(context.userId);
+    const workspaceId = await getWorkspaceId(context);
     const { data: rows } = await context.supabase.from("ticket_crm_links")
       .select("id, entity_type, entity_id, created_at")
       .eq("workspace_id", workspaceId).eq("ticket_id", data.ticketId)
@@ -326,7 +323,7 @@ export const addCrmLink = createServerFn({ method: "POST" })
     entityId: z.string().uuid(),
   }).parse(i))
   .handler(async ({ data, context }) => {
-    const workspaceId = await getWorkspaceId(context.userId);
+    const workspaceId = await getWorkspaceId(context);
     const { error } = await context.supabase.from("ticket_crm_links").insert({
       workspace_id: workspaceId,
       ticket_id: data.ticketId,
@@ -354,7 +351,7 @@ export const removeCrmLink = createServerFn({ method: "POST" })
 export const listMentionableAgents = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const workspaceId = await getWorkspaceId(context.userId);
+    const workspaceId = await getWorkspaceId(context);
     const { data } = await context.supabase.from("workspace_members")
       .select("user_id, profiles(full_name, email, avatar_url)")
       .eq("workspace_id", workspaceId);
@@ -367,7 +364,7 @@ export const listTicketActivity = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .validator((i: unknown) => z.object({ ticketId: z.string().uuid(), limit: z.number().int().min(1).max(200).default(100) }).parse(i))
   .handler(async ({ data, context }) => {
-    const workspaceId = await getWorkspaceId(context.userId);
+    const workspaceId = await getWorkspaceId(context);
     const { data: rows } = await context.supabase.from("ticket_activity")
       .select("id, action, actor_id, actor_type, from_value, to_value, meta, created_at")
       .eq("workspace_id", workspaceId).eq("ticket_id", data.ticketId)
@@ -382,11 +379,11 @@ export const suggestKbArticles = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((i: unknown) => z.object({ ticketId: z.string().uuid() }).parse(i))
   .handler(async ({ data, context }) => {
-    const workspaceId = await getWorkspaceId(context.userId);
     const { data: conv } = await context.supabase.from("conversations")
-      .select("subject, description, ai_summary, last_message_preview")
-      .eq("id", data.ticketId).eq("workspace_id", workspaceId).maybeSingle();
+      .select("subject, description, ai_summary, last_message_preview, workspace_id")
+      .eq("id", data.ticketId).maybeSingle();
     if (!conv) return [];
+    const workspaceId = await requireEntityAiWorkspace(context, (conv as { workspace_id: string }).workspace_id);
     const c = conv as { subject: string | null; description: string | null; ai_summary: string | null; last_message_preview: string | null };
     const q = [c.subject, c.ai_summary, c.description, c.last_message_preview].filter(Boolean).join(" ").slice(0, 200);
     if (!q) return [];
@@ -417,10 +414,10 @@ export const suggestNextActions = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((i: unknown) => z.object({ ticketId: z.string().uuid() }).parse(i))
   .handler(async ({ data, context }) => {
-    const workspaceId = await getWorkspaceId(context.userId);
     const { data: conv } = await context.supabase.from("conversations")
-      .select("subject, priority, status, ai_summary").eq("id", data.ticketId).eq("workspace_id", workspaceId).maybeSingle();
+      .select("subject, priority, status, ai_summary, workspace_id").eq("id", data.ticketId).maybeSingle();
     if (!conv) throw new Error("Ticket not found");
+    const workspaceId = await requireEntityAiWorkspace(context, (conv as { workspace_id: string }).workspace_id);
     const c = conv as { subject: string | null; priority: string; status: string; ai_summary: string | null };
     const prompt = `Given this helpdesk ticket, propose 3 concise next best actions for the agent as a JSON array of {label, kind} where kind is one of: reply, escalate, create_task, resolve, request_info, link_kb, assign.\nSubject: ${c.subject}\nPriority: ${c.priority}\nStatus: ${c.status}\nSummary: ${c.ai_summary ?? "n/a"}\nReturn ONLY JSON.`;
     try {

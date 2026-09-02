@@ -24,15 +24,19 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 import { runChat } from "@/lib/ai/complete.functions";
+import { requireEntityAiWorkspace, type AiCallerContext } from "@/lib/ai/workspace-auth";
 
 // ============= helpers =============
 
-async function getWorkspaceId(userId: string): Promise<string> {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data } = await supabaseAdmin.from("workspace_members")
-    .select("workspace_id").eq("user_id", userId).limit(1).maybeSingle();
-  if (!data) throw new Error("No workspace found");
-  return (data as { workspace_id: string }).workspace_id;
+async function loadTicket(context: AiCallerContext, ticketId: string): Promise<{ ticket: Ticket; workspaceId: string }> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data } = await (context.supabase as any).from("conversations")
+    .select("id, subject, description, priority, status, channel, ai_summary, last_message_preview, tags, ticket_category_id, assigned_to, workspace_id")
+    .eq("id", ticketId).maybeSingle();
+  if (!data) throw new Error("Ticket not found");
+  const ticket = data as unknown as Ticket;
+  const workspaceId = await requireEntityAiWorkspace(context, ticket.workspace_id);
+  return { ticket, workspaceId };
 }
 
 interface Ticket {
@@ -48,16 +52,6 @@ interface Ticket {
   ticket_category_id: string | null;
   assigned_to: string | null;
   workspace_id: string;
-}
-
-async function loadTicket(userId: string, ticketId: string): Promise<{ ticket: Ticket; workspaceId: string }> {
-  const workspaceId = await getWorkspaceId(userId);
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data } = await supabaseAdmin.from("conversations" as never)
-    .select("id, subject, description, priority, status, channel, ai_summary, last_message_preview, tags, ticket_category_id, assigned_to, workspace_id")
-    .eq("id", ticketId).eq("workspace_id", workspaceId).maybeSingle();
-  if (!data) throw new Error("Ticket not found");
-  return { ticket: data as unknown as Ticket, workspaceId };
 }
 
 async function loadTranscript(ticketId: string, limit = 20): Promise<string> {
@@ -118,7 +112,7 @@ export const analyzeTicket = createServerFn({ method: "POST" })
     apply: z.boolean().default(true),
   }).parse(i))
   .handler(async ({ data, context }) => {
-    const { ticket, workspaceId } = await loadTicket(context.userId, data.ticketId);
+    const { ticket, workspaceId } = await loadTicket(context, data.ticketId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: cats } = await supabaseAdmin.from("ticket_categories" as never)
       .select("id, name").eq("workspace_id", workspaceId).eq("is_active", true);
@@ -179,7 +173,7 @@ export const detectPriority = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((i: unknown) => z.object({ ticketId: z.string().uuid(), apply: z.boolean().default(false) }).parse(i))
   .handler(async ({ data, context }) => {
-    const { ticket, workspaceId } = await loadTicket(context.userId, data.ticketId);
+    const { ticket, workspaceId } = await loadTicket(context, data.ticketId);
     const transcript = await loadTranscript(data.ticketId, 8);
     const raw = await callAI({
       workspaceId, userId: context.userId, feature: "helpdesk.priority", json: true,
@@ -203,7 +197,7 @@ export const analyzeSentiment = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((i: unknown) => z.object({ ticketId: z.string().uuid() }).parse(i))
   .handler(async ({ data, context }) => {
-    const { workspaceId } = await loadTicket(context.userId, data.ticketId);
+    const { workspaceId } = await loadTicket(context, data.ticketId);
     const transcript = await loadTranscript(data.ticketId, 20);
     const raw = await callAI({
       workspaceId, userId: context.userId, feature: "helpdesk.sentiment", json: true,
@@ -219,7 +213,7 @@ export const detectIntent = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((i: unknown) => z.object({ ticketId: z.string().uuid() }).parse(i))
   .handler(async ({ data, context }) => {
-    const { ticket, workspaceId } = await loadTicket(context.userId, data.ticketId);
+    const { ticket, workspaceId } = await loadTicket(context, data.ticketId);
     const transcript = await loadTranscript(data.ticketId, 10);
     const raw = await callAI({
       workspaceId, userId: context.userId, feature: "helpdesk.intent", json: true,
@@ -239,7 +233,7 @@ export const suggestReply = createServerFn({ method: "POST" })
     goal: z.string().optional(),
   }).parse(i))
   .handler(async ({ data, context }) => {
-    const { ticket, workspaceId } = await loadTicket(context.userId, data.ticketId);
+    const { ticket, workspaceId } = await loadTicket(context, data.ticketId);
     const transcript = await loadTranscript(data.ticketId, 15);
     const content = await callAI({
       workspaceId, userId: context.userId, feature: "helpdesk.reply",
@@ -256,7 +250,7 @@ export const suggestKnowledge = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((i: unknown) => z.object({ ticketId: z.string().uuid() }).parse(i))
   .handler(async ({ data, context }) => {
-    const { ticket, workspaceId } = await loadTicket(context.userId, data.ticketId);
+    const { ticket, workspaceId } = await loadTicket(context, data.ticketId);
     const q = [ticket.subject, ticket.ai_summary, ticket.description, ticket.last_message_preview]
       .filter(Boolean).join(" ").slice(0, 300);
     if (!q) return [];
@@ -279,7 +273,7 @@ export const summarizeConversation = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((i: unknown) => z.object({ ticketId: z.string().uuid(), apply: z.boolean().default(true) }).parse(i))
   .handler(async ({ data, context }) => {
-    const { workspaceId } = await loadTicket(context.userId, data.ticketId);
+    const { workspaceId } = await loadTicket(context, data.ticketId);
     const transcript = await loadTranscript(data.ticketId, 50);
     if (!transcript) return { summary: "" };
     const content = await callAI({
@@ -303,7 +297,7 @@ export const summarizeTicket = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((i: unknown) => z.object({ ticketId: z.string().uuid() }).parse(i))
   .handler(async ({ data, context }) => {
-    const { ticket, workspaceId } = await loadTicket(context.userId, data.ticketId);
+    const { ticket, workspaceId } = await loadTicket(context, data.ticketId);
     const transcript = await loadTranscript(data.ticketId, 30);
     const raw = await callAI({
       workspaceId, userId: context.userId, feature: "helpdesk.ticket_summary", json: true,
@@ -319,7 +313,7 @@ export const suggestTags = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((i: unknown) => z.object({ ticketId: z.string().uuid(), apply: z.boolean().default(false) }).parse(i))
   .handler(async ({ data, context }) => {
-    const { ticket, workspaceId } = await loadTicket(context.userId, data.ticketId);
+    const { ticket, workspaceId } = await loadTicket(context, data.ticketId);
     const transcript = await loadTranscript(data.ticketId, 8);
     const raw = await callAI({
       workspaceId, userId: context.userId, feature: "helpdesk.tags", json: true,
@@ -345,7 +339,7 @@ export const suggestAssignment = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((i: unknown) => z.object({ ticketId: z.string().uuid(), apply: z.boolean().default(false) }).parse(i))
   .handler(async ({ data, context }) => {
-    const { ticket, workspaceId } = await loadTicket(context.userId, data.ticketId);
+    const { ticket, workspaceId } = await loadTicket(context, data.ticketId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     // Pull agents + their skills
     const { data: agents } = await supabaseAdmin.from("workspace_members")
@@ -389,7 +383,7 @@ export const detectDuplicates = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((i: unknown) => z.object({ ticketId: z.string().uuid() }).parse(i))
   .handler(async ({ data, context }) => {
-    const { ticket, workspaceId } = await loadTicket(context.userId, data.ticketId);
+    const { ticket, workspaceId } = await loadTicket(context, data.ticketId);
     const query = [ticket.subject, ticket.ai_summary, ticket.last_message_preview].filter(Boolean).join(" ").slice(0, 200);
     if (!query) return [];
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -425,7 +419,7 @@ export const suggestEscalation = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((i: unknown) => z.object({ ticketId: z.string().uuid() }).parse(i))
   .handler(async ({ data, context }) => {
-    const { ticket, workspaceId } = await loadTicket(context.userId, data.ticketId);
+    const { ticket, workspaceId } = await loadTicket(context, data.ticketId);
     const transcript = await loadTranscript(data.ticketId, 15);
     // Load SLA state
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -447,7 +441,7 @@ export const suggestResolution = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((i: unknown) => z.object({ ticketId: z.string().uuid() }).parse(i))
   .handler(async ({ data, context }) => {
-    const { ticket, workspaceId } = await loadTicket(context.userId, data.ticketId);
+    const { ticket, workspaceId } = await loadTicket(context, data.ticketId);
     const transcript = await loadTranscript(data.ticketId, 20);
     const raw = await callAI({
       workspaceId, userId: context.userId, feature: "helpdesk.resolution", json: true,

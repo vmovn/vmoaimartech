@@ -99,3 +99,37 @@ export async function resolveCallerWorkspaceId(opts: {
   }
   return workspaceId;
 }
+
+export type AiCallerContext = {
+  supabase: unknown;
+  userId: string;
+};
+
+/** Workspace-wide AI: active header or explicit id, then membership. Never first membership. */
+export async function requireActiveAiWorkspace(
+  context: AiCallerContext,
+  requestedWorkspaceId?: string | null,
+): Promise<string> {
+  return resolveCallerWorkspaceId({
+    supabase: context.supabase as AuthRpcClient,
+    userId: context.userId,
+    requestedWorkspaceId,
+    headerWorkspaceId: readActiveWorkspaceHeader(),
+  });
+}
+
+/**
+ * Entity-scoped AI: the record's workspace_id is canonical.
+ * Membership is still verified; the active header is not a substitute.
+ */
+export async function requireEntityAiWorkspace(
+  context: AiCallerContext,
+  entityWorkspaceId: string | null | undefined,
+): Promise<string> {
+  const workspaceId = nonemptyWorkspaceId(entityWorkspaceId);
+  if (!workspaceId) {
+    throw new AIError("auth", "Record has no workspace");
+  }
+  await assertAiWorkspaceMember(context.supabase as AuthRpcClient, context.userId, workspaceId);
+  return workspaceId;
+}

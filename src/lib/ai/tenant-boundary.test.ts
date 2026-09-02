@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import { AIError } from "./errors";
 import {
   pickRequestedWorkspaceId,
+  requireActiveAiWorkspace,
+  requireEntityAiWorkspace,
   resolveCallerWorkspaceId,
   type AuthRpcClient,
 } from "./workspace-auth";
@@ -86,6 +88,48 @@ describe("resolveCallerWorkspaceId", () => {
       requestedWorkspaceId: WS_B,
       requireAdmin: true,
     })).rejects.toMatchObject({ message: expect.stringContaining("owners and admins") });
+  });
+});
+
+describe("multi-workspace AI resolution", () => {
+  it("runs a workspace-wide AI operation in active workspace B", async () => {
+    const supabase = mockSupabase({
+      [WS_A]: { member: true, admin: true },
+      [WS_B]: { member: true, admin: false },
+    });
+    const id = await resolveCallerWorkspaceId({
+      supabase,
+      userId: "user-1",
+      headerWorkspaceId: WS_B,
+    });
+    expect(id).toBe(WS_B);
+  });
+
+  it("runs entity-scoped AI in the record workspace B even when the user also belongs to A", async () => {
+    const supabase = mockSupabase({
+      [WS_A]: { member: true, admin: true },
+      [WS_B]: { member: true, admin: false },
+    });
+    const id = await requireEntityAiWorkspace(
+      { supabase, userId: "user-1" },
+      WS_B,
+    );
+    expect(id).toBe(WS_B);
+  });
+
+  it("rejects a foreign workspace C before provider transport", async () => {
+    const supabase = mockSupabase({
+      [WS_A]: { member: true, admin: true },
+      [WS_B]: { member: true, admin: false },
+    });
+    await expect(requireActiveAiWorkspace(
+      { supabase, userId: "user-1" },
+      WS_C,
+    )).rejects.toMatchObject({ type: "auth" });
+    await expect(requireEntityAiWorkspace(
+      { supabase, userId: "user-1" },
+      WS_C,
+    )).rejects.toMatchObject({ type: "auth" });
   });
 });
 

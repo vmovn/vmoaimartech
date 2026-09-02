@@ -23,16 +23,41 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 import { runChat } from "@/lib/ai/complete.functions";
+import { requireActiveAiWorkspace, requireEntityAiWorkspace } from "@/lib/ai/workspace-auth";
 import { computeAvailability, dedupeSlotsByStart, type AvailabilitySlot } from "./availability-engine";
 
 // ---------- Helpers ----------
 
-async function getWorkspaceId(userId: string): Promise<string> {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data } = await supabaseAdmin.from("workspace_members")
-    .select("workspace_id").eq("user_id", userId).limit(1).maybeSingle();
-  if (!data) throw new Error("No workspace found for current user");
-  return (data as { workspace_id: string }).workspace_id;
+async function getWorkspaceId(context: { supabase: unknown; userId: string }): Promise<string> {
+  return requireActiveAiWorkspace(context);
+}
+
+async function workspaceFromEventType(
+  context: { supabase: unknown; userId: string },
+  eventTypeId: string,
+): Promise<string> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data } = await (context.supabase as any)
+    .from("booking_event_types")
+    .select("workspace_id")
+    .eq("id", eventTypeId)
+    .maybeSingle();
+  if (!data) throw new Error("Event type not found");
+  return requireEntityAiWorkspace(context, (data as { workspace_id: string }).workspace_id);
+}
+
+async function workspaceFromBooking(
+  context: { supabase: unknown; userId: string },
+  bookingId: string,
+): Promise<string> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const s = context.supabase as any;
+  const { data: booking } = await s.from("bookings")
+    .select("id, event_type_id")
+    .eq("id", bookingId)
+    .maybeSingle();
+  if (!booking) throw new Error("Booking not found");
+  return workspaceFromEventType(context, booking.event_type_id as string);
 }
 
 interface AIOpts { system: string; user: string; json?: boolean; feature?: string; model?: string }
@@ -104,7 +129,7 @@ export const suggestBestTime = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((v: unknown) => suggestBestTimeInput.parse(v))
   .handler(async ({ data, context }): Promise<RankedSlot[]> => {
-    const workspaceId = await getWorkspaceId(context.userId);
+    const workspaceId = await workspaceFromEventType(context, data.event_type_id);
     const slots = await computeAvailability(context.supabase as never, data.event_type_id, data.from, data.to);
     if (slots.length === 0) return [];
     const candidates = dedupeSlotsByStart(slots).slice(0, 40);
@@ -179,7 +204,6 @@ export const rescheduleRecommendations = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((v: unknown) => rescheduleInput.parse(v))
   .handler(async ({ data, context }): Promise<RankedSlot[]> => {
-    const workspaceId = await getWorkspaceId(context.userId);
     const { data: booking } = await context.supabase
       .from("bookings" as never)
       .select("id, event_type_id, start_at, end_at, host_id")
@@ -187,6 +211,7 @@ export const rescheduleRecommendations = createServerFn({ method: "POST" })
       .maybeSingle();
     if (!booking) return [];
     const b = booking as { event_type_id: string; start_at: string };
+    const workspaceId = await workspaceFromEventType(context, b.event_type_id);
     const start = new Date(b.start_at);
     const from = new Date(start.getTime() + 24 * 60 * 60 * 1000).toISOString();
     const to = new Date(start.getTime() + 14 * 24 * 60 * 60 * 1000).toISOString();
@@ -267,7 +292,7 @@ export const travelTimeSuggestions = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((v: unknown) => travelInput.parse(v))
   .handler(async ({ data, context }): Promise<{ estimated_minutes: number; buffer_minutes: number; leave_by: string | null; notes: string }> => {
-    const workspaceId = await getWorkspaceId(context.userId);
+    const workspaceId = await getWorkspaceId(context);
     const system = "You estimate realistic travel time between two locations. Return strict JSON. Be conservative; include buffer for parking, security, or transfers.";
     const user = `Origin: ${data.origin}\nDestination: ${data.destination}\nMode: ${data.mode}\nArrive by: ${data.arrive_by ?? "any"}\n\nReturn {"estimated_minutes":n,"buffer_minutes":n,"notes":"..."}. Buffer is extra minutes on top of estimated_minutes.`;
     const parsed = await askAI<{ estimated_minutes: number; buffer_minutes: number; notes: string }>(
@@ -303,7 +328,7 @@ export const meetingSummary = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((v: unknown) => bookingIdInput.parse(v))
   .handler(async ({ data, context }): Promise<{ summary: string; key_points: string[]; action_items: string[] }> => {
-    const workspaceId = await getWorkspaceId(context.userId);
+    const workspaceId = await workspaceFromBooking(context, data.booking_id);
     const ctx = await loadBookingContext(context.supabase, data.booking_id);
     if (!ctx) throw new Error("Booking not found");
     const system = "You summarize a completed or upcoming meeting. Return strict JSON.";
@@ -318,7 +343,7 @@ export const meetingPreparation = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((v: unknown) => bookingIdInput.parse(v))
   .handler(async ({ data, context }): Promise<{ agenda: string[]; questions: string[]; research: string[]; talking_points: string[] }> => {
-    const workspaceId = await getWorkspaceId(context.userId);
+    const workspaceId = await workspaceFromBooking(context, data.booking_id);
     const ctx = await loadBookingContext(context.supabase, data.booking_id);
     if (!ctx) throw new Error("Booking not found");
     const system = "You prepare an agent for an upcoming meeting. Return strict JSON.";
@@ -335,7 +360,7 @@ export const followUpSuggestions = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((v: unknown) => bookingIdInput.parse(v))
   .handler(async ({ data, context }): Promise<{ email: string; whatsapp: string; internal_note: string; next_steps: string[] }> => {
-    const workspaceId = await getWorkspaceId(context.userId);
+    const workspaceId = await workspaceFromBooking(context, data.booking_id);
     const ctx = await loadBookingContext(context.supabase, data.booking_id);
     if (!ctx) throw new Error("Booking not found");
     const system = "You draft follow-up messages after a meeting. Return strict JSON with `email`, `whatsapp`, `internal_note`, `next_steps`.";
@@ -361,7 +386,7 @@ export const smartAvailability = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((v: unknown) => smartAvailInput.parse(v))
   .handler(async ({ data, context }): Promise<RankedSlot[]> => {
-    const workspaceId = await getWorkspaceId(context.userId);
+    const workspaceId = await workspaceFromEventType(context, data.event_type_id);
     const slots = dedupeSlotsByStart(
       await computeAvailability(context.supabase as never, data.event_type_id, data.from, data.to),
     ).slice(0, 30);
@@ -392,7 +417,7 @@ export const naturalLanguageScheduling = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((v: unknown) => nlInput.parse(v))
   .handler(async ({ data, context }): Promise<NLSchedulingIntent> => {
-    const workspaceId = await getWorkspaceId(context.userId);
+    const workspaceId = await getWorkspaceId(context);
     const now = data.reference_now ?? new Date().toISOString();
     const system = `You parse scheduling requests into structured JSON. Reference time: ${now}. Timezone: ${data.timezone}. Interpret relative phrases ("tomorrow at 2pm", "next Tuesday morning", "in 30 min"). Return ISO-8601 UTC.`;
     const user = `Parse: """${data.prompt}"""\n\nReturn {"intent":"book|reschedule|cancel|check_availability|unknown","title":null,"duration_minutes":null,"start_at":null,"end_at":null,"participants":[],"location":null,"notes":null,"confidence":0.0-1.0}.`;

@@ -4,14 +4,11 @@
  */
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireActiveAiWorkspace } from "@/lib/ai/workspace-auth";
 import { z } from "zod";
 
-async function getWorkspaceId(userId: string): Promise<string> {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data } = await supabaseAdmin.from("workspace_members")
-    .select("workspace_id").eq("user_id", userId).limit(1).maybeSingle();
-  if (!data) throw new Error("No workspace found");
-  return (data as { workspace_id: string }).workspace_id;
+async function getWorkspaceId(context: { supabase: unknown; userId: string }): Promise<string> {
+  return requireActiveAiWorkspace(context);
 }
 
 const filterSchema = z.object({
@@ -59,7 +56,7 @@ export const analyticsOverview = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .validator((i: unknown) => filterSchema.parse(i ?? {}))
   .handler(async ({ data, context }) => {
-    const workspaceId = await getWorkspaceId(context.userId);
+    const workspaceId = await getWorkspaceId(context);
     const { fromIso, toIso } = windowFromFilters(data);
 
     const createdBase = context.supabase.from("conversations")
@@ -160,7 +157,7 @@ export const agentPerformance = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .validator((i: unknown) => filterSchema.parse(i ?? {}))
   .handler(async ({ data, context }) => {
-    const workspaceId = await getWorkspaceId(context.userId);
+    const workspaceId = await getWorkspaceId(context);
     const { fromIso, toIso } = windowFromFilters(data);
     const base = context.supabase.from("conversations")
       .select("id, assigned_to, created_at, first_response_at, resolved_at, status")
@@ -217,7 +214,7 @@ export const departmentPerformance = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .validator((i: unknown) => filterSchema.parse(i ?? {}))
   .handler(async ({ data, context }) => {
-    const workspaceId = await getWorkspaceId(context.userId);
+    const workspaceId = await getWorkspaceId(context);
     const { fromIso, toIso } = windowFromFilters(data);
     const base = context.supabase.from("conversations")
       .select("id, assigned_team_id, created_at, first_response_at, resolved_at")
@@ -256,7 +253,7 @@ export const categoryBreakdown = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .validator((i: unknown) => filterSchema.parse(i ?? {}))
   .handler(async ({ data, context }) => {
-    const workspaceId = await getWorkspaceId(context.userId);
+    const workspaceId = await getWorkspaceId(context);
     const { fromIso, toIso } = windowFromFilters(data);
     const base = context.supabase.from("conversations")
       .select("id, ticket_category_id, resolved_at, created_at")
@@ -292,7 +289,7 @@ export const escalationTrends = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .validator((i: unknown) => filterSchema.parse(i ?? {}))
   .handler(async ({ data, context }) => {
-    const workspaceId = await getWorkspaceId(context.userId);
+    const workspaceId = await getWorkspaceId(context);
     const { fromIso, toIso } = windowFromFilters(data);
     const { data: rows } = await context.supabase.from("ticket_escalations")
       .select("id, created_at, level, auto, reason")
@@ -329,7 +326,7 @@ export const slaCompliance = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .validator((i: unknown) => filterSchema.parse(i ?? {}))
   .handler(async ({ data, context }) => {
-    const workspaceId = await getWorkspaceId(context.userId);
+    const workspaceId = await getWorkspaceId(context);
     const { fromIso, toIso } = windowFromFilters(data);
     const { data: rows } = await context.supabase.from("ticket_sla_tracking")
       .select("id, sla_policy_id, first_response_breached, resolution_breached, created_at")
@@ -386,7 +383,7 @@ export const knowledgeUsage = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .validator((i: unknown) => filterSchema.parse(i ?? {}))
   .handler(async ({ data, context }) => {
-    const workspaceId = await getWorkspaceId(context.userId);
+    const workspaceId = await getWorkspaceId(context);
     const { fromIso, toIso } = windowFromFilters(data);
     const { data: rows } = await context.supabase.from("kb_article_events")
       .select("article_id, event_type, created_at")
@@ -430,7 +427,7 @@ export const knowledgeUsage = createServerFn({ method: "GET" })
 export const analyticsFacets = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const workspaceId = await getWorkspaceId(context.userId);
+    const workspaceId = await getWorkspaceId(context);
     const [{ data: depts }, { data: cats }, { data: members }] = await Promise.all([
       context.supabase.from("departments").select("id, name").eq("workspace_id", workspaceId).eq("is_active", true).order("name"),
       context.supabase.from("ticket_categories").select("id, name").eq("workspace_id", workspaceId).order("name"),

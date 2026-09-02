@@ -8,15 +8,12 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { runChat } from "@/lib/ai/complete.functions";
+import { requireActiveAiWorkspace, requireEntityAiWorkspace } from "@/lib/ai/workspace-auth";
 import { z } from "zod";
 import { sanitizeSearchTerm } from "@/lib/api/postgrest-filters";
 
-async function getWorkspaceId(userId: string): Promise<string> {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data } = await supabaseAdmin.from("workspace_members")
-    .select("workspace_id").eq("user_id", userId).limit(1).maybeSingle();
-  if (!data) throw new Error("No workspace found");
-  return (data as { workspace_id: string }).workspace_id;
+async function getWorkspaceId(context: { supabase: unknown; userId: string }): Promise<string> {
+  return requireActiveAiWorkspace(context);
 }
 
 /* ============================ Ticket Queue ============================ */
@@ -33,7 +30,7 @@ export const listTickets = createServerFn({ method: "GET" })
     limit: z.number().min(1).max(200).default(50),
   }).parse(input ?? {}))
   .handler(async ({ data, context }) => {
-    const workspaceId = await getWorkspaceId(context.userId);
+    const workspaceId = await getWorkspaceId(context);
     let q = context.supabase.from("conversations")
       .select("id, subject, status, priority, channel, assigned_to, assigned_team_id, contact_id, ticket_category_id, escalation_level, first_response_at, resolved_at, last_message_at, created_at, updated_at, last_message_preview, ai_summary")
       .eq("workspace_id", workspaceId)
@@ -56,7 +53,7 @@ export const getTicket = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .validator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
-    const workspaceId = await getWorkspaceId(context.userId);
+    const workspaceId = await getWorkspaceId(context);
     const { data: ticket, error } = await context.supabase.from("conversations")
       .select("*").eq("id", data.id).eq("workspace_id", workspaceId).maybeSingle();
     if (error) throw new Error(error.message);
@@ -85,7 +82,7 @@ export const updateTicket = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((input: unknown) => updateSchema.parse(input))
   .handler(async ({ data, context }) => {
-    const workspaceId = await getWorkspaceId(context.userId);
+    const workspaceId = await getWorkspaceId(context);
     const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
     for (const k of ["status","priority","assigned_to","assigned_team_id","ticket_category_id","subject"] as const) {
       if (data[k] !== undefined) patch[k] = data[k];
@@ -105,7 +102,7 @@ export const replyToTicket = createServerFn({ method: "POST" })
     isInternal: z.boolean().default(false),
   }).parse(input))
   .handler(async ({ data, context }) => {
-    const workspaceId = await getWorkspaceId(context.userId);
+    const workspaceId = await getWorkspaceId(context);
     const { data: conv } = await context.supabase.from("conversations")
       .select("id, workspace_id, first_response_at")
       .eq("id", data.id).eq("workspace_id", workspaceId).maybeSingle();
@@ -132,7 +129,7 @@ export const addWatcher = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((input: unknown) => z.object({ ticketId: z.string().uuid(), userId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
-    const workspaceId = await getWorkspaceId(context.userId);
+    const workspaceId = await getWorkspaceId(context);
     const { error } = await (context.supabase.from("ticket_watchers") as any).insert({
       workspace_id: workspaceId, ticket_id: data.ticketId, user_id: data.userId, added_by: context.userId,
     });
@@ -144,7 +141,7 @@ export const removeWatcher = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((input: unknown) => z.object({ ticketId: z.string().uuid(), userId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
-    const workspaceId = await getWorkspaceId(context.userId);
+    const workspaceId = await getWorkspaceId(context);
     const { error } = await (context.supabase.from("ticket_watchers") as any).delete()
       .eq("ticket_id", data.ticketId).eq("user_id", data.userId).eq("workspace_id", workspaceId);
     if (error) throw new Error(error.message);
@@ -162,7 +159,7 @@ export const escalateTicket = createServerFn({ method: "POST" })
     escalatedToTeam: z.string().uuid().nullable().optional(),
   }).parse(input))
   .handler(async ({ data, context }) => {
-    const workspaceId = await getWorkspaceId(context.userId);
+    const workspaceId = await getWorkspaceId(context);
     const { data: current } = await context.supabase.from("conversations")
       .select("escalation_level, assigned_to").eq("id", data.ticketId).eq("workspace_id", workspaceId).maybeSingle();
     const level = ((current as { escalation_level: number | null } | null)?.escalation_level ?? 0) + 1;
@@ -203,7 +200,7 @@ export const attachSla = createServerFn({ method: "POST" })
     policyId: z.string().uuid().optional(),
   }).parse(input))
   .handler(async ({ data, context }) => {
-    const workspaceId = await getWorkspaceId(context.userId);
+    const workspaceId = await getWorkspaceId(context);
     const { data: conv } = await context.supabase.from("conversations")
       .select("id, priority, created_at").eq("id", data.ticketId).eq("workspace_id", workspaceId).maybeSingle();
     if (!conv) throw new Error("Ticket not found");
@@ -237,7 +234,7 @@ export const pauseSla = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((input: unknown) => z.object({ ticketId: z.string().uuid(), pause: z.boolean() }).parse(input))
   .handler(async ({ data, context }) => {
-    const workspaceId = await getWorkspaceId(context.userId);
+    const workspaceId = await getWorkspaceId(context);
     const { data: tracking } = await (context.supabase.from("ticket_sla_tracking") as any)
       .select("*").eq("ticket_id", data.ticketId).eq("workspace_id", workspaceId).maybeSingle();
     if (!tracking) throw new Error("No SLA attached");
@@ -259,7 +256,7 @@ export const pauseSla = createServerFn({ method: "POST" })
 export const slaMonitor = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const workspaceId = await getWorkspaceId(context.userId);
+    const workspaceId = await getWorkspaceId(context);
     const { data: rows } = await context.supabase
       .from("ticket_sla_tracking")
       .select("*, conversations!inner(id, subject, status, priority, assigned_to)")
@@ -284,7 +281,7 @@ export const slaMonitor = createServerFn({ method: "GET" })
 export const listCategories = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const workspaceId = await getWorkspaceId(context.userId);
+    const workspaceId = await getWorkspaceId(context);
     const { data } = await (context.supabase.from("ticket_categories") as any)
       .select("*").eq("workspace_id", workspaceId).order("sort_order").order("name");
     return data ?? [];
@@ -305,7 +302,7 @@ export const saveCategory = createServerFn({ method: "POST" })
     is_active: z.boolean().optional(),
   }).parse(input))
   .handler(async ({ data, context }) => {
-    const workspaceId = await getWorkspaceId(context.userId);
+    const workspaceId = await getWorkspaceId(context);
     if (data.id) {
       const { id, ...rest } = data;
       const { error } = await (context.supabase.from("ticket_categories") as any)
@@ -324,7 +321,7 @@ export const deleteCategory = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
-    const workspaceId = await getWorkspaceId(context.userId);
+    const workspaceId = await getWorkspaceId(context);
     const { error } = await (context.supabase.from("ticket_categories") as any)
       .delete().eq("id", data.id).eq("workspace_id", workspaceId);
     if (error) throw new Error(error.message);
@@ -336,7 +333,7 @@ export const deleteCategory = createServerFn({ method: "POST" })
 export const listMacros = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const workspaceId = await getWorkspaceId(context.userId);
+    const workspaceId = await getWorkspaceId(context);
     const { data } = await (context.supabase.from("ticket_macros") as any)
       .select("*").eq("workspace_id", workspaceId).order("usage_count", { ascending: false }).order("name");
     return data ?? [];
@@ -355,7 +352,7 @@ export const saveMacro = createServerFn({ method: "POST" })
     is_shared: z.boolean().optional(),
   }).parse(input))
   .handler(async ({ data, context }) => {
-    const workspaceId = await getWorkspaceId(context.userId);
+    const workspaceId = await getWorkspaceId(context);
     if (data.id) {
       const { id, ...rest } = data;
       const { error } = await (context.supabase.from("ticket_macros") as any)
@@ -374,7 +371,7 @@ export const deleteMacro = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
-    const workspaceId = await getWorkspaceId(context.userId);
+    const workspaceId = await getWorkspaceId(context);
     const { error } = await (context.supabase.from("ticket_macros") as any)
       .delete().eq("id", data.id).eq("workspace_id", workspaceId);
     if (error) throw new Error(error.message);
@@ -385,7 +382,7 @@ export const applyMacro = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((input: unknown) => z.object({ ticketId: z.string().uuid(), macroId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
-    const workspaceId = await getWorkspaceId(context.userId);
+    const workspaceId = await getWorkspaceId(context);
     const { data: macro } = await (context.supabase.from("ticket_macros") as any)
       .select("*").eq("id", data.macroId).eq("workspace_id", workspaceId).maybeSingle();
     if (!macro) throw new Error("Macro not found");
@@ -419,7 +416,7 @@ export const applyMacro = createServerFn({ method: "POST" })
 export const listCsatSurveys = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const workspaceId = await getWorkspaceId(context.userId);
+    const workspaceId = await getWorkspaceId(context);
     const { data } = await (context.supabase.from("csat_surveys") as any)
       .select("*").eq("workspace_id", workspaceId).order("created_at", { ascending: false });
     return data ?? [];
@@ -439,7 +436,7 @@ export const saveCsatSurvey = createServerFn({ method: "POST" })
     is_active: z.boolean().default(true),
   }).parse(input))
   .handler(async ({ data, context }) => {
-    const workspaceId = await getWorkspaceId(context.userId);
+    const workspaceId = await getWorkspaceId(context);
     if (data.id) {
       const { id, ...rest } = data;
       const { error } = await (context.supabase.from("csat_surveys") as any)
@@ -457,7 +454,7 @@ export const saveCsatSurvey = createServerFn({ method: "POST" })
 export const csatSummary = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const workspaceId = await getWorkspaceId(context.userId);
+    const workspaceId = await getWorkspaceId(context);
     const since = new Date(Date.now() - 30 * 24 * 3600_000).toISOString();
     const { data: rows } = await context.supabase.from("csat_responses")
       .select("rating, score_type, agent_id, submitted_at, comment, sentiment")
@@ -482,7 +479,7 @@ export const helpdeskAnalytics = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .validator((input: unknown) => z.object({ days: z.number().min(1).max(365).default(30) }).parse(input ?? {}))
   .handler(async ({ data, context }) => {
-    const workspaceId = await getWorkspaceId(context.userId);
+    const workspaceId = await getWorkspaceId(context);
     const since = new Date(Date.now() - data.days * 24 * 3600_000).toISOString();
     const [
       { data: created },
@@ -531,10 +528,10 @@ export const aiSuggestReply = createServerFn({ method: "POST" })
     tone: z.enum(["friendly","formal","empathetic","concise"]).default("friendly"),
   }).parse(input))
   .handler(async ({ data, context }) => {
-    const workspaceId = await getWorkspaceId(context.userId);
     const { data: conv } = await context.supabase.from("conversations")
-      .select("id, subject, ai_summary").eq("id", data.ticketId).eq("workspace_id", workspaceId).maybeSingle();
+      .select("id, subject, ai_summary, workspace_id").eq("id", data.ticketId).maybeSingle();
     if (!conv) throw new Error("Ticket not found");
+    const workspaceId = await requireEntityAiWorkspace(context, (conv as { workspace_id: string }).workspace_id);
     const { data: recent } = await context.supabase.from("messages")
       .select("body, direction, sent_by, created_at").eq("conversation_id", data.ticketId)
       .order("created_at", { ascending: false }).limit(10);
@@ -565,10 +562,10 @@ export const aiTriageTicket = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((input: unknown) => z.object({ ticketId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
-    const workspaceId = await getWorkspaceId(context.userId);
     const { data: conv } = await context.supabase.from("conversations")
-      .select("id, subject, last_message_preview, priority").eq("id", data.ticketId).eq("workspace_id", workspaceId).maybeSingle();
+      .select("id, subject, last_message_preview, priority, workspace_id").eq("id", data.ticketId).maybeSingle();
     if (!conv) throw new Error("Ticket not found");
+    const workspaceId = await requireEntityAiWorkspace(context, (conv as { workspace_id: string }).workspace_id);
     const { data: cats } = await (context.supabase.from("ticket_categories") as any)
       .select("id, name").eq("workspace_id", workspaceId).eq("is_active", true);
     const c = conv as { subject: string | null; last_message_preview: string | null; priority: string };
@@ -608,7 +605,7 @@ export const aiTriageTicket = createServerFn({ method: "POST" })
 export const listAgents = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const workspaceId = await getWorkspaceId(context.userId);
+    const workspaceId = await getWorkspaceId(context);
     const { data } = await context.supabase
       .from("workspace_members")
       .select("user_id, role, profiles(id, full_name, email, avatar_url)")

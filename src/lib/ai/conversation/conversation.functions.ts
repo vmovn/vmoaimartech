@@ -17,6 +17,7 @@ import { requireTenantAccess } from "@/lib/auth/tenant-auth";
 import { z } from "zod";
 import { runChat } from "@/lib/ai/complete.functions";
 import { AIError } from "@/lib/ai/errors";
+import { requireActiveAiWorkspace } from "@/lib/ai/workspace-auth";
 import type {
   Conversation, ConversationConfig, ConversationStatus,
   PromptSettings, UiMessage, Tone, Length,
@@ -394,14 +395,7 @@ export const translateText = createServerFn({ method: "POST" })
     model: z.string().optional(),
   }).parse(v))
   .handler(async ({ data, context }): Promise<{ text: string }> => {
-    const { data: membership } = await context.supabase
-      .from("workspace_members")
-      .select("workspace_id")
-      .eq("user_id", context.userId)
-      .limit(1)
-      .maybeSingle();
-    const workspaceId = (membership as { workspace_id?: string } | null)?.workspace_id;
-    if (!workspaceId) throw new Error("No workspace found for current user");
+    const workspaceId = await requireActiveAiWorkspace(context);
     const { translate } = await import("./language.server");
     const text = await translate({
       workspaceId,
