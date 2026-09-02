@@ -71,9 +71,11 @@ The local Supabase CLI additionally receives `SUPABASE_PROJECT_ID` and `SUPABASE
 | `XAI_API_KEY` | xAI Grok-compatible provider credential | Conditional | Yes | Runtime server | xAI Grok | Conditional |
 | `OPENROUTER_API_KEY` | OpenRouter-compatible provider credential | Conditional | Yes | Runtime server | OpenRouter | Conditional |
 | `CUSTOM_AI_API_KEY` | Default custom OpenAI-compatible credential name | Conditional | Yes | Runtime server | Custom AI provider | Conditional |
+| `OLLAMA_BASE_URL` | Internal OpenAI-compatible URL for the shared platform Ollama utility service | Conditional | No | Runtime server | Platform-managed Ollama | Conditional |
+| `OLLAMA_UTILITY_MODEL` | Default local chat model id for utility features such as conversation intelligence | Optional | No | Runtime server | Platform-managed Ollama | Conditional |
 | `KB_VECTOR_STORE` | Knowledge-base vector backend selector; defaults to pgvector | Optional | No | Runtime server | Knowledge Base / RAG | Conditional |
 
-Ollama and LM Studio are implemented as keyless/self-hosted AI provider kinds and are configured later through provider settings rather than mandatory first-run variables.
+Ollama is a keyless self-hosted provider. Production must set `OLLAMA_BASE_URL` to the operator-controlled internal URL (do not assume localhost or a Coolify hostname in source). Local development may omit it and use `http://localhost:11434/v1`. `OLLAMA_UTILITY_MODEL` selects the workspace utility model used when seeding `conversation_intelligence`; it is not a customer-facing chatbot default. Other provider kinds remain configured through workspace/provider settings and their API keys.
 
 ## 6. Messaging Providers
 

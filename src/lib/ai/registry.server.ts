@@ -8,6 +8,7 @@ import { createOpenAICompatProvider } from "./providers/openai-compat.server";
 import { anthropicProvider } from "./providers/anthropic.server";
 import { geminiProvider } from "./providers/gemini.server";
 import { AIError } from "./errors";
+import { resolveOllamaBaseUrl } from "./platform-ollama";
 
 const lovable = createOpenAICompatProvider({
   kind: "lovable",
@@ -30,7 +31,7 @@ const openrouter = createOpenAICompatProvider({
   kind: "openrouter", defaultBaseUrl: "https://openrouter.ai/api/v1",
 });
 const ollama = createOpenAICompatProvider({
-  kind: "ollama", defaultBaseUrl: "http://localhost:11434/v1", supportsEmbeddings: true,
+  kind: "ollama", defaultBaseUrl: "", supportsEmbeddings: true,
 });
 const lmstudio = createOpenAICompatProvider({
   kind: "lmstudio", defaultBaseUrl: "http://localhost:1234/v1",
@@ -69,9 +70,12 @@ export function resolveCredentials(record: AIProviderRecord): ProviderCredential
   if (requiresKey && !apiKey) {
     throw new AIError("auth", `Missing API key for provider "${record.name}" (${record.kind}). Configure the secret named ${record.apiKeySecretName ?? "<none>"} in workspace settings.`);
   }
+  const baseUrl = record.kind === "ollama"
+    ? resolveOllamaBaseUrl({ recordBaseUrl: record.baseUrl, config: record.config })
+    : (record.baseUrl ?? undefined);
   return {
     apiKey,
-    baseUrl: record.baseUrl ?? undefined,
+    baseUrl,
     organizationId: record.organizationId ?? undefined,
     config: record.config,
     extraHeaders: (record.config?.extra_headers as Record<string, string>) ?? undefined,

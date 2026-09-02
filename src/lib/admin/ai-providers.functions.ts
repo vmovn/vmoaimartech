@@ -17,6 +17,11 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { requireTenantAccess } from "@/lib/auth/tenant-auth";
 import { z } from "zod";
 import type { AIProviderKind } from "@/lib/ai/types";
+import {
+  platformManagedProviderConfig,
+  resolveOllamaBaseUrl,
+} from "@/lib/ai/platform-ollama";
+import { ensurePlatformOllamaForWorkspace } from "@/lib/ai/platform-ollama.functions";
 
 /* -------------------------------------------------------------------------- */
 /* Guards                                                                     */
@@ -127,7 +132,7 @@ export const PROVIDER_KINDS: ProviderKindInfo[] = [
   {
     kind: "ollama",
     label: "Ollama (self-hosted)",
-    defaultBaseUrl: "http://localhost:11434/v1",
+    defaultBaseUrl: "",
     requiresKey: false,
     suggestedSecretName: "",
     models: [],
@@ -213,9 +218,41 @@ export const savePlatformAiProvider = createServerFn({ method: "POST" })
     await assertSuperAdmin(context.supabase, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
+    if (data.kind === "ollama" && !data.id) {
+      let workspaceIds: string[] = [];
+      if (data.applyToAllWorkspaces) {
+        const { data: ws } = await supabaseAdmin.from("workspaces").select("id").limit(1000);
+        workspaceIds = ((ws ?? []) as { id: string }[]).map((w) => w.id);
+      } else {
+        if (!data.workspaceId) throw new Error("Select a workspace");
+        workspaceIds = [data.workspaceId];
+      }
+      const ids: string[] = [];
+      for (const workspaceId of workspaceIds) {
+        const result = await ensurePlatformOllamaForWorkspace(supabaseAdmin, workspaceId);
+        if (!result.ok || !result.providerId) {
+          throw new Error(
+            "Ollama base URL is not configured. Set OLLAMA_BASE_URL to the internal service URL.",
+          );
+        }
+        ids.push(result.providerId);
+      }
+      return { ok: true, ids };
+    }
+
     const kindInfo = PROVIDER_KINDS.find((k) => k.kind === data.kind)!;
-    const baseUrl = (data.baseUrl?.trim() || kindInfo.defaultBaseUrl || null) as string | null;
-    const secretName = data.apiKeySecretName?.trim() || null;
+    const ollamaUrl = data.kind === "ollama"
+      ? resolveOllamaBaseUrl({
+          recordBaseUrl: data.baseUrl,
+          config: platformManagedProviderConfig(),
+        })
+      : null;
+    const baseUrl = (ollamaUrl
+      || data.baseUrl?.trim()
+      || kindInfo.defaultBaseUrl
+      || null) as string | null;
+    const secretName = data.kind === "ollama" ? null : (data.apiKeySecretName?.trim() || null);
+    const ollamaConfig = data.kind === "ollama" ? platformManagedProviderConfig() : {};
 
     const base = {
       kind: data.kind,
@@ -224,8 +261,9 @@ export const savePlatformAiProvider = createServerFn({ method: "POST" })
       api_key_secret_name: secretName,
       organization_id: data.organizationId?.trim() || null,
       enabled: data.enabled,
-      is_default: data.isDefault,
+      is_default: data.kind === "ollama" ? false : data.isDefault,
       priority: data.priority,
+      ...(data.kind === "ollama" ? { config: ollamaConfig } : {}),
     };
 
     // Update path
@@ -239,7 +277,7 @@ export const savePlatformAiProvider = createServerFn({ method: "POST" })
       if (error) throw new Error(error.message);
       const updated = row as unknown as { id: string; workspace_id: string } | null;
       if (!updated) throw new Error("Provider not found");
-      if (data.isDefault) await clearOtherDefaults(updated.workspace_id, updated.id);
+      if (base.is_default) await clearOtherDefaults(updated.workspace_id, updated.id);
       return { ok: true, ids: [updated.id] };
     }
 
@@ -257,14 +295,14 @@ export const savePlatformAiProvider = createServerFn({ method: "POST" })
     for (const workspaceId of workspaceIds) {
       const { data: row, error } = await supabaseAdmin
         .from("ai_providers" as never)
-        .insert({ ...base, workspace_id: workspaceId, config: {} } as never)
+        .insert({ ...base, workspace_id: workspaceId, config: ollamaConfig } as never)
         .select("id")
         .maybeSingle();
       if (error) throw new Error(error.message);
       const created = row as unknown as { id: string } | null;
       if (created) {
         ids.push(created.id);
-        if (data.isDefault) await clearOtherDefaults(workspaceId, created.id);
+        if (base.is_default) await clearOtherDefaults(workspaceId, created.id);
       }
     }
     return { ok: true, ids };

@@ -8,6 +8,7 @@ import {
   subscribeActiveTenant,
   readActiveOrgId,
 } from "@/lib/tenant/active-tenant";
+import { ensurePlatformOllamaProvider } from "@/lib/ai/platform-ollama.functions";
 
 
 export type WorkspaceRow = {
@@ -316,7 +317,13 @@ export function useCreateWorkspace() {
         _description: input.description ?? null,
       });
       if (error) throw error;
-      return data as WorkspaceRow;
+      const workspace = data as WorkspaceRow;
+      try {
+        await ensurePlatformOllamaProvider({ data: { workspaceId: workspace.id } });
+      } catch {
+        // Platform Local AI is optional; workspace creation must still succeed.
+      }
+      return workspace;
     },
     onSuccess: (ws) => {
       setActiveWorkspaceId(ws.id);

@@ -29,6 +29,7 @@ import {
 } from "./feature-routing";
 import { assertProviderTenant, modelBelongsToProvider } from "./provider-tenant";
 import { readActiveWorkspaceHeader, resolveCallerWorkspaceId, type AuthRpcClient } from "./workspace-auth";
+import { platformOllamaRateLimitPerMin } from "./platform-ollama";
 
 // ---------- Record loaders ----------
 
@@ -200,7 +201,7 @@ export async function runChat(opts: RunOpts): Promise<ChatResponse & { providerI
     await enforceAIRateLimit({
       workspaceId: opts.workspaceId, userId: opts.userId ?? null,
       providerId: provider.id, feature: opts.feature ?? null,
-      limit: opts.rateLimitPerMin ?? 120,
+      limit: opts.rateLimitPerMin ?? platformOllamaRateLimitPerMin(provider),
     });
 
     const start = Date.now();

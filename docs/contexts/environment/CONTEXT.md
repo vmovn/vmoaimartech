@@ -5,7 +5,7 @@ Owns classification of environment configuration: public build variables, server
 
 ## Primary Entry Points
 - `.env.example` — deployable template.
-- `src/lib/environment/environment-catalog.json` — canonical 74-key metadata catalog.
+- `src/lib/environment/environment-catalog.json` — canonical environment metadata catalog.
 - `src/lib/environment/environment-catalog.ts` — typed shared metadata export.
 - `src/lib/setup/environment-readiness.server.ts` — server-only readiness evaluation.
 - `scripts/ai/env-audit.mjs` — deterministic drift validator.
@@ -46,10 +46,9 @@ If a new executable environment read is introduced or an env key is removed/rena
 Prefer deterministic env-drift audit when present, plus build/public-bundle secret scan for public/private boundary changes.
 
 ## Drift Contract
-`npm run env:audit` verifies the completed `75 active executable keys = 75 catalog keys = 75 .env.example keys` contract. Do not re-scan environment implementation merely to re-establish this completed checkpoint.
+`npm run env:audit` verifies the completed `77 active executable keys = 77 catalog keys = 77 .env.example keys` contract. Do not re-scan environment implementation merely to re-establish this completed checkpoint.
 
 ## Last Verified
-- Runtime baseline: `v1.0.0-localhost-1.0.6.2`.
-- Memory installation checkpoint: `v1.0.0-localhost-1.0.7` / `0f401975274490d0201581325a932d7865f73208`.
-- Date: 2026-08-31.
-- Verification scope: canonical environment artifacts and the completed 74/74/74 drift contract; environment implementation was not re-audited here.
+- Runtime baseline: `v1.0.0-Freedom-v1.0.2` / `896760b3276b89e32102c30d82ea211dbc0ba180`.
+- Date: 2026-09-02.
+- Verification scope: added `OLLAMA_BASE_URL` and `OLLAMA_UTILITY_MODEL`; catalog/example/docs remain synchronized.

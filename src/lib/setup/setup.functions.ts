@@ -251,7 +251,21 @@ export const createSetupSuperAdmin = createServerFn({ method: "POST" })
         await admin
           .from("ai_providers")
           .update({ enabled: false })
-          .in("workspace_id", workspaceIds);
+          .in("workspace_id", workspaceIds)
+          .neq("kind", "ollama");
+      }
+    }
+
+    const { ensurePlatformOllamaForWorkspace } = await import("@/lib/ai/platform-ollama.functions");
+    const { data: ownerMemberships } = await admin
+      .from("workspace_members")
+      .select("workspace_id")
+      .eq("user_id", created.user.id);
+    for (const row of ownerMemberships ?? []) {
+      try {
+        await ensurePlatformOllamaForWorkspace(admin, row.workspace_id);
+      } catch {
+        // Platform Local AI is optional at first-run setup.
       }
     }
 
@@ -318,6 +332,13 @@ export const saveSetupBusiness = createServerFn({ method: "POST" })
       .eq("id", workspace.id)
       .eq("owner_id", state.superAdminUserId);
     if (workspaceError) throw new Error(workspaceError.message);
+
+    const { ensurePlatformOllamaForWorkspace } = await import("@/lib/ai/platform-ollama.functions");
+    try {
+      await ensurePlatformOllamaForWorkspace(admin, workspace.id);
+    } catch {
+      // Platform Local AI is optional at first-run setup.
+    }
 
     await setPlatformSetting("branding", { app_name: data.app_name });
     await setPlatformSetting("localization", {

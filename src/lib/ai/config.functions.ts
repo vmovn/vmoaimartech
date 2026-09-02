@@ -22,6 +22,11 @@ import {
   resolveCallerWorkspaceId,
   type AuthRpcClient,
 } from "./workspace-auth";
+import {
+  isPlatformManagedProvider,
+  preservePlatformManagedConfig,
+  stripWorkspaceManagedMarker,
+} from "./platform-ollama";
 
 // --------- Serializable return shapes (avoid Record<string,unknown>) ---------
 
@@ -273,13 +278,30 @@ export const upsertAIProvider = createServerFn({ method: "POST" })
   .handler(async ({ data, context }): Promise<AIProviderRow> => {
     const workspaceId = await requireAiWorkspace(context, { admin: true });
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const row = {
+    const incomingConfig = stripWorkspaceManagedMarker(data.config ?? {});
+    const row: Record<string, unknown> = {
       workspace_id: workspaceId, kind: data.kind, name: data.name,
       base_url: data.baseUrl ?? null, api_key_secret_name: data.apiKeySecretName ?? null,
       organization_id: data.organizationId ?? null, enabled: data.enabled,
-      is_default: data.isDefault, priority: data.priority, config: data.config,
+      is_default: data.isDefault, priority: data.priority, config: incomingConfig,
     };
     if (data.id) {
+      const existing = await requireProviderInWorkspace(data.id, workspaceId);
+      if (isPlatformManagedProvider(existing.config)) {
+        if (data.kind !== existing.kind) {
+          throw new AIError("validation", "Platform-managed Local AI kind cannot be changed");
+        }
+        const incomingUrl = (data.baseUrl ?? "").replace(/\/+$/, "");
+        const existingUrl = (existing.base_url ?? "").replace(/\/+$/, "");
+        if (incomingUrl && incomingUrl !== existingUrl) {
+          throw new AIError("validation", "Platform-managed Local AI URL is operator-controlled");
+        }
+        row.kind = existing.kind;
+        row.base_url = existing.base_url;
+        row.api_key_secret_name = existing.api_key_secret_name;
+        row.is_default = false;
+        row.config = preservePlatformManagedConfig(existing.config, incomingConfig);
+      }
       const { data: updated, error } = await supabaseAdmin.from("ai_providers" as never)
         .update(row as never).eq("id", data.id).eq("workspace_id", workspaceId).select().maybeSingle();
       if (error) throw new Error(error.message);
@@ -297,6 +319,10 @@ export const deleteAIProvider = createServerFn({ method: "POST" })
   .validator((v: unknown) => z.object({ id: z.string().uuid() }).parse(v))
   .handler(async ({ data, context }): Promise<{ ok: true }> => {
     const workspaceId = await requireAiWorkspace(context, { admin: true });
+    const rec = await requireProviderInWorkspace(data.id, workspaceId);
+    if (isPlatformManagedProvider(rec.config)) {
+      throw new AIError("validation", "Platform-managed Local AI cannot be deleted by the workspace");
+    }
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await supabaseAdmin.from("ai_providers" as never).delete()
       .eq("id", data.id).eq("workspace_id", workspaceId);

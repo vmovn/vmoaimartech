@@ -48,8 +48,13 @@ export function createOpenAICompatProvider(opts: FactoryOpts): AIProvider {
     return h;
   };
 
-  const baseUrl = (creds: ProviderCredentials) =>
-    (creds.baseUrl || opts.defaultBaseUrl).replace(/\/+$/, "");
+  const baseUrl = (creds: ProviderCredentials) => {
+    const raw = (creds.baseUrl || opts.defaultBaseUrl).trim();
+    if (!raw) {
+      throw new AIError("validation", `No base URL configured for provider ${opts.kind}`);
+    }
+    return raw.replace(/\/+$/, "");
+  };
 
   const doFetch = async (url: string, init: RequestInit, timeoutMs: number) => {
     const controller = new AbortController();

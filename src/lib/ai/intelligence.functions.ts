@@ -350,6 +350,7 @@ Base every field on evidence in the transcript. If unknown, use null or an empty
       temperature: 0.2,
       max_tokens: 1200,
       response_format: "json_object",
+      timeout_ms: 20_000,
     };
 
     const res = await runChat({
