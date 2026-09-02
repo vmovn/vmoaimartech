@@ -25,6 +25,7 @@ CREATE TABLE public.conversation_intelligence (
   messages_analyzed int NOT NULL DEFAULT 0,
   last_message_at timestamptz,
   needs_reanalysis boolean NOT NULL DEFAULT false,
+  analysis_claimed_at timestamptz,
   analyzed_at timestamptz,
   search_text text,
   created_at timestamptz NOT NULL DEFAULT now(),
@@ -38,6 +39,7 @@ CREATE INDEX conv_intel_search_trgm_idx ON public.conversation_intelligence
   USING GIN (search_text gin_trgm_ops);
 CREATE INDEX conv_intel_topics_idx ON public.conversation_intelligence USING GIN (topics);
 CREATE INDEX conv_intel_needs_reanalysis_idx ON public.conversation_intelligence(workspace_id, needs_reanalysis) WHERE needs_reanalysis = true;
+CREATE INDEX conv_intel_claim_idx ON public.conversation_intelligence(analysis_claimed_at) WHERE needs_reanalysis = true;
 CREATE INDEX conv_intel_category_idx ON public.conversation_intelligence(workspace_id, category);
 CREATE INDEX conv_intel_urgency_idx ON public.conversation_intelligence(workspace_id, urgency);
 
@@ -110,6 +112,8 @@ BEGIN
     SET needs_reanalysis = true,
         last_message_at = GREATEST(coalesce(public.conversation_intelligence.last_message_at, NEW.created_at), NEW.created_at),
         updated_at = now();
+  -- analysis_claimed_at is intentionally not cleared: an in-flight worker keeps
+  -- the lease. Completion compares last_message_at so a newer message stays pending.
   RETURN NEW;
 END $$;
 

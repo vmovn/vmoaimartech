@@ -2,13 +2,18 @@
  * Pure helpers for background conversation intelligence.
  * Durable work lives on conversation_intelligence.needs_reanalysis
  * (message insert trigger coalesces by conversation PK).
+ * analysis_claimed_at is a crash-safe lease; needs_reanalysis stays true while claimed.
  */
 import { AIError } from "./errors";
+
+/** Must exceed one Ollama call (~20s) plus the 45s drain budget. */
+export const INTELLIGENCE_LEASE_MS = 90_000;
 
 export type PendingIntelligenceJob = {
   conversation_id: string;
   workspace_id: string;
   last_message_at: string | null;
+  analysis_claimed_at?: string | null;
 };
 
 export type IntelligenceFailureKind = "retryable" | "terminal";
@@ -121,6 +126,33 @@ export function assertIntelligenceTenant(opts: {
   if (!opts.entityWorkspaceId || opts.entityWorkspaceId !== opts.queuedWorkspaceId) {
     throw new IntelligenceTenantError();
   }
+}
+
+export function intelligenceLeaseExpiredBefore(
+  nowMs: number,
+  leaseMs: number = INTELLIGENCE_LEASE_MS,
+): string {
+  return new Date(nowMs - leaseMs).toISOString();
+}
+
+export function isIntelligenceLeaseExpired(
+  claimedAt: string | null | undefined,
+  nowMs: number,
+  leaseMs: number = INTELLIGENCE_LEASE_MS,
+): boolean {
+  if (!claimedAt) return true;
+  const ts = Date.parse(claimedAt);
+  if (!Number.isFinite(ts)) return true;
+  return nowMs - ts >= leaseMs;
+}
+
+export function isIntelligenceJobClaimable(
+  row: { needs_reanalysis?: boolean; analysis_claimed_at?: string | null },
+  nowMs: number,
+  leaseMs: number = INTELLIGENCE_LEASE_MS,
+): boolean {
+  if (row.needs_reanalysis === false) return false;
+  return isIntelligenceLeaseExpired(row.analysis_claimed_at, nowMs, leaseMs);
 }
 
 /** Bounded in-flight mapper. Does not grow a promise per incoming event unbounded. */

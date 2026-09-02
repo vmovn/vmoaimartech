@@ -64,6 +64,7 @@ export interface RawIntelRow {
   messages_analyzed: number | null;
   analyzed_at: string | null;
   needs_reanalysis: boolean;
+  analysis_claimed_at?: string | null;
   last_message_at: string | null;
 }
 
@@ -370,20 +371,43 @@ Base every field on evidence in the transcript. If unknown, use null or an empty
     messages_analyzed: messages.length,
     last_message_at: messages[messages.length - 1]?.created_at ?? null,
     needs_reanalysis: false,
+    analysis_claimed_at: null,
     analyzed_at: new Date().toISOString(),
     search_text: searchText,
   };
 
-  const { data: saved, error: upErr } = await (db.from("conversation_intelligence") as {
-    upsert: (
-      p: Record<string, unknown>,
-      o: { onConflict: string },
-    ) => { select: (c: string) => { maybeSingle: () => Promise<{ data: unknown; error: { message: string } | null }> } };
-  })
-    .upsert(payload, { onConflict: "conversation_id" })
-    .select("*")
-    .maybeSingle();
+  const snapshotLastMessageAt = payload.last_message_at as string | null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let persistQuery: any = (opts.db.from("conversation_intelligence") as any)
+    .update(payload)
+    .eq("conversation_id", conv.id)
+    .eq("workspace_id", conv.workspace_id);
+  persistQuery =
+    snapshotLastMessageAt == null
+      ? persistQuery.is("last_message_at", null)
+      : persistQuery.eq("last_message_at", snapshotLastMessageAt);
+  const { data: saved, error: upErr } = await persistQuery.select("*").maybeSingle();
   if (upErr) throw new Error(upErr.message);
+
+  if (!saved) {
+    if (opts.queuedWorkspaceId) {
+      return mapInsight({
+        ...(payload as unknown as RawIntelRow),
+        needs_reanalysis: true,
+      });
+    }
+    const { data: inserted, error: insErr } = await (opts.db.from("conversation_intelligence") as {
+      upsert: (
+        p: Record<string, unknown>,
+        o: { onConflict: string },
+      ) => { select: (c: string) => { maybeSingle: () => Promise<{ data: unknown; error: { message: string } | null }> } };
+    })
+      .upsert(payload, { onConflict: "conversation_id" })
+      .select("*")
+      .maybeSingle();
+    if (insErr) throw new Error(insErr.message);
+    return mapInsight(inserted as unknown as RawIntelRow);
+  }
 
   return mapInsight(saved as unknown as RawIntelRow);
 }

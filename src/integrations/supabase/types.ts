@@ -8013,6 +8013,7 @@ export type Database = {
           messages_analyzed: number
           model: string | null
           needs_reanalysis: boolean
+          analysis_claimed_at: string | null
           priority: string | null
           provider_kind: string | null
           risk_reasons: Json
@@ -8044,6 +8045,7 @@ export type Database = {
           messages_analyzed?: number
           model?: string | null
           needs_reanalysis?: boolean
+          analysis_claimed_at?: string | null
           priority?: string | null
           provider_kind?: string | null
           risk_reasons?: Json
@@ -8075,6 +8077,7 @@ export type Database = {
           messages_analyzed?: number
           model?: string | null
           needs_reanalysis?: boolean
+          analysis_claimed_at?: string | null
           priority?: string | null
           provider_kind?: string | null
           risk_reasons?: Json
