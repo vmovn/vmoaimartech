@@ -87,6 +87,13 @@ function validateValue(key: string, value: string): boolean {
     return value.length >= 32;
   }
   if (key === "SETUP_SECRET") return value.length >= 24;
+  if (key === "AI_CREDENTIAL_ENCRYPTION_KEY") {
+    try {
+      return Buffer.from(value, "base64").length === 32;
+    } catch {
+      return false;
+    }
+  }
   if (["PORT", "PASSENGER_PORT", "APP_REPLICAS"].includes(key)) {
     const number = Number(value);
     return Number.isInteger(number) && number > 0 && (key === "APP_REPLICAS" || number <= 65535);

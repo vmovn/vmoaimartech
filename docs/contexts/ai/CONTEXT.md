@@ -13,6 +13,7 @@ Owns AI provider configuration, completion/orchestration helpers, AI analytics/c
 - `src/lib/ai/automations.functions.ts`
 - `src/lib/ai/analytics.functions.ts`
 - `src/lib/ai/workspace-auth.ts`
+- `src/lib/ai/credential-crypto.server.ts`, `src/lib/ai/provider-credentials.server.ts`
 - `src/lib/ai/providers/**`, `src/lib/admin/ai-providers.functions.ts`
 - `src/lib/ai/platform-ollama.ts`, `src/lib/ai/platform-ollama.functions.ts`
 
@@ -28,14 +29,17 @@ AI owns suggestions/generation/orchestration metadata; domain services own canon
 - Platform-managed Ollama is a workspace-scoped `ai_providers` row (`config.managed_by = "platform"`, `purpose = "utility"`), not a global provider table. Production requires operator `OLLAMA_BASE_URL`; localhost is never a production fallback. Utility routing (currently `conversation_intelligence`) is seeded via `ai_feature_config` with no vendor fallback. Ollama is not the workspace customer-facing default.
 - AI workspace resolution uses the product active-workspace header (`x-swiffer-workspace-id` from `readActiveWorkspaceId`) or an explicit `workspaceId`, then `is_workspace_member` / `is_workspace_admin`. Domain-entity AI uses `entity.workspace_id` plus the same membership check. Never the first membership row.
 - A provider may execute only when `ai_providers.workspace_id` equals the execution workspace. Explicit cross-tenant provider IDs fail closed.
+- Workspace BYOK API keys live in server-only `ai_provider_secrets` (ciphertext), never on `ai_providers`. Decrypt uses operator `AI_CREDENTIAL_ENCRYPTION_KEY`. Credential sources are `workspace_encrypted` | `platform_env` | `keyless` and are never mixed. Platform Ollama remains keyless.
+- `runChat`/`runEmbed` resolve credentials through `resolveProviderCredentials` after the tenant check. Ciphertext and plaintext never return to the browser.
 
 ## Validation
 Provider/config change → provider/config tests and secret boundary. Domain assistant change → targeted domain behavior, not whole-repo AI audit.
 Feature-routing change → `src/lib/ai/feature-routing.test.ts`.
 Tenant-boundary change → `src/lib/ai/tenant-boundary.test.ts`.
 Platform Ollama URL/policy → `src/lib/ai/platform-ollama.test.ts`.
+Workspace BYOK crypto/credentials → `src/lib/ai/credential-crypto.test.ts`, `src/lib/ai/provider-credentials.test.ts`.
 
 ## Last Verified
-- Runtime baseline: `v1.0.0-Freedom-v1.0.3` / `610b3967f1b3d0fcd7206d1a96e6fc2baab3d4c7`.
+- Runtime baseline: `v1.0.0-Freedom-v1.0.3.5` / `f62da5a4899a2f6134589e0d5afdea27d3842e5b`.
 - Date: 2026-09-02.
-- Verification scope: remaining first-membership AI workspace resolution removed; entity vs active-workspace guards in `workspace-auth.ts`.
+- Verification scope: workspace BYOK (`ai_provider_secrets`, AES-256-GCM, centralized credential resolution).

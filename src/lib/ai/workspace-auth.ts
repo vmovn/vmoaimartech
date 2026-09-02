@@ -60,6 +60,19 @@ export async function assertAiWorkspaceMember(
   if (!data) throw new AIError("auth", "Forbidden: not a member of this workspace");
 }
 
+export async function isAiWorkspaceAdmin(
+  supabase: AuthRpcClient,
+  userId: string,
+  workspaceId: string,
+): Promise<boolean> {
+  try {
+    await assertAiWorkspaceAdmin(supabase, userId, workspaceId);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export async function assertAiWorkspaceAdmin(
   supabase: AuthRpcClient,
   userId: string,

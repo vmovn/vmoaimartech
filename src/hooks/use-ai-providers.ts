@@ -4,8 +4,10 @@ import {
   listAIProviders, listSupportedProviderKinds, upsertAIProvider, deleteAIProvider,
   testAIProvider, listProviderModelsRemote, upsertAIModel, deleteAIModel,
   upsertAIFeatureConfig, upsertAIPrompt, getAIUsageSummary, getAIRecentLogs,
+  removeAIProviderCredential, syncAIProviderModels,
   type UpsertAIProviderInput, type UpsertAIModelInput,
   type UpsertAIFeatureConfigInput, type UpsertAIPromptInput,
+  type TestAIProviderInput,
 } from "@/lib/ai/config.functions";
 
 export function useAIProviders() {
@@ -39,6 +41,24 @@ export function useDeleteAIProvider() {
 export function useTestAIProvider() {
   const qc = useQueryClient();
   const fn = useServerFn(testAIProvider);
+  return useMutation({
+    mutationFn: (data: TestAIProviderInput) => fn({ data }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["ai", "providers"] }),
+  });
+}
+
+export function useRemoveAIProviderCredential() {
+  const qc = useQueryClient();
+  const fn = useServerFn(removeAIProviderCredential);
+  return useMutation({
+    mutationFn: (id: string) => fn({ data: { id } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["ai", "providers"] }),
+  });
+}
+
+export function useSyncAIProviderModels() {
+  const qc = useQueryClient();
+  const fn = useServerFn(syncAIProviderModels);
   return useMutation({
     mutationFn: (id: string) => fn({ data: { id } }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["ai", "providers"] }),

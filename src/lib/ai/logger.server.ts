@@ -2,7 +2,7 @@
  * AI request logging + daily usage aggregation.
  */
 import type { AIProviderKind, TokenUsage } from "./types";
-import { selectAiLogPreviews } from "./log-privacy";
+import { selectAiLogPreviews, stripCredentialShapes } from "./log-privacy";
 
 interface LogEntry {
   workspaceId: string;
@@ -77,7 +77,7 @@ export async function logAIRequest(entry: LogEntry): Promise<void> {
       total_tokens: entry.usage?.total_tokens ?? 0,
       cost_usd: entry.costUsd ?? 0,
       error_type: entry.errorType ?? null,
-      error_message: entry.errorMessage ?? null,
+      error_message: entry.errorMessage ? stripCredentialShapes(entry.errorMessage) : null,
       request_preview: redact(previews.requestPreview),
       response_preview: redact(previews.responsePreview),
       metadata: entry.metadata ?? {},

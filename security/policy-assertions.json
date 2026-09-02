@@ -39,6 +39,14 @@
       "mustMatch": "REVOKE ALL ON public\\.social_channels FROM anon"
     },
     {
+      "id": "ai-provider-secrets-not-granted",
+      "finding": "ai_provider_secrets ciphertext readable by authenticated clients",
+      "severity": "critical",
+      "scope": "migrations",
+      "mustNotMatch": "GRANT\\s+(SELECT|INSERT|UPDATE|DELETE|ALL)\\s+ON\\s+public\\.ai_provider_secrets\\s+TO\\s+(authenticated|anon)",
+      "mustMatch": "REVOKE ALL ON public\\.ai_provider_secrets FROM public, anon, authenticated"
+    },
+    {
       "id": "no-service-role-key-in-client-code",
       "finding": "Service-role credentials reachable from the browser bundle",
       "severity": "critical",

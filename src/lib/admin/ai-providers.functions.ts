@@ -372,7 +372,8 @@ export const syncPlatformProviderModels = createServerFn({ method: "POST" })
   .handler(async ({ data, context }): Promise<{ ok: true; count: number; source: string }> => {
     await assertSuperAdmin(context.supabase, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { getAIProvider, resolveCredentials } = await import("@/lib/ai/registry.server");
+    const { getAIProvider } = await import("@/lib/ai/registry.server");
+    const { resolveProviderCredentials } = await import("@/lib/ai/provider-credentials.server");
 
     const { data: row } = await supabaseAdmin
       .from("ai_providers" as never)
@@ -389,7 +390,7 @@ export const syncPlatformProviderModels = createServerFn({ method: "POST" })
     let source = "catalog";
     try {
       const impl = getAIProvider(kind);
-      const creds = resolveCredentials({
+      const creds = await resolveProviderCredentials({
         id: p.id as string,
         workspaceId: p.workspace_id as string,
         kind,
@@ -401,7 +402,7 @@ export const syncPlatformProviderModels = createServerFn({ method: "POST" })
         isDefault: Boolean(p.is_default),
         priority: (p.priority as number) ?? 100,
         config: (p.config as Record<string, unknown>) ?? {},
-      });
+      }, p.workspace_id as string);
       discovered = (await impl.listModels?.(creds)) ?? [];
       if (discovered.length > 0) source = "provider";
     } catch {

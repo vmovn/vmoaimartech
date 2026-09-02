@@ -15,7 +15,8 @@ import type {
   AIMessage, AIProviderRecord, AIModelRecord, AIFeatureConfig, ChatRequest, ChatResponse,
   EmbedResponse,
 } from "./types";
-import { getAIProvider, resolveCredentials } from "./registry.server";
+import { getAIProvider } from "./registry.server";
+import { resolveProviderCredentials } from "./provider-credentials.server";
 import { AIError } from "./errors";
 import { computeCost } from "./cost";
 import { estimateMessageTokens } from "./tokens";
@@ -128,9 +129,13 @@ interface RunOpts {
   promptVariables?: Record<string, unknown>;
 }
 
-async function callWithProvider(provider: AIProviderRecord, req: ChatRequest): Promise<ChatResponse> {
+async function callWithProvider(
+  provider: AIProviderRecord,
+  req: ChatRequest,
+  executionWorkspaceId: string,
+): Promise<ChatResponse> {
   const impl = getAIProvider(provider.kind);
-  const creds = resolveCredentials(provider);
+  const creds = await resolveProviderCredentials(provider, executionWorkspaceId);
   return impl.chat(req, creds);
 }
 
@@ -213,7 +218,7 @@ export async function runChat(opts: RunOpts): Promise<ChatResponse & { providerI
         });
       }
       const resolvedRequest = { ...request, model: modelId };
-      const res = await callWithProvider(provider, resolvedRequest);
+      const res = await callWithProvider(provider, resolvedRequest, opts.workspaceId);
       const model = await loadModel(provider.id, modelId).catch(() => null);
       if (model && !modelBelongsToProvider(model.providerId, provider.id)) {
         throw new AIError("auth", "AI model does not belong to the resolved provider");
@@ -309,7 +314,10 @@ export async function runEmbed(opts: RunEmbedOpts): Promise<EmbedResponse & {
       continue;
     }
     try {
-      const response = await impl.embed({ model, input: opts.input }, resolveCredentials(provider));
+      const response = await impl.embed(
+        { model, input: opts.input },
+        await resolveProviderCredentials(provider, opts.workspaceId),
+      );
       return { ...response, providerId: provider.id, providerKind: provider.kind };
     } catch (error) {
       lastError = error as Error;

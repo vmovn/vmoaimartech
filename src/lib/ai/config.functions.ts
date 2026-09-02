@@ -15,11 +15,12 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 import type { AIProviderKind } from "./types";
-import { getAIProvider, listProviderKinds, resolveCredentials } from "./registry.server";
+import { getAIProvider, listProviderKinds } from "./registry.server";
 import { AIError } from "./errors";
 import {
   readActiveWorkspaceHeader,
   resolveCallerWorkspaceId,
+  isAiWorkspaceAdmin,
   type AuthRpcClient,
 } from "./workspace-auth";
 import {
@@ -27,6 +28,19 @@ import {
   preservePlatformManagedConfig,
   stripWorkspaceManagedMarker,
 } from "./platform-ollama";
+import {
+  credentialsFromPlaintext,
+  decideCredentialSource,
+  deleteWorkspaceProviderSecret,
+  isByokProviderKind,
+  isKeylessProviderKind,
+  loadProviderSecretMeta,
+  resolveProviderCredentials,
+  safeProviderErrorMessage,
+  upsertWorkspaceProviderSecret,
+  withWorkspaceEncryptedSource,
+  writeProviderCredentialAudit,
+} from "./provider-credentials.server";
 
 // --------- Serializable return shapes (avoid Record<string,unknown>) ---------
 
@@ -49,6 +63,11 @@ export interface AIProviderRow {
   health_last_error?: string | null;
   health_latency_ms?: number | null;
   model_count?: number;
+  has_credential?: boolean;
+  credential_last4?: string | null;
+  credential_updated_at?: string | null;
+  credential_source?: string;
+  platform_managed?: boolean;
 }
 
 export interface AIModelRow {
@@ -170,6 +189,27 @@ async function requireProviderInWorkspace(providerId: string, workspaceId: strin
   return rec;
 }
 
+function toProviderRecord(rec: {
+  id: string; workspace_id: string; kind: AIProviderKind; name: string;
+  base_url: string | null; api_key_secret_name: string | null;
+  organization_id: string | null; enabled: boolean; is_default: boolean;
+  priority: number; config: Record<string, unknown>;
+}): import("./types").AIProviderRecord {
+  return {
+    id: rec.id,
+    workspaceId: rec.workspace_id,
+    kind: rec.kind,
+    name: rec.name,
+    baseUrl: rec.base_url,
+    apiKeySecretName: rec.api_key_secret_name,
+    organizationId: rec.organization_id,
+    enabled: rec.enabled,
+    isDefault: rec.is_default,
+    priority: rec.priority,
+    config: rec.config ?? {},
+  };
+}
+
 function normalizeProvider(row: unknown): AIProviderRow {
   const r = row as Record<string, unknown>;
   const health = (r.ai_provider_health as Array<Record<string, unknown>> | undefined)?.[0] ?? null;
@@ -193,6 +233,23 @@ function normalizeProvider(row: unknown): AIProviderRow {
     health_last_error: (health?.last_error as string | null) ?? null,
     health_latency_ms: (health?.latency_ms as number | null) ?? null,
     model_count: models?.[0]?.count ?? 0,
+    has_credential: false,
+    credential_last4: null,
+    credential_updated_at: null,
+    credential_source: decideCredentialSource({
+      id: r.id as string,
+      workspaceId: r.workspace_id as string,
+      kind: r.kind as AIProviderKind,
+      name: r.name as string,
+      baseUrl: (r.base_url as string | null) ?? null,
+      apiKeySecretName: (r.api_key_secret_name as string | null) ?? null,
+      organizationId: (r.organization_id as string | null) ?? null,
+      enabled: r.enabled as boolean,
+      isDefault: r.is_default as boolean,
+      priority: (r.priority as number) ?? 100,
+      config: ((r.config as Record<string, unknown>) ?? {}),
+    }),
+    platform_managed: isPlatformManagedProvider((r.config as Record<string, unknown>) ?? {}),
   };
 }
 
@@ -247,11 +304,28 @@ export const listAIProviders = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<AIProviderRow[]> => {
     const workspaceId = await requireAiWorkspace(context);
+    const admin = await isAiWorkspaceAdmin(
+      context.supabase as unknown as AuthRpcClient,
+      context.userId,
+      workspaceId,
+    );
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data } = await supabaseAdmin.from("ai_providers" as never)
       .select("*, ai_provider_health(*), ai_models(count)")
       .eq("workspace_id", workspaceId).order("priority", { ascending: true });
-    return ((data as unknown as unknown[]) ?? []).map(normalizeProvider);
+    const rows = ((data as unknown as unknown[]) ?? []).map(normalizeProvider);
+    const meta = await loadProviderSecretMeta(rows.map((r) => r.id));
+    return rows.map((row) => {
+      const secret = meta.get(row.id);
+      const hasEnv = Boolean(row.api_key_secret_name);
+      const hasEncrypted = Boolean(secret);
+      return {
+        ...row,
+        has_credential: hasEncrypted || (row.credential_source === "platform_env" && hasEnv) || row.credential_source === "keyless",
+        credential_last4: admin ? (secret?.last4 ?? null) : null,
+        credential_updated_at: admin ? (secret?.updatedAt ?? null) : null,
+      };
+    });
   });
 
 export const listSupportedProviderKinds = createServerFn({ method: "GET" })
@@ -269,6 +343,7 @@ export const upsertAIProviderInput = z.object({
   isDefault: z.boolean().default(false),
   priority: z.number().int().default(100),
   config: z.record(z.unknown()).default({}),
+  apiKey: z.string().max(8192).optional(),
 });
 export type UpsertAIProviderInput = z.infer<typeof upsertAIProviderInput>;
 
@@ -278,16 +353,31 @@ export const upsertAIProvider = createServerFn({ method: "POST" })
   .handler(async ({ data, context }): Promise<AIProviderRow> => {
     const workspaceId = await requireAiWorkspace(context, { admin: true });
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const incomingConfig = stripWorkspaceManagedMarker(data.config ?? {});
+    const incomingKey = data.apiKey?.trim() ? data.apiKey.trim() : undefined;
+    if (incomingKey && (isKeylessProviderKind(data.kind) || !isByokProviderKind(data.kind))) {
+      throw new AIError("validation", "This provider kind does not accept an API key");
+    }
+    let incomingConfig = stripWorkspaceManagedMarker(data.config ?? {});
     const row: Record<string, unknown> = {
       workspace_id: workspaceId, kind: data.kind, name: data.name,
-      base_url: data.baseUrl ?? null, api_key_secret_name: data.apiKeySecretName ?? null,
+      base_url: data.baseUrl ?? null,
       organization_id: data.organizationId ?? null, enabled: data.enabled,
       is_default: data.isDefault, priority: data.priority, config: incomingConfig,
     };
+    if (data.apiKeySecretName !== undefined) {
+      row.api_key_secret_name = data.apiKeySecretName;
+    } else if (!data.id) {
+      row.api_key_secret_name = null;
+    }
     if (data.id) {
       const existing = await requireProviderInWorkspace(data.id, workspaceId);
+      incomingConfig = { ...existing.config, ...incomingConfig };
+      if (incomingKey) incomingConfig = withWorkspaceEncryptedSource(incomingConfig);
+      row.config = incomingConfig;
       if (isPlatformManagedProvider(existing.config)) {
+        if (incomingKey) {
+          throw new AIError("validation", "Platform-managed Local AI credentials cannot be replaced");
+        }
         if (data.kind !== existing.kind) {
           throw new AIError("validation", "Platform-managed Local AI kind cannot be changed");
         }
@@ -306,11 +396,35 @@ export const upsertAIProvider = createServerFn({ method: "POST" })
         .update(row as never).eq("id", data.id).eq("workspace_id", workspaceId).select().maybeSingle();
       if (error) throw new Error(error.message);
       if (!updated) throw new AIError("not_found", "Provider not found");
+      if (incomingKey) {
+        const existed = await loadProviderSecretMeta([data.id]);
+        await upsertWorkspaceProviderSecret({
+          providerId: data.id, workspaceId, plaintext: incomingKey, updatedBy: context.userId,
+        });
+        await writeProviderCredentialAudit({
+          workspaceId, actorId: context.userId,
+          action: existed.has(data.id) ? "provider.credential_rotated" : "provider.credential_added",
+          providerId: data.id,
+        });
+      }
       return normalizeProvider(updated);
     }
+    if (incomingKey) incomingConfig = withWorkspaceEncryptedSource(incomingConfig);
+    row.config = incomingConfig;
     const { data: inserted, error } = await supabaseAdmin.from("ai_providers" as never)
       .insert(row as never).select().single();
     if (error) throw new Error(error.message);
+    const created = inserted as { id: string };
+    if (incomingKey) {
+      await upsertWorkspaceProviderSecret({
+        providerId: created.id, workspaceId, plaintext: incomingKey, updatedBy: context.userId,
+      });
+      await writeProviderCredentialAudit({
+        workspaceId, actorId: context.userId,
+        action: "provider.credential_added",
+        providerId: created.id,
+      });
+    }
     return normalizeProvider(inserted);
   });
 
@@ -331,41 +445,69 @@ export const deleteAIProvider = createServerFn({ method: "POST" })
 
 export interface HealthResult { ok: boolean; latency_ms: number; error?: string }
 
+export const testAIProviderInput = z.object({
+  id: z.string().uuid().optional(),
+  kind: providerKind.optional(),
+  name: z.string().optional(),
+  apiKey: z.string().max(8192).optional(),
+  baseUrl: z.string().optional().nullable(),
+});
+export type TestAIProviderInput = z.infer<typeof testAIProviderInput>;
+
 export const testAIProvider = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((v: unknown) => z.object({ id: z.string().uuid() }).parse(v))
+  .validator((v: unknown) => testAIProviderInput.parse(v))
   .handler(async ({ data, context }): Promise<HealthResult> => {
     const workspaceId = await requireAiWorkspace(context, { admin: true });
-    const rec = await requireProviderInWorkspace(data.id, workspaceId);
+    const ephemeralKey = data.apiKey?.trim() ? data.apiKey.trim() : undefined;
+    let rec: Awaited<ReturnType<typeof requireProviderInWorkspace>> | null = null;
+    if (data.id) rec = await requireProviderInWorkspace(data.id, workspaceId);
+    const kind = rec?.kind ?? data.kind;
+    if (!kind) throw new AIError("validation", "Provider kind is required");
+    if (ephemeralKey && (isKeylessProviderKind(kind) || !isByokProviderKind(kind))) {
+      throw new AIError("validation", "This provider kind does not accept an API key");
+    }
+    if (rec && isPlatformManagedProvider(rec.config) && ephemeralKey) {
+      throw new AIError("validation", "Platform-managed Local AI credentials cannot be replaced");
+    }
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     try {
-      const impl = getAIProvider(rec.kind);
-      const creds = resolveCredentials({
-        id: rec.id, workspaceId: rec.workspace_id, kind: rec.kind, name: rec.name,
-        baseUrl: rec.base_url, apiKeySecretName: rec.api_key_secret_name,
-        organizationId: rec.organization_id, enabled: rec.enabled,
-        isDefault: rec.is_default, priority: rec.priority, config: rec.config,
-      });
+      const impl = getAIProvider(kind);
+      const creds = ephemeralKey
+        ? credentialsFromPlaintext({
+            kind,
+            name: rec?.name ?? data.name ?? kind,
+            baseUrl: data.baseUrl !== undefined ? data.baseUrl : (rec?.base_url ?? null),
+            organizationId: rec?.organization_id ?? null,
+            config: rec?.config ?? {},
+          }, ephemeralKey)
+        : rec
+          ? await resolveProviderCredentials(toProviderRecord(rec), workspaceId)
+          : (() => { throw new AIError("validation", "Save the provider or paste an API key to test"); })();
       const health = (await impl.healthCheck?.(creds)) ?? { ok: false, latency_ms: 0, error: "no healthcheck" };
-      await supabaseAdmin.from("ai_provider_health" as never).upsert({
-        provider_id: rec.id,
-        status: health.ok ? "healthy" : "down",
-        last_check_at: new Date().toISOString(),
-        last_success_at: health.ok ? new Date().toISOString() : null,
-        last_error: health.error ?? null,
-        latency_ms: health.latency_ms,
-        consecutive_failures: health.ok ? 0 : 1,
-        updated_at: new Date().toISOString(),
-      } as never, { onConflict: "provider_id" });
+      if (rec && !ephemeralKey) {
+        await supabaseAdmin.from("ai_provider_health" as never).upsert({
+          provider_id: rec.id,
+          status: health.ok ? "healthy" : "down",
+          last_check_at: new Date().toISOString(),
+          last_success_at: health.ok ? new Date().toISOString() : null,
+          last_error: health.error ?? null,
+          latency_ms: health.latency_ms,
+          consecutive_failures: health.ok ? 0 : 1,
+          updated_at: new Date().toISOString(),
+        } as never, { onConflict: "provider_id" });
+      }
       return { ok: health.ok, latency_ms: health.latency_ms, error: health.error };
     } catch (e) {
-      const msg = e instanceof AIError ? e.message : (e as Error).message;
-      await supabaseAdmin.from("ai_provider_health" as never).upsert({
-        provider_id: rec.id, status: "down",
-        last_check_at: new Date().toISOString(),
-        last_error: msg, latency_ms: 0, consecutive_failures: 1,
-        updated_at: new Date().toISOString(),
-      } as never, { onConflict: "provider_id" });
+      const msg = safeProviderErrorMessage(e instanceof AIError ? e : (e as Error));
+      if (rec && !ephemeralKey) {
+        await supabaseAdmin.from("ai_provider_health" as never).upsert({
+          provider_id: rec.id, status: "down",
+          last_check_at: new Date().toISOString(),
+          last_error: msg, latency_ms: 0, consecutive_failures: 1,
+          updated_at: new Date().toISOString(),
+        } as never, { onConflict: "provider_id" });
+      }
       return { ok: false, latency_ms: 0, error: msg };
     }
   });
@@ -379,14 +521,59 @@ export const listProviderModelsRemote = createServerFn({ method: "POST" })
     const workspaceId = await requireAiWorkspace(context, { admin: true });
     const rec = await requireProviderInWorkspace(data.id, workspaceId);
     const impl = getAIProvider(rec.kind);
-    const creds = resolveCredentials({
-      id: rec.id, workspaceId: rec.workspace_id, kind: rec.kind, name: rec.name,
-      baseUrl: rec.base_url, apiKeySecretName: rec.api_key_secret_name,
-      organizationId: rec.organization_id, enabled: rec.enabled,
-      isDefault: rec.is_default, priority: rec.priority, config: rec.config,
-    });
+    const creds = await resolveProviderCredentials(toProviderRecord(rec), workspaceId);
     const models = (await impl.listModels?.(creds)) ?? [];
     return models.map((m) => ({ id: m.id, name: m.name }));
+  });
+
+export const removeAIProviderCredential = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((v: unknown) => z.object({ id: z.string().uuid() }).parse(v))
+  .handler(async ({ data, context }): Promise<{ ok: true }> => {
+    const workspaceId = await requireAiWorkspace(context, { admin: true });
+    const rec = await requireProviderInWorkspace(data.id, workspaceId);
+    if (isPlatformManagedProvider(rec.config)) {
+      throw new AIError("validation", "Platform-managed Local AI credentials cannot be removed");
+    }
+    await deleteWorkspaceProviderSecret(data.id, workspaceId);
+    await writeProviderCredentialAudit({
+      workspaceId, actorId: context.userId,
+      action: "provider.credential_removed",
+      providerId: data.id,
+    });
+    return { ok: true };
+  });
+
+export const syncAIProviderModels = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((v: unknown) => z.object({ id: z.string().uuid() }).parse(v))
+  .handler(async ({ data, context }): Promise<{ ok: true; count: number }> => {
+    const workspaceId = await requireAiWorkspace(context, { admin: true });
+    const rec = await requireProviderInWorkspace(data.id, workspaceId);
+    const impl = getAIProvider(rec.kind);
+    const creds = await resolveProviderCredentials(toProviderRecord(rec), workspaceId);
+    const discovered = (await impl.listModels?.(creds)) ?? [];
+    if (discovered.length === 0) {
+      throw new AIError("not_found", "No models returned by this provider");
+    }
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: existing } = await supabaseAdmin.from("ai_models" as never)
+      .select("model_id").eq("provider_id", rec.id);
+    const known = new Set(((existing ?? []) as Array<{ model_id: string }>).map((r) => r.model_id));
+    const toInsert = discovered.filter((m) => !known.has(m.id)).slice(0, 200).map((m, i) => ({
+      provider_id: rec.id,
+      model_id: m.id,
+      display_name: m.name ?? m.id,
+      capabilities: { chat: true },
+      enabled: true,
+      is_default: false,
+      sort_order: 100 + i,
+    }));
+    if (toInsert.length > 0) {
+      const { error } = await supabaseAdmin.from("ai_models" as never).insert(toInsert as never);
+      if (error) throw new Error(error.message);
+    }
+    return { ok: true, count: toInsert.length };
   });
 
 // ---------- Models ----------

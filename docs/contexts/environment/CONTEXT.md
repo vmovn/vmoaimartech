@@ -46,9 +46,9 @@ If a new executable environment read is introduced or an env key is removed/rena
 Prefer deterministic env-drift audit when present, plus build/public-bundle secret scan for public/private boundary changes.
 
 ## Drift Contract
-`npm run env:audit` verifies the completed `77 active executable keys = 77 catalog keys = 77 .env.example keys` contract. Do not re-scan environment implementation merely to re-establish this completed checkpoint.
+`npm run env:audit` verifies the completed catalog/example/executable-key contract. Do not re-scan environment implementation merely to re-establish this completed checkpoint.
 
 ## Last Verified
-- Runtime baseline: `v1.0.0-Freedom-v1.0.2` / `896760b3276b89e32102c30d82ea211dbc0ba180`.
+- Runtime baseline: `v1.0.0-Freedom-v1.0.3.5` / `f62da5a4899a2f6134589e0d5afdea27d3842e5b`.
 - Date: 2026-09-02.
-- Verification scope: added `OLLAMA_BASE_URL` and `OLLAMA_UTILITY_MODEL`; catalog/example/docs remain synchronized.
+- Verification scope: added `AI_CREDENTIAL_ENCRYPTION_KEY` for workspace BYOK; catalog/example/docs remain synchronized.

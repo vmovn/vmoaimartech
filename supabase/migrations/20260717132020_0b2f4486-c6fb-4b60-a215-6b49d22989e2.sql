@@ -36,6 +36,38 @@ create policy "ai_providers admins manage" on public.ai_providers for all to aut
   using (public.has_workspace_role(workspace_id, auth.uid(), array['owner'::workspace_role,'admin'::workspace_role]))
   with check (public.has_workspace_role(workspace_id, auth.uid(), array['owner'::workspace_role,'admin'::workspace_role]));
 
+-- Workspace BYOK ciphertext. Server/service_role only. Never grant to authenticated.
+create table public.ai_provider_secrets (
+  provider_id uuid primary key references public.ai_providers(id) on delete cascade,
+  workspace_id uuid not null references public.workspaces(id) on delete cascade,
+  api_key_ciphertext text not null,
+  api_key_last4 text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  updated_by uuid references auth.users(id) on delete set null
+);
+create index ai_provider_secrets_workspace_idx on public.ai_provider_secrets(workspace_id);
+create or replace function public.enforce_ai_provider_secret_workspace()
+returns trigger language plpgsql as $$
+declare
+  provider_ws uuid;
+begin
+  select workspace_id into provider_ws from public.ai_providers where id = new.provider_id;
+  if provider_ws is null then
+    raise exception 'AI provider not found for secret';
+  end if;
+  if new.workspace_id is distinct from provider_ws then
+    raise exception 'ai_provider_secrets.workspace_id must match ai_providers.workspace_id';
+  end if;
+  return new;
+end $$;
+create trigger ai_provider_secrets_workspace_match
+  before insert or update of provider_id, workspace_id on public.ai_provider_secrets
+  for each row execute function public.enforce_ai_provider_secret_workspace();
+alter table public.ai_provider_secrets enable row level security;
+revoke all on public.ai_provider_secrets from public, anon, authenticated;
+grant all on public.ai_provider_secrets to service_role;
+
 create table public.ai_models (
   id uuid primary key default gen_random_uuid(),
   provider_id uuid not null references public.ai_providers(id) on delete cascade,

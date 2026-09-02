@@ -7,6 +7,7 @@ export const LOCAL_SECRET_NAMES = [
   "WEBHOOK_DISPATCH_SECRET",
   "WIDGET_SIGNING_SECRET",
   "APP_USER_CONNECTION_KEY_SECRET",
+  "AI_CREDENTIAL_ENCRYPTION_KEY",
   "WA_QR_WEBHOOK_SECRET",
   "WA_QR_WORKER_TOKEN",
   "WA_QR_WORKER_SIGNING_SECRET",
@@ -33,14 +34,24 @@ export function parseLocalEnv(contents) {
   return values;
 }
 
-export function isReusableLocalSecret(value) {
+export function isReusableLocalSecret(value, name) {
   if (typeof value !== "string" || value.length < 32) return false;
   if (value.includes("<") || value.includes(">")) return false;
   if (value.startsWith("local-development-")) return false;
+  if (name === "AI_CREDENTIAL_ENCRYPTION_KEY") {
+    try {
+      return Buffer.from(value, "base64").length === 32;
+    } catch {
+      return false;
+    }
+  }
   return true;
 }
 
 export function generateLocalSecret(name) {
+  if (name === "AI_CREDENTIAL_ENCRYPTION_KEY") {
+    return randomBytes(32).toString("base64");
+  }
   const entropy = randomBytes(32).toString("base64url");
   return entropy;
 }
@@ -49,7 +60,7 @@ export function resolveLocalSecrets(existingValues = new Map()) {
   return Object.fromEntries(
     LOCAL_SECRET_NAMES.map((name) => {
       const existing = existingValues.get(name);
-      return [name, isReusableLocalSecret(existing) ? existing : generateLocalSecret(name)];
+      return [name, isReusableLocalSecret(existing, name) ? existing : generateLocalSecret(name)];
     }),
   );
 }

@@ -21,6 +21,7 @@ import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
+import { AiProvidersPanel } from "@/components/app/ai/ai-providers-panel";
 import { cn } from "@/lib/utils";
 
 
@@ -127,8 +128,9 @@ export function AiSettingsPanel() {
         </div>
       </header>
 
-      <Tabs defaultValue="model">
+      <Tabs defaultValue="providers">
         <TabsList>
+          <TabsTrigger value="providers"><KeyRound className="h-3.5 w-3.5 mr-1.5" />Providers</TabsTrigger>
           <TabsTrigger value="model"><Sparkles className="h-3.5 w-3.5 mr-1.5" />Model</TabsTrigger>
           <TabsTrigger value="prompts"><ScrollText className="h-3.5 w-3.5 mr-1.5" />Prompts</TabsTrigger>
           <TabsTrigger value="access"><KeyRound className="h-3.5 w-3.5 mr-1.5" />Access</TabsTrigger>
@@ -137,6 +139,10 @@ export function AiSettingsPanel() {
           <TabsTrigger value="privacy"><EyeOff className="h-3.5 w-3.5 mr-1.5" />Privacy</TabsTrigger>
           <TabsTrigger value="audit"><History className="h-3.5 w-3.5 mr-1.5" />Audit log</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="providers" className="mt-4">
+          <AiProvidersPanel />
+        </TabsContent>
 
         {/* ============ Model ============ */}
         <TabsContent value="model" className="mt-4 space-y-4">

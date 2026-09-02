@@ -811,6 +811,51 @@ export type Database = {
           },
         ]
       }
+      ai_provider_secrets: {
+        Row: {
+          api_key_ciphertext: string
+          api_key_last4: string | null
+          created_at: string
+          provider_id: string
+          updated_at: string
+          updated_by: string | null
+          workspace_id: string
+        }
+        Insert: {
+          api_key_ciphertext: string
+          api_key_last4?: string | null
+          created_at?: string
+          provider_id: string
+          updated_at?: string
+          updated_by?: string | null
+          workspace_id: string
+        }
+        Update: {
+          api_key_ciphertext?: string
+          api_key_last4?: string | null
+          created_at?: string
+          provider_id?: string
+          updated_at?: string
+          updated_by?: string | null
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_provider_secrets_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: true
+            referencedRelation: "ai_providers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_provider_secrets_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_providers: {
         Row: {
           api_key_secret_name: string | null
